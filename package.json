@@ -1,5 +1,5 @@
 {
-  "name": "gl-matrix",
+  "name": "helpers",
   "version": "0.1.0",
   "description": "helpful functions",
   "main": "src/index.js",
