@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "helpful functions",
   "main": "src/index.js",
+  "module": "src/index.js",
   "scripts": {
     "test": "rollup test/test-index.js --format cjs --file build/test-bundle.js && node build/test-bundle.js",
     "test-brk": "rollup test/test-index.js --format cjs --file build/test-bundle.js && node --inspect-brk build/test-bundle.js"
