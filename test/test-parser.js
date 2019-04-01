@@ -31,14 +31,28 @@ test("parser.parseValue", (t) => {
 
 
 test("parser.parseRangeOptions", (t) => {
-  t.deepEqual(parser.parseRangeOptions("1 2 3"), { options: ["1 2 3"]}, "no range or options")
-  t.deepEqual(parser.parseRangeOptions("1 2..3 4 5"), { range: ["1 2","3 4 5"]}, "range")
-  t.deepEqual(parser.parseRangeOptions("a|b|c"), { options: ["a","b","c"]}, "options")
-  t.deepEqual(parser.parseRangeOptions("1 2||3"), { options: ["1 2","","3"]}, "empty option")
-  t.deepEqual(parser.parseRangeOptions("..3"), { range: ["","3"]}, "empty range")
-  t.deepEqual(parser.parseRangeOptions("1..3 | 2.5..6"), { options: ["1..3 "," 2.5..6"]}, "both range and options")
-  t.deepEqual(parser.parseRangeOptions("1..3..-2"), { range: ["1","3"]}, "multiple ranges")
+  t.deepEquals(parser.parseRangeOptions("1 2 3"), { options: ["1 2 3"]}, "no range or options")
+  t.deepEquals(parser.parseRangeOptions("1 2..3 4 5"), { range: ["1 2","3 4 5"]}, "range")
+  t.deepEquals(parser.parseRangeOptions("a|b|c"), { options: ["a","b","c"]}, "options")
+  t.deepEquals(parser.parseRangeOptions("1 2||3"), { options: ["1 2","","3"]}, "empty option")
+  t.deepEquals(parser.parseRangeOptions("..3"), { range: ["","3"]}, "empty range")
+  t.deepEquals(parser.parseRangeOptions("1..3 | 2.5..6"), { options: ["1..3 "," 2.5..6"]}, "both range and options")
+  t.deepEquals(parser.parseRangeOptions("1..3..-2"), { range: ["1","3"]}, "multiple ranges")
 
   t.end()
 })
 
+test("parser.parseSelector", (t) => {
+  t.deepEquals(parser.parseSelector(""), {type: "", id: "", classes: [], attrs: {}}, "empty")
+  t.deepEquals(parser.parseSelector("xyz"), {type: "xyz", id: "", classes: [], attrs: {}}, "type")
+  t.deepEquals(parser.parseSelector("#xyz"), {type: "", id: "xyz", classes: [], attrs: {}}, "id")
+  t.deepEquals(parser.parseSelector(".xyz"), {type: "", id: "", classes: ["xyz"], attrs: {}}, "class")
+  t.deepEquals(parser.parseSelector("[xyz=1]"), {type: "", id: "", classes: [], attrs: {"xyz": "1"}}, "attributes")
+  t.deepEquals(parser.parseSelector("type.class#id[attr=value]"), {type: "type", id: "id", classes: ["class"], attrs: {attr: "value"}}, "everything")
+  t.deepEquals(parser.parseSelector(".class#id[]"), {type: "", id: "id", classes: ["class"], attrs: {}}, "class and id")
+  t.deepEquals(parser.parseSelector(".class1#id.class2"), {type: "", id: "id", classes: ["class1", "class2"], attrs: {}}, "multiple classes")
+  t.deepEquals(parser.parseSelector("[foo=bar][one.two=three.four]"), {type: "", id: "", classes: [], attrs: {"foo": "bar", "one.two": "three.four"}}, "multiple attributes, and dot notation")
+  t.deepEquals(parser.parseSelector("xyz[foo=bar]#abc"), {type: "xyz", id: "abc", classes: [], attrs: {"foo": "bar"}}, "id at the end")
+
+  t.end()
+})
