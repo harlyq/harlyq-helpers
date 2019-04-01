@@ -26,8 +26,8 @@ export const testSeparatingAxis = (function() {
 
 
 export const isPointInside = (function() {
-  const UP_X = [1,0,0]
-  const UP_Y = [0,1,0]
+  let UP_X = new Float32Array([1,0,0])
+  let UP_Y = new Float32Array([0,1,0])
   let axis = new Float32Array(3)
   let normal = new Float32Array(3)
   let up = new Float32Array(3)
@@ -39,7 +39,7 @@ export const isPointInside = (function() {
   return function isPointInside(vertices, indices, point, pi = 0) {
     vertex3.sub(axis, vertices, point, indices[0], pi)
     vertex3.normalize(axis, axis)
-    up = vertex3.equals(axis, UP_Y, 0.01) ? UP_X : UP_Y
+    vertex3.copy(up, vertex3.equals(axis, UP_Y, 0.01) ? UP_X : UP_Y)
     vertex3.cross(normal, axis, up)
     vertex3.cross(up, normal, axis)
     

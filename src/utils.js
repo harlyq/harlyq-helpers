@@ -2,6 +2,22 @@ export function clamp(v, min, max) {
   return v < min ? min : v > max ? max : v
 }
 
+export function euclideanModulo(v, m) {
+  return ( ( v % m ) + m ) % m  
+}
+
+export function lerp(a, b, t) {
+  return a*(1 - t) + b*t
+}
+
+export function lerpObject(out, a, b, t) {
+  Object.assign(out, b) // copy values from b in case the keys do not exist in a
+  for (let k in a) {
+    out[k] = typeof b[k] !== "undefined" ? lerp(a[k], b[k], t) : a[k]
+  }
+  return out
+}
+
 export function deepEquals(a, b) {
   if (typeof a === "object" && typeof b === "object") {
     if (typeof a[Symbol.iterator] === "function" && typeof b[Symbol.iterator] === "function") {
