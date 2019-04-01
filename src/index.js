@@ -1,5 +1,6 @@
 import * as affine4 from "./affine4.js"
 import * as closestPoint from "./closest-point.js"
+import * as easing from "./easing.js"
 import * as extent from "./extent.js"
 import * as hull from "./hull.js"
 import * as intersection from "./intersection.js"
@@ -15,6 +16,7 @@ import * as vertex3 from "./vertex3.js"
 // exports will shake correctly (unless bundled)
 export { affine4 }
 export { closestPoint }
+export { easing }
 export { extent }
 export { intersection }
 export { hull }

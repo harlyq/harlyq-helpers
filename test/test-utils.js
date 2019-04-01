@@ -33,3 +33,12 @@ test("utils.range", (t) => {
   t.deepEquals(utils.range(10,-2,-3), [10,7,4,1,-2])
   t.end()
 })
+
+test("utils.getWithPath", (t) => {
+  t.equals(utils.getWithPath({a: 1, b: {c: {x: "hello"}, d: 3}}, ["b","c","x"]), "hello", "valid leaf")
+  t.equals(utils.getWithPath({a: 1, b: {c: {x: "hello"}, d: 3}}, ["b","c","y"]), undefined, "invalid leaf")
+  t.equals(utils.getWithPath({a: 1, b: {c: {x: "hello"}, d: 3}}, ["a"]), 1, "valid first level")
+  t.equals(utils.getWithPath({a: 1, b: {c: {x: "hello"}, d: 3}}, ["b","w"]), undefined, "invalid branch")
+  t.end()
+})
+
