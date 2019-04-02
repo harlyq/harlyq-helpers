@@ -2,6 +2,13 @@ import test from "tape"
 import * as rgbcolor from "../src/rgbcolor.js"
 
 const TOLERANCE = 0.001
+
+/**
+ * 
+ * @param {number|number[]|Object} a 
+ * @param {number|number[]|Object} b 
+ * @param {number} tolerance 
+ */
 const similar = (a,b,tolerance = TOLERANCE) => {
   const typeofA = typeof a
   const typeofB = typeof b
@@ -42,5 +49,17 @@ test("rgbcolor.toString", (t) => {
   t.equals(rgbcolor.toString({r: 0, g: 0, b: 0}), "#000000", "black")
   t.equals(rgbcolor.toString({r: 1, g: 1, b: 1}), "#ffffff", "white")
   t.equals(rgbcolor.toString( rgbcolor.setHex({}, 0x05d9a3) ), "#05d9a3", "setHex then toString")
+  t.end()
+})
+
+test("rgbcolor.parse", (t) => {
+  t.equals(rgbcolor.parse("rgba(255,255,0,0.1)").a === 0.1 && rgbcolor.toString(rgbcolor.parse("rgba(255,255,0,0.1)")), "#ffff00", "rgba")
+  t.equals(rgbcolor.toString(rgbcolor.parse("red")), "#ff0000", "named")
+  t.equals(rgbcolor.toString(rgbcolor.parse("#123")), "#112233", "hex")
+  t.equals(rgbcolor.toString(rgbcolor.parse("hsl(270,60%,51%)")), "#8237cd", "hsl")
+  t.equals(rgbcolor.toString(rgbcolor.parse("rgb(50%,50%,50%)")), "#7f7f7f", "rgb percentage")
+  t.notOk(rgbcolor.parse("ted"), "invalid")
+  t.notOk(rgbcolor.parse("Red"), "wrong case")
+
   t.end()
 })

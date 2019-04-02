@@ -42,6 +42,15 @@ export function normalize(out, a) {
   return out
 }
 
+export function setFromArray(out, array, i) {
+  i = i || 0
+  out.x = array[i]
+  out.y = array[i+1]
+  out.z = array[i+2]
+  out.w = array[i+3]
+  return out
+}
+
 export function setFromUnscaledAffine4(out, aff) {
   const m11 = aff[0], m12 = aff[4], m13 = aff[8]
   const m21 = aff[1], m22 = aff[5], m23 = aff[9]

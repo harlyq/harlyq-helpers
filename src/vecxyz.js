@@ -3,6 +3,10 @@ export const UNIT_X = Object.freeze({x: 1, y: 0, z: 0})
 export const UNIT_Y = Object.freeze({x: 0, y: 1, z: 0})
 export const UNIT_Z = Object.freeze({x: 0, y: 0, z: 1})
 
+export function isVecXYZ(a) {
+  return "x" in a && "y" in a && "z" in a
+}
+
 export function create(x = 0, y = 0, z = 0) {
   return { x: x, y: y, z: z }
 }
