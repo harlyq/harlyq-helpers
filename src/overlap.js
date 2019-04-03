@@ -1,44 +1,32 @@
 import * as vecxyz from "./vecxyz.js"
 import * as quatxyzw from "./quatxyzw.js"
-// import * as debugPlot from "./debug-plot.js"
 
-/**
- * Returns true if two axis-aligned bounding boxes (AABB) overlap
- * 
- * @param {{x,y,z}} aabbAMin - min extent of AABB A
- * @param {{x,y,z}} aabbAMax - max extent of AABB A
- * @param {{x,y,z}} aabbBMin - min extent of AABB B
- * @param {{x,y,z}} aabbBMax - max extent of AABB B
+/** 
+ * @typedef {{x: number, y: number, z: number}} VecXYZ
+ * @typedef {{x: number, y: number, z: number, w: number}} QuatXYZW
+ * @typedef {number} Distance
  */
+
+// Returns true if two axis-aligned bounding boxes (AABB) overlap
+/** @type {<AN extends VecXYZ, AX extends VecXYZ, BN extends VecXYZ, BX extends VecXYZ>(aabbAMin: AN, aabbAMax: AX, aabbBMin: BN, aabbBMax: BX) => boolean} */
 export function aabbWithAabb(aabbAMin, aabbAMax, aabbBMin, aabbBMax) {
   return aabbAMin.x <= aabbBMax.x && aabbAMin.y <= aabbBMax.y && aabbAMin.z <= aabbBMax.z &&
     aabbBMin.x <= aabbAMax.x && aabbBMin.y <= aabbAMax.y && aabbBMin.z <= aabbAMax.z
 }
 
-/**
- * Returns true if two boxes overlap
- * 
- * @param {{x,y,z}} boxAMin - min extent of boxA
- * @param {{x,y,z}} boxAMax - max extent of boxA
- * @param {{x,y,z}} posA - center of boxA
- * @param {{x,y,z,w}} quatA - rotation of boxA
- * @param {{x,y,z}} boxBMin - min extent of boxB
- * @param {{x,y,z}} boxBMax - max extent of boxB
- * @param {{x,y,z}} posB - center of boxB
- * @param {{x,y,z,w}} quatB - rotation of boxB
- */
+// Returns true if two boxes overlap
+/** @typedef {<AN extends VecXYZ, AX extends VecXYZ, PA extends VecXYZ, QA extends QuatXYZW, SA extends VecXYZ, BN extends VecXYZ, BX extends VecXYZ, PB extends VecXYZ, QB extends QuatXYZW, SB extends VecXYZ>(boxAMin: AN, boxAMax: AX, posA: PA, quatA: QA, scaleA: SA, boxBMin: BN, boxBMax: BX, posB: PB, quatB: QB, scaleB: SB) => boolean} BoxWithBoxFn */
+/** @type {BoxWithBoxFn} */
 export const boxWithBox = (function() {
-  let vertA = {}
-  let invQuatB = {}
-  let extentsMin = {}
-  let extentsMax = {}
-  let invScaleB = {}
+  let vertA = {x:0,y:0,z:0}
+  let invQuatB = {x:0,y:0,z:0,w:1}
+  let extentsMin = {x:0,y:0,z:0}
+  let extentsMax = {x:0,y:0,z:0}
+  let invScaleB = {x:0,y:0,z:0}
 
   // map boxA into boxB space, such that boxB is aligned to X,Y and Z axes and centered around 0,0,0
+  /** @type {<AN extends VecXYZ, AX extends VecXYZ, PA extends VecXYZ, QA extends QuatXYZW, SA extends VecXYZ, BN extends VecXYZ, BX extends VecXYZ, PB extends VecXYZ, QB extends QuatXYZW, SB extends VecXYZ>(boxAMin: AN, boxAMax: AX, posA: PA, quatA: QA, scaleA: SA, boxBMin: BN, boxBMax: BX, posB: PB, quatB: QB, scaleB: SB) => boolean} */
   function boxSAT(boxAMin, boxAMax, posA, quatA, scaleA, boxBMin, boxBMax, posB, quatB, scaleB) {
-    // quatxyzw.conjugate(invQuatB, quatB)
-    // vecxyz.sub(posAB, posA, posB)
-    // vecxyz.divide(scaleA_B, scaleA, scaleB)
     quatxyzw.conjugate(invQuatB, quatB)
     vecxyz.inverse(invScaleB, scaleB)
 
@@ -48,11 +36,7 @@ export const boxWithBox = (function() {
       vertA.y = (corner >>> 1) % 2 ? boxAMax.y : boxAMin.y
       vertA.z = (corner >>> 2) % 2 ? boxAMax.z : boxAMin.z
 
-      // vertA = (vertA*scaleA*(1/scaleB)*quatA*cong(quatB) + posA - posB)
-      // vecxyz.add( vertA, vecxyz.transformQuaternion( vertA, vecxyz.transformQuaternion( vertA, vecxyz.multiply( vertA, vertA, scaleA_B ), quatA ), invQuatB ), posAB )
-      // map vertA into boxA space (scaleA -> quatA -> posA)
       vecxyz.add( vertA, vecxyz.transformQuaternion( vertA, vecxyz.multiply( vertA, vertA, scaleA ), quatA ), posA )
-      // map vertA into boxB space (-posB -> cong(quatB) -> 1/scaleB)
       vecxyz.multiply( vertA, vecxyz.transformQuaternion( vertA, vecxyz.sub( vertA, vertA, posB ), invQuatB ), invScaleB )
 
       if (corner === 0) {
@@ -69,31 +53,27 @@ export const boxWithBox = (function() {
       boxBMin.x <= extentsMax.x && boxBMin.y <= extentsMax.y && boxBMin.z <= extentsMax.z
   }
   
-  return function boxWithBox(boxAMin, boxAMax, posA, quatA, scaleA, boxBMin, boxBMax, posB, quatB, scaleB) {
+  return /** @type {BoxWithBoxFn} */ function boxWithBox(boxAMin, boxAMax, posA, quatA, scaleA, boxBMin, boxBMax, posB, quatB, scaleB) {
     return boxSAT(boxAMin, boxAMax, posA, quatA, scaleA, boxBMin, boxBMax, posB, quatB, scaleB) &&
            boxSAT(boxBMin, boxBMax, posB, quatB, scaleB, boxAMin, boxAMax, posA, quatA, scaleA)
   }
   
 })()
 
-/**
- * Returns true if two spheres overlap
- * 
- * @param {{x,y,z}} sphereACenter 
- * @param {number} sphereARadius 
- * @param {{x,y,z}} sphereBCenter 
- * @param {number} sphereBRadius 
- */
+// Returns true if two spheres overlap
+/** @type {<AC extends VecXYZ, BC extends VecXYZ>(sphereACenter: AC, sphereARadius: Distance, sphereBCenter: BC, sphereBRadius: Distance) => boolean} */
 export function sphereWithSphere(sphereACenter, sphereARadius, sphereBCenter, sphereBRadius) {
   return vecxyz.distance(sphereACenter, sphereBCenter) - sphereARadius - sphereBRadius < 0
 }
 
+/** @typedef {<AC extends VecXYZ, BN extends VecXYZ, BX extends VecXYZ, PB extends VecXYZ, QB extends QuatXYZW, SB extends VecXYZ>(sphereACenter: AC, sphereARadius: Distance, boxBMin: BN, boxBMax: BX, posB: PB, quatB: QB, scaleB: SB) => boolean} SphereWithBoxFn */
+/** @type {SphereWithBoxFn} */
 export const sphereWithBox = (function() {
-  let vertA = {}
-  let invQuatB = {}
+  let vertA = {x:0,y:0,z:0}
+  let invQuatB = {x:0,y:0,z:0,w:1}
   const square = (x) => x*x
 
-  return function sphereWithBox(sphereACenter, sphereARadius, boxBMin, boxBMax, posB, quatB, scaleB) {
+  return /** @type {SphereWithBoxFn} */function sphereWithBox(sphereACenter, sphereARadius, boxBMin, boxBMax, posB, quatB, scaleB) {
     // map sphere into boxB space
     quatxyzw.conjugate( invQuatB, quatB )
     vecxyz.transformQuaternion( vertA, vecxyz.divide( vertA, vecxyz.sub(vertA, sphereACenter, posB), scaleB ), invQuatB )

@@ -1,24 +1,36 @@
 import * as vecxyz from "./vecxyz.js"
 import * as affine4 from "./affine4.js"
 
+/** 
+ * @typedef {{x: number, y: number, z: number}} VecXYZ
+ * @typedef {{x: number, y: number, z: number, w: number}} QuatXYZW
+ * @typedef {Float32Array} Affine4
+ * @typedef {number} Distance
+ */
+
+/** @type {<PA extends VecXYZ, BN extends VecXYZ>(pointA: PA, planeBNormal: BN, planeBConstant: number) => number} */
 export function pointToPlane(pointA, planeBNormal, planeBConstant) {
   return vecxyz.dot( planeBNormal, pointA ) + planeBConstant
 }
 
+/** @type {<AS extends VecXYZ, AE extends VecXYZ, BN extends VecXYZ>(lineAStart: AS, lineAEnd: AE, planeBNormal: BN, planeBConstant: number) => number} */
 export function lineToPlane(lineAStart, lineAEnd, planeBNormal, planeBConstant) {
   const startDist = pointToPlane( lineAStart, planeBNormal, planeBConstant )
   const endDist = pointToPlane( lineAEnd, planeBNormal, planeBConstant )
   return (startDist > 0 && endDist > 0) || (startDist < 0 && endDist < 0) ? Math.min(startDist, endDist) : 0
 }
 
+/** @type {<AC extends VecXYZ, BN extends VecXYZ>(sphereACenter: AC, sphereARadius: Distance, planeBNormal: BN, planeBConstant: number) => number} */
 export function sphereToPlane(sphereACenter, sphereARadius, planeBNormal, planeBConstant) {
   return pointToPlane( sphereACenter, planeBNormal, planeBConstant ) - sphereARadius
 }
 
+/** @type {<AC extends VecXYZ, BC extends VecXYZ>(sphereACenter: AC, sphereARadius: Distance, sphereBCenter: BC, sphereBRadius: Distance) => number} */
 export function sphereToSphere(sphereACenter, sphereARadius, sphereBCenter, sphereBRadius) {
   return vecxyz.distance(sphereACenter, sphereBCenter) - sphereARadius - sphereBRadius
 }
 
+/** @type {<AN extends VecXYZ, AX extends VecXYZ, BN extends VecXYZ, BX extends VecXYZ>(aabbAMin: AN, aabbAMax: AX, aabbBMin: BN, aabbBMax: BX) => number} */
 export function aabbToAabb(aabbAMin, aabbAMax, aabbBMin, aabbBMax) {
   const outerX = Math.max(aabbAMax.x, aabbBMax.x) - Math.min(aabbAMin.x, aabbBMin.x)
   const outerY = Math.max(aabbAMax.y, aabbBMax.y) - Math.min(aabbAMin.y, aabbBMin.y)
@@ -30,22 +42,15 @@ export function aabbToAabb(aabbAMin, aabbAMax, aabbBMin, aabbBMax) {
   return (isOverlapping ? -1 : 1) * Math.hypot(innerX, innerY, innerZ)
 }
 
-/**
- * Returns true if two boxes overlap
- * 
- * @param {{x,y,z}} boxAMin - min extent of boxA
- * @param {{x,y,z}} boxAMax - max extent of boxA
- * @param {number[]} affineA - column-wise 4x4 affine matrix for boxA
- * @param {{x,y,z}} boxBMin - min extent of boxB
- * @param {{x,y,z}} boxBMax - max extent of boxB
- * @param {number[]} affineB - column-wise 4x4 affine matrix for boxB
- */
+// Returns true if two boxes overlap
+/** @typedef {<AN extends VecXYZ, AX extends VecXYZ, BN extends VecXYZ, BX extends VecXYZ>(boxAMin: AN, boxAMax: AX, affineA: Affine4, boxBMin: BN, boxBMax: BX, affineB: Affine4) => number} BoxToBoxFn */
+/** @type {BoxToBoxFn} */
 export const boxToBox = (function() {
-  let vertA = {}
-  let extentsMin = {}
-  let extentsMax = {}
+  let vertA = {x:0,y:0,z:0}
+  let extentsMin = {x:0,y:0,z:0}
+  let extentsMax = {x:0,y:0,z:0}
 
-  // map boxA into boxB space, such that boxB is aligned to X,Y and Z axes and centered around 0,0,0
+  /** @type {<AN extends VecXYZ, AX extends VecXYZ, BN extends VecXYZ, BX extends VecXYZ>(boxAMin: AN, boxAMax: AX, affineA: Affine4, boxBMin: BN, boxBMax: BX, affineB: Affine4) => number} */
   function boxSATDistance(boxAMin, boxAMax, affineA, boxBMin, boxBMax, affineB) {
     // map boxB into boxA space, and determine the extents
     for (let corner = 0; corner < 8; corner++) {
@@ -70,7 +75,7 @@ export const boxToBox = (function() {
       boxBMin.x - extentsMax.x, boxBMin.y - extentsMax.y, boxBMin.z - extentsMax.z)
   }
   
-  return function boxToBox(boxAMin, boxAMax, affineA, boxBMin, boxBMax, affineB) {
+  return /** @type {BoxToBoxFn} */ function boxToBox(boxAMin, boxAMax, affineA, boxBMin, boxBMax, affineB) {
     const dAB = boxSATDistance(boxAMin, boxAMax, affineA, boxBMin, boxBMax, affineB)
     const dBA = boxSATDistance(boxBMin, boxBMax, affineB, boxAMin, boxAMax, affineA)
     return Math.max(dAB, dBA)
@@ -78,21 +83,15 @@ export const boxToBox = (function() {
   
 })()
 
-/**
- * Returns the distance between pointA and the surface of boxB. Negative values indicate
- * that pointA is inside of boxB
- * 
- * @param {{x,y,z}} pointA - point
- * @param {{x,y,z}} boxBMin - min extents of boxB
- * @param {{x,y,z}} boxBMax - max extents of boxB
- * @param {float32[16]} affineB - colum-wise matrix for B
- * @param {{x,y,z}} extraScale - additional scale to apply to the output distance
- */
+// Returns the distance between pointA and the surface of boxB. Negative values indicate
+// that pointA is inside of boxB
+/** @typedef {<PA extends VecXYZ, BN extends VecXYZ, BX extends VecXYZ>(pointA: PA, boxBMin: BN, boxBMax: BX, affineB: Affine4) => number} PointToBoxFn */
+/** @type {PointToBoxFn} */
 export const pointToBox = (function() {
-  let vertA = {}
-  let scaleA = {}
+  let vertA = {x:0,y:0,z:0}
+  let scaleA = {x:1,y:1,z:1}
 
-  return function pointToBox(pointA, boxBMin, boxBMax, affineB) {
+  return /** @type {PointToBoxFn} */function pointToBox(pointA, boxBMin, boxBMax, affineB) {
     affine4.decompose( affineB, undefined, undefined, scaleA )
     affine4.invertAndMultiplyVecXYZ( vertA, affineB, pointA )
     const vx = vertA.x, vy = vertA.y, vz = vertA.z

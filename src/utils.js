@@ -1,15 +1,19 @@
+/** @type {(v: number, min: number, max: number) => number} */
 export function clamp(v, min, max) {
   return v < min ? min : v > max ? max : v
 }
 
+/** @type {(v: number, m: number) => number} */
 export function euclideanModulo(v, m) {
   return ( ( v % m ) + m ) % m  
 }
 
+/** @type {(a: number, b: number, t: number) => number} */
 export function lerp(a, b, t) {
-  return a*(1 - t) + b*t
+  return a + (b - a)*t
 }
 
+/** @type {<T extends {[key: string]: number}>(out: T, a: {[key: string]: number}, b: {[key: string]: number}, t: number) => T} */
 export function lerpObject(out, a, b, t) {
   Object.assign(out, b) // copy values from b in case the keys do not exist in a
   for (let k in a) {
@@ -18,6 +22,7 @@ export function lerpObject(out, a, b, t) {
   return out
 }
 
+/** @type {(a: any, b: any) => boolean} */
 export function deepEquals(a, b) {
   if (typeof a === "object" && typeof b === "object") {
     if (typeof a[Symbol.iterator] === "function" && typeof b[Symbol.iterator] === "function") {
@@ -62,6 +67,7 @@ export function deepEquals(a, b) {
   return a === b
 }
 
+/** @type {(a: number, b: number, step: number) => number[]} */
 export function range(a, b = undefined, step = undefined) {
   if (b === undefined) {
     if (a === 0) { 
@@ -76,16 +82,18 @@ export function range(a, b = undefined, step = undefined) {
   return Array.from( {length: Math.floor((b - a)/step + 1)}, (_,i) => i*step + a )
 }
 
-
+/** @type {<T extends any[]>(list: T, i: number) => T} */
 export function unorderedRemoveAt(list, i) {
   const n = list.length
   if (i < n) {
     list[i] = list[n - 1]
     list.length = n - 1
   }
+  return list
 }
 
 // returns a value from a 'root' and an array of 'properties', each property is considered the child of the previous property
+/** @type {(root: {[key: string]: any}, properties: string[]) => any} */
 export function getWithPath(root, properties) {
   let path = root
   let parts = properties.slice().reverse()

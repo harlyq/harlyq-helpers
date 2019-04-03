@@ -1,10 +1,17 @@
 // remix of https://github.com/mrdoob/three.js/blob/master/src/math/Color.js
 import * as utils from "./utils.js"
 
+/**
+ * @typedef {{r:number, g:number, b:number}} RGBColor
+ * @typedef {{r:number, g:number, b:number, a:number}} RGBAColor
+ */
+
+/** @type {(a: any) => boolean} */
 export function isColor(a) {
   return "r" in a && "g" in a && "b" in a
 }
 
+/** @type {<T extends RGBColor>(out: T, hex: number) => T} */
 export function setHex(out, hex) {
   out.r = ( hex >> 16 & 255 )/255
   out.g = ( hex >> 8 & 255 )/255
@@ -12,7 +19,14 @@ export function setHex(out, hex) {
   return out
 }
 
+/** @typedef {<T extends RGBColor>(out: T, h: number, s: number, l: number) => T} SetHSLFn */
+/** @type {SetHSLFn} */
 export const setHSL = (function () {
+  /**
+   * @param {number} p 
+   * @param {number} q 
+   * @param {number} t 
+   */
   function hue2rgb( p, q, t ) {
     if ( t < 0 ) t += 1;
     if ( t > 1 ) t -= 1;
@@ -22,7 +36,7 @@ export const setHSL = (function () {
     return p;
   }
 
-  return function setHSL(out, h, s, l) {
+  return /** @type {SetHSLFn} */ function setHSL(out, h, s, l) {
     // h,s,l ranges are in 0.0 - 1.0
     h = utils.euclideanModulo( h, 1 );
     s = utils.clamp( s, 0, 1 );
@@ -43,19 +57,24 @@ export const setHSL = (function () {
   }
 })()
 
+/** @type {<TX extends RGBColor, TY extends RGBColor>(x: TX, y: TY) => boolean} */
 export function equals(x, y) {
-  return x.r === y.r && x.g === y.g && x.b === y.b && x.a === y.a
+  return x.r === y.r && x.g === y.g && x.b === y.b
 }
 
+/** @type {<TA extends RGBColor>(a: TA) => number} */
 export function toHex(a) {
   return (a.r*255) << 16 ^ (a.g*255) << 8 ^ (a.b*255) << 0
 }
 
+/** @type {<TA extends RGBColor>(a: TA) => string} */
 export function toString(a) {
+  // @ts-ignore padStart()
   return "#" + toHex(a).toString(16).padStart(6, '0')
 }
 
 // remix of https://github.com/mrdoob/three.js/blob/master/src/math/Color.js
+/** @type {Object.<string, number>} */
 export const COLOR_KEYWORDS = { 'aliceblue': 0xF0F8FF, 'antiquewhite': 0xFAEBD7, 'aqua': 0x00FFFF, 'aquamarine': 0x7FFFD4, 'azure': 0xF0FFFF,
 	'beige': 0xF5F5DC, 'bisque': 0xFFE4C4, 'black': 0x000000, 'blanchedalmond': 0xFFEBCD, 'blue': 0x0000FF, 'blueviolet': 0x8A2BE2,
 	'brown': 0xA52A2A, 'burlywood': 0xDEB887, 'cadetblue': 0x5F9EA0, 'chartreuse': 0x7FFF00, 'chocolate': 0xD2691E, 'coral': 0xFF7F50,
@@ -83,6 +102,7 @@ export const COLOR_KEYWORDS = { 'aliceblue': 0xF0F8FF, 'antiquewhite': 0xFAEBD7,
 
 const COLOR_REGEX = /^((?:rgb|hsl)a?)\(\s*([^\)]*)\)/
 
+/** @type {(str: string) => RGBColor | RGBAColor} */
 export function parse(str) {
   let m;
 
@@ -127,7 +147,7 @@ export function parse(str) {
         if ( color = /^([0-9]*\.?[0-9]+)\s*,\s*(\d+)\%\s*,\s*(\d+)\%\s*(,\s*([0-9]*\.?[0-9]+)\s*)?$/.exec( components ) ) {
 
           // hsl(120,50%,50%) hsla(120,50%,50%,0.5)
-          const rgba = setHSL({}, parseFloat( color[ 1 ] )/360, parseInt( color[ 2 ], 10 )/100, parseInt( color[ 3 ], 10 )/100)
+          const rgba = setHSL({r:0,g:0,b:0,a:0}, parseFloat( color[ 1 ] )/360, parseInt( color[ 2 ], 10 )/100, parseInt( color[ 3 ], 10 )/100);
           rgba.a = color[5] ? parseFloat( color[5] ) : undefined
           return rgba
         }
@@ -166,7 +186,7 @@ export function parse(str) {
     const hex = COLOR_KEYWORDS[ str ];
 
     if ( hex !== undefined ) {
-      return setHex({}, hex)
+      return setHex({r:0,g:0,b:0}, hex)
     }
   }
 }

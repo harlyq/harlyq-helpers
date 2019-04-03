@@ -1,8 +1,16 @@
+/**
+ * @typedef {{x: number, y: number, z: number}} VecXYZ
+ * @typedef {{min: VecXYZ, max: VecXYZ}} Extent
+ * @typedef {number} Distance
+ */
+
+/** @type {() => Extent} */
 export function create() {
   let x, y, z
   return {min: {x, y, z}, max: {x, y, z}}
 }
 
+/** @type {<T extends Extent>(out: T, center: VecXYZ, r: Distance) => T} */
 export function setFromSphere(out, center, r) {
   const cx = center.x, cy = center.y, cz = center.z
   out.min.x = cx - r
@@ -14,14 +22,17 @@ export function setFromSphere(out, center, r) {
   return out
 }
 
+/** @type {<T extends Extent, TV extends VecXYZ, TE extends Extent>(out: T, vec: TV, ext: TE) => T} */
 export function addVecXYZ(out, vec, ext) {
-  return addPoint(vec.x, vec.y, vec.z, ext, out)
+  return addPoint(out, vec.x, vec.y, vec.z, ext)
 }
 
+/** @type {<T extends Extent, TE extends Extent>(out: T, vertices: Float32Array, vi: number, ext: TE) => T} */
 export function addVertex(out, vertices, vi, ext) {
-  return addPoint(vertices[vi], vertices[vi+1], vertices[vi+2], ext, out)
+  return addPoint(out, vertices[vi], vertices[vi+1], vertices[vi+2], ext)
 }
 
+/** @type {<T extends Extent, TE extends Extent>(out: T, vx: number, vy: number, vz: number, ext: TE) => T} */
 export function addPoint(out, vx, vy, vz, ext) {
   out.min.x = Math.min(ext.min.x, vx)
   out.min.y = Math.min(ext.min.y, vy)
@@ -32,6 +43,7 @@ export function addPoint(out, vx, vy, vz, ext) {
   return out
 }
 
+/** @type {<T extends Extent>(out: T, vertices: Float32Array, stride: number) => T} */
 export function setFromVertices(out, vertices, stride = 3) {
   let minX = vertices[0], maxX = vertices[0]
   let minY = vertices[1], maxY = vertices[1]
@@ -53,6 +65,7 @@ export function setFromVertices(out, vertices, stride = 3) {
   return out
 }
 
+/** @type {<T extends Extent, TE extends Extent>(out: T, vertices: Float32Array, indices: number[], ext: TE) => T} */
 export function setFromIndices(out, vertices, indices) {
   let minX = vertices[0], maxX = vertices[0]
   let minY = vertices[1], maxY = vertices[1]
@@ -75,13 +88,19 @@ export function setFromIndices(out, vertices, indices) {
   return out
 }
 
+/** @typedef {<T extends Extent>(out: T, object3D: object) => T} SetFromObject3DFn */
+/** @type {SetFromObject3DFn} */
 export const setFromObject3D = (function() {
+  // @ts-ignore
   let tempPosition = new THREE.Vector3()
+  // @ts-ignore
   let tempQuaternion = new THREE.Quaternion()
+  // @ts-ignore
   let tempScale = new THREE.Vector3()
+  // @ts-ignore
   let tempBox3 = new THREE.Box3()
 
-  return function setFromObject3D(ext, object3D) {
+  return /** @type {SetFromObject3DFn} */function setFromObject3D(ext, object3D) {
     if (object3D.children.length === 0) {
       return ext
     }
@@ -115,10 +134,12 @@ export const setFromObject3D = (function() {
   }
 })()
 
+/** @type {<TE extends Extent>(ext: TE) => number} */
 export function volume(ext) {
   return (ext.max.x - ext.min.x)*(ext.max.y - ext.min.y)*(ext.max.z - ext.min.z)
 }
 
+/** @type {<T extends VecXYZ, TE extends Extent>(out: T, ext: TE) => T} */
 export function dimensions(out, ext) {
   out.x = ext.max.x - ext.min.x
   out.y = ext.max.y - ext.min.y

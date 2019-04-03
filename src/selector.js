@@ -1,16 +1,13 @@
-/**
- * Breaks a selector string into {type, id, classes, attrs}
- * 
- * @param {string} str - selector in the form type#id.class1.class2[attr1=value1][attr2=value2]
- * @return {object} { type, id, classes[], attrs{} }
- */
+// Breaks a selector string into {type, id, classes, attrs}
+/** @type { (str: string) => {type: string, id: string, classes: string[], attrs: {[key: string]: string}} } */
 export function parse(str) {
   let results = {type: "", id: "", classes: [], attrs: {}}
   let token = "type"
   let tokenStart = 0
   let lastAttr = ""
 
-  const setToken = (newToken, i) => {
+  /** @type {(newToken: string, i: number) => void} */
+  function setToken(newToken, i) {
     let tokenValue = str.slice(tokenStart, i)
 
     if (i > tokenStart) {

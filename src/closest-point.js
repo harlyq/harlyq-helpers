@@ -1,11 +1,17 @@
 import * as utils from "./utils.js"
 import * as vecxyz from "./vecxyz"
 
-export const lineToPointParametric = (function () {
-  let startToPoint = {}
-  let startToEnd = {}
+/**
+ * @typedef {{x: number, y: number, z: number}} VecXYZ
+ */
 
-  return function lineToPointParametric(lineAStart, lineAEnd, pointB) {
+/** @typedef {<TS extends VecXYZ, TE extends VecXYZ, TP extends VecXYZ>(lineAStart: TS, lineAEnd: TE, pointB: TP) => number} LineToPointParametriceFn */
+/** @type {LineToPointParametriceFn} */
+export const lineToPointParametric = (function () {
+  let startToPoint = {x: 0, y: 0, z: 0}
+  let startToEnd = {x: 0, y: 0, z: 0}
+
+  return /** @type {LineToPointParametriceFn} */ function lineToPointParametric(lineAStart, lineAEnd, pointB) {
     vecxyz.sub(startToPoint, pointB, lineAStart)
     vecxyz.sub( startToEnd, lineAEnd, lineAStart)
     const d2 = vecxyz.dot(startToEnd, startToEnd) || 1
@@ -15,6 +21,7 @@ export const lineToPointParametric = (function () {
   }
 })()
 
+/** @type {<T extends VecXYZ, TS extends VecXYZ, TE extends VecXYZ, TP extends VecXYZ>(out: T, lineAStart: TS, lineAEnd: TE, pointB: TP, clampToLine: boolean) => T} */
 export function lineToPoint(out, lineAStart, lineAEnd, pointB, clampToLine = true) {
   const t = lineToPointParametric(lineAStart, lineAEnd, pointB)
   const finalT = clampToLine ? utils.clamp(t, 0, 1) : t

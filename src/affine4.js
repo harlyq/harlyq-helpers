@@ -3,12 +3,24 @@ import * as quatxyzw from "./quatxyzw.js";
 
 // remix of https://github.com/mrdoob/three.js/blob/master/src/math/Matrix4.js
 
-// column major 4x4 affine matrix
+/**
+ * @typedef {Float32Array} Affine4
+ * @typedef {{x: number, y: number, z: number}} VecXYZ
+ * @typedef {{x: number, y: number, z: number, w: number}} QuatXYZW
+ * @typedef {number} Radians
+ */
+
+/**
+ * column major 4x4 affine matrix
+ * @type {() => Affine4}
+ */
 export function create() {
   return new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1])
 }
 
+/** @type {<T extends Affine4, TA extends Affine4, TT extends VecXYZ>(out: T, aff: TA, t: TT) => T */
 export function translateXYZ(out, aff, t) {
+  // @ts-ignore
   if (out !== aff) {
     out.set(aff)
   }
@@ -19,13 +31,15 @@ export function translateXYZ(out, aff, t) {
   return out
 }
 
+/** @type {<T extends Affine4, TA extends Affine4>(out: T, aff: TA, rad: Radians) => T} */
 export function rotateX(out, aff, rad) {
+  // @ts-ignore
   if (out !== aff) {
     out.set(aff)
   }
 
-  cs = Math.cos(rad)
-  ss = Math.sin(rad)
+  const cs = Math.cos(rad)
+  const ss = Math.sin(rad)
   out[5] *= cs
   out[6] *= ss
   out[9] *= -ss
@@ -34,13 +48,15 @@ export function rotateX(out, aff, rad) {
   return out
 }
 
+/** @type {<T extends Affine4, TA extends Affine4>(out: T, aff: TA, rad: Radians) => T} */
 export function rotateY(out, aff, rad) {
+  // @ts-ignore
   if (out !== aff) {
     out.set(aff)
   }
 
-  cs = Math.cos(rad)
-  ss = Math.sin(rad)
+  const cs = Math.cos(rad)
+  const ss = Math.sin(rad)
   out[0] *= cs
   out[2] *= -ss
   out[8] *= ss
@@ -49,13 +65,15 @@ export function rotateY(out, aff, rad) {
   return out
 }
 
+/** @type {<T extends Affine4, TA extends Affine4>(out: T, aff: TA, rad: Radians) => T} */
 export function rotateZ(out, aff, rad) {
+  // @ts-ignore
   if (out !== aff) {
     out.set(aff)
   }
 
-  cs = Math.cos(rad)
-  ss = Math.sin(rad)
+  const cs = Math.cos(rad)
+  const ss = Math.sin(rad)
   out[0] *= cs
   out[1] *= ss
   out[4] *= -ss
@@ -64,13 +82,16 @@ export function rotateZ(out, aff, rad) {
   return out
 }
 
+/** @type {<T extends Affine4, TA extends Affine4, TS extends VecXYZ>(out: T, aff: TA, scale: TS) => T} */
 export function scaleXYZ(out, aff, scale) {
   out.set(aff)
   out[0] *= scale.x
   out[5] *= scale.y
   out[10] *= scale.z
+  return out
 }
 
+/** @type {<T extends VecXYZ, TA extends Affine4, TV extends VecXYZ>(out: T, aff: TA, v: TV) => T} */
 export function multiplyVecXYZ(out, aff, v) {
   const vx = v.x, vy = v.y, vz = v.z
 
@@ -81,6 +102,7 @@ export function multiplyVecXYZ(out, aff, v) {
   return out
 }
 
+/** @type {<T extends VecXYZ, TA extends Affine4, TV extends VecXYZ>(out: T, aff: TA, v: TV) => T} */
 export function invertAndMultiplyVecXYZ(out, aff, v) {
   const n11 = aff[0], n21 = aff[1], n31 = aff[2]
   const n12 = aff[4], n22 = aff[5], n32 = aff[6]
@@ -116,6 +138,7 @@ export function invertAndMultiplyVecXYZ(out, aff, v) {
   return out
 }
 
+/** @type {<TA extends Affine4>(aff: TA) => number} */
 export function determinant(aff) {
   const n11 = aff[0], n21 = aff[1], n31 = aff[2]
   const n12 = aff[4], n22 = aff[5], n32 = aff[6]
@@ -128,10 +151,12 @@ export function determinant(aff) {
   return n11 * t11 + n21 * t12 + n31 * t13
 }
 
+/** @typedef {<T extends Affine4, VP extends VecXYZ, VQ extends QuatXYZW, VS extends VecXYZ>(aff: T, outPosition: VP, outQuaterion: VQ, outScale: VS) => T} DecomposeFN */
+/** @type {DecomposeFN} */
 export const decompose = (function() {
   let affCopy = new Float32Array(16)
 
-  return function decompose(aff, outPosition = undefined, outQuaternion = undefined, outScale = undefined) {
+  return /** @type {DecomposeFN} */function decompose(aff, outPosition = undefined, outQuaternion = undefined, outScale = undefined) {
     if (outPosition) {
       outPosition.x = aff[12]
       outPosition.y = aff[13]
@@ -175,13 +200,15 @@ export const decompose = (function() {
 })()
 
 
+/** @typedef {<TA extends Affine4>(aff: TA) => string} ToStringFn */
+/** @type {ToStringFn} */
 export const toString = (function() {
-  let position = {}
-  let quaternion = {}
-  let scale = {}
+  let position = {x:0, y:0, z:0}
+  let quaternion = {x:0, y:0, z:0, w:1}
+  let scale = {x:1, y:1, z:1}
 
-  return function toString(aff) {
-    decompose(position, quaternion, scale, aff)
+  return /** @type {ToStringFn} */ function toString(aff) {
+    decompose(aff, position, quaternion, scale)
     return `[position: ${vecxyz.toString(position)}, quaternion: ${quatxyzw.toString(quaternion)}, scale: ${vecxyz.toString(scale)}]`
   }
 })()

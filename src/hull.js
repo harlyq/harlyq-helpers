@@ -2,20 +2,18 @@ import * as vertex3 from "./vertex3.js"
 import * as utils from "./utils.js"
 
 /**
- * returns the minimum distance between 'hullA' and 'hullB' along the 'axis'. Negative distances indicate overlap
- * @param {{x,y,z}} axis - axis on which to test the separation
- * @param {*} hullA - first hull
- * @param {*} hullB - second hull
- * @param {{x,y,z}} posA - offset to apply to hullA
- * @param {{x,y,z,w}} quatA - rotation to apply to hullA
- * @param {{x,y,z}} posB - offset to apply to hullB
- * @param {{x,y,z,w}} quatB - rotation to apply to hullB
+ * @typedef {{x: number, y: number, z: number}} VecXYZ
+ * @typedef {{x: number, y: number, z: number, w: number}} QuatXYZW
  */
+
+// returns the minimum distance between 'verticesA' and 'verticesB' along the 'axis'. Negative distances indicate overlap
+/** @typedef {<TA extends VecXYZ, TPA extends VecXYZ, TQA extends QuatXYZW, TPB extends VecXYZ, TQB extends QuatXYZW>(axis: TA, verticesA: Float32Array, verticesB: Float32Array, posA: TPA, quatA: TQA, posB: TPB, quatB: TQB) => number} TestSeparatingAxisFn */
+/** @type {TestSeparatingAxisFn} */
 export const testSeparatingAxis = (function() {
   let minMaxA = {min:0, max:0}
   let minMaxB = {min:0, max:0}
 
-  return function testSeparatingAxis(axis, verticesA, verticesB, posA, quatA, posB, quatB) {
+  return /** @type {TestSeparatingAxisFn} */function testSeparatingAxis(axis, verticesA, verticesB, posA, quatA, posB, quatB) {
     vertex3.projectOntoAxis(minMaxA, axis, verticesA, posA, quatA, 3)
     vertex3.projectOntoAxis(minMaxB, axis, verticesB, posB, quatB, 3)
     const dAB = minMaxA.min - minMaxB.max
@@ -24,7 +22,8 @@ export const testSeparatingAxis = (function() {
   }
 })()
 
-
+/** @typedef {(vertices: Float32Array, indices: number[], point: Float32Array, pi: number) => boolean} IsPointInsideFn */
+/** @type {IsPointInsideFn} */
 export const isPointInside = (function() {
   let UP_X = new Float32Array([1,0,0])
   let UP_Y = new Float32Array([0,1,0])
@@ -36,7 +35,7 @@ export const isPointInside = (function() {
   let minDelta = new Float32Array(3)
   let projected = new Float32Array(3)
 
-  return function isPointInside(vertices, indices, point, pi = 0) {
+  return /** @type {IsPointInsideFn} */function isPointInside(vertices, indices, point, pi = 0) {
     vertex3.sub(axis, vertices, point, indices[0], pi)
     vertex3.normalize(axis, axis)
     vertex3.copy(up, vertex3.equals(axis, UP_Y, 0.01) ? UP_X : UP_Y)
@@ -64,6 +63,7 @@ export const isPointInside = (function() {
 })()
 
 
+/** @type {(vertices: Float32Array, stride: number) => number[]} */
 export function generateHullIndices(vertices, stride = 3) {
   let extremes = vertex3.generateExtremes(vertices, stride)
   let hull = extremes.slice()

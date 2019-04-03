@@ -1,6 +1,11 @@
 import * as vecxyz from "./vecxyz.js"
 import * as proximity from "./proximity.js"
 
+/** 
+ * @typedef {{x: number, y: number, z: number}} VecXYZ
+ */
+
+/** @type {<T extends VecXYZ, TS extends VecXYZ, TE extends VecXYZ, TN extends VecXYZ>(out: T, lineAStart: TS, lineAEnd: TE, planeBNormal: TN, planeBConstant: number) => T} */
 export function intersectionLineAndPlane(out, lineAStart, lineAEnd, planeBNormal, planeBConstant) {
   vecxyz.sub(out, lineAEnd, lineAStart)
   const size = vecxyz.dot(planeBNormal, out)

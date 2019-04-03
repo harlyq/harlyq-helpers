@@ -1,12 +1,32 @@
+/**
+ * @typedef {{x: number, y: number, z: number, w: number}} QuatXYZW
+ * @typedef {Float32Array} Affine4
+ */
+
 const SQRT_1_2 = Math.sqrt(0.5)
+
+/** @type {QuatXYZW} */
 export const IDENTITY = Object.freeze({x:0, y:0, z:0, w:1})
+
+/** @type {QuatXYZW} */
 export const ROTATE_X_180 = Object.freeze({x:1, y:0, z:0, w:0})
+
+/** @type {QuatXYZW} */
 export const ROTATE_Y_180 = Object.freeze({x:0, y:1, z:0, w:0})
+
+/** @type {QuatXYZW} */
 export const ROTATE_Z_180 = Object.freeze({x:0, y:0, z:1, w:0})
+
+/** @type {QuatXYZW} */
 export const ROTATE_X_90 = Object.freeze({x:SQRT_1_2, y:0, z:0, w:SQRT_1_2})
+
+/** @type {QuatXYZW} */
 export const ROTATE_Y_90 = Object.freeze({x:0, y:SQRT_1_2, z:0, w:SQRT_1_2})
+
+/** @type {QuatXYZW} */
 export const ROTATE_Z_90 = Object.freeze({x:0, y:0, z:SQRT_1_2, w:SQRT_1_2})
 
+/** @type {<T extends QuatXYZW, TA extends QuatXYZW>(out: T, a: TA) => T} */
 export function conjugate(out, a) {
   out.x = -a.x
   out.y = -a.y
@@ -15,6 +35,7 @@ export function conjugate(out, a) {
   return out
 }
 
+/** @type {<T extends QuatXYZW, TA extends QuatXYZW>(out: T, a: TA) => T} */
 export function copy(out, a) {
   out.x = a.x
   out.y = a.y
@@ -23,10 +44,12 @@ export function copy(out, a) {
   return out
 }
 
+/** @type {<TA extends QuatXYZW>(a: TA) => number} */
 export function length(a) {
   return Math.hypot(a.x, a.y, a.z, a.w)
 }
 
+/** @type {<T extends QuatXYZW, TA extends QuatXYZW>(out: T, a: TA) => T} */
 export function normalize(out, a) {
   const ax = a.x, ay = a.y, az = a.z, aw = a.w
   const len = Math.hypot(ax, ay, az, aw)
@@ -42,6 +65,7 @@ export function normalize(out, a) {
   return out
 }
 
+/** @type {<T extends QuatXYZW>(out: T, array: number[], i: number) => T} */
 export function setFromArray(out, array, i) {
   i = i || 0
   out.x = array[i]
@@ -51,6 +75,7 @@ export function setFromArray(out, array, i) {
   return out
 }
 
+/** @type {<T extends QuatXYZW>(out: T, aff: Affine4) => T} */
 export function setFromUnscaledAffine4(out, aff) {
   const m11 = aff[0], m12 = aff[4], m13 = aff[8]
   const m21 = aff[1], m22 = aff[5], m23 = aff[9]
@@ -98,10 +123,12 @@ export function setFromUnscaledAffine4(out, aff) {
   return out
 }
 
+/** @type {<TA extends QuatXYZW, TB extends QuatXYZW>(a: TA, b: TB, tolerance: number) => boolean} */
 export function equals(a, b, tolerance = 0.000001) {
   return Math.abs(a.x - b.x) < tolerance && Math.abs(a.y - b.y) < tolerance && Math.abs(a.z - b.z) < tolerance && Math.abs(a.w - b.w) < tolerance
 }
 
+/** @type {<TQ extends QuatXYZW>(quat: TQ) => string} */
 export function toString(quat) {
   return `(${quat.x.toFixed(3)},${quat.y.toFixed(3)},${quat.z.toFixed(3)},${quat.w.toFixed(3)})`
 }

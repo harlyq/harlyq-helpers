@@ -1,53 +1,33 @@
 /**
- * @param {any[]} list 
- * @param {function() : number} randFn 
- * @returns {any}
+ * @typedef {{r: number, g: number, b: number}} RGBColor
  */
+
+/** @type {<T>(list: T[], randFn: () => number) => T} */
 export function entry(list, randFn = Math.random) {
   return list[ index(list.length, randFn) ]
 }
 
-/**
- * @param {number} length
- * @param {function() : number} randFn 
- * @returns {number}
- */
+/** @type {(length: number, randFn: () => number) => number} */
 export function index(length, randFn = Math.random) {
   return ~~(randFn()*length)
 }
 
-/**
- * range is (min,max)
- * @param {number} min
- * @param {number} max
- * @param {function() : number} randFn 
- * @returns {number}
- */
+// range is (min,max)
+/** @type {(min: number, max: number, randFn: () => number) => number} */
 export function integer(min, max, randFn = Math.random) {
   if (max === min) return min
   return ~~(randFn()*(max + 1 - min) + min)
 }
 
-/**
- * range is (min,max]
- * @param {number} min
- * @param {number} max
- * @param {function() : number} randFn 
- * @returns {number}
- */
+// range is (min,max]
+/** @type {(min: number, max: number, randFn: () => number) => number} */
 export function float(min, max, randFn = Math.random) {
   if (max === min) return min
   return randFn()*(max - min) + min
 }
 
-/**
- * in RGB space. TODO rgbMax should be a valid result
- * @param {Object} out
- * @param {{r,g,b}} rgbMin
- * @param {{r,g,b}} rgbMax
- * @param {function() : number} randFn 
- * @returns {{r,g,b}}
- */
+// in RGB space. TODO rgbMax should be a valid result
+/** @type {<T extends RGBColor, RN extends RGBColor, RX extends RGBColor>(out: T, rgbMin: RN, rgbMax: RX, randFn: () => number) => T} */
 export function color(out, rgbMin, rgbMax, randFn = Math.random) {
   out.r = float(rgbMin.r, rgbMax.r, randFn)
   out.g = float(rgbMin.g, rgbMax.g, randFn)
@@ -55,14 +35,7 @@ export function color(out, rgbMin, rgbMax, randFn = Math.random) {
   return out
 }
 
-/**
- * 
- * @param {number[]} out 
- * @param {number[]} vecMin 
- * @param {number[]} vecMax 
- * @param {function() : number} randFn
- * @returns {number[]}
- */
+/** @type {(out: number[], vecMin: number[], vecMax: number[], randFn: () => number) => number[]} */
 export function vector(out, vecMin, vecMax, randFn = Math.random) {
   const lengthOfMin = vecMin.length
   const lengthOfMax = vecMax.length
@@ -89,18 +62,12 @@ export function vector(out, vecMin, vecMax, randFn = Math.random) {
 export function lcg() {
   let seed = -1
   
-  /**
-   * 
-   * @param {number} s 
-   */
+  /** @type {(s: number) => void}*/
   function setSeed(s) {
     seed = s
   }
-  
-  /**
-   * 
-   * @returns {number}
-   */
+
+  /** @type {() => number} */
   function random() {
     if (seed < 0) {
       return Math.random()

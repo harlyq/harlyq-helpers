@@ -2,7 +2,7 @@ import test from "tape"
 import * as affine4 from "../src/affine4.js"
 
 const identity = () => new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1])
-const arraySimilar = (a,b) => [].every.call(a, (x,i) => Math.abs(x, b[i]) < 1e-5)
+const arraySimilar = (a,b) => [].every.call(a, (x,i) => Math.abs(x - b[i]) < 1e-5)
 const RAD45 = 45/180*Math.PI
 const COSIN45 = Math.cos(RAD45)
 const SIN45 = Math.sin(RAD45)
