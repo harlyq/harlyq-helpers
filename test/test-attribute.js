@@ -2,6 +2,10 @@ import test from "tape"
 import * as attribute from "../src/attribute.js"
 import * as rgbcolor from "../src/rgbcolor.js"
 
+/**
+ * @typedef {{r: number, g: number, b: number}} RGBColor
+ */
+
 test("attribute.parsePart", (t) => {
   t.deepEquals(attribute.parsePart(""), "", "empty")
   t.deepEquals(attribute.parsePart("1"), [1], "single number")
@@ -9,8 +13,8 @@ test("attribute.parsePart", (t) => {
   t.deepEquals(attribute.parsePart(" 2.5 "), [2.5], "decimal number")
   t.deepEquals(attribute.parsePart(" lesser   "), "lesser", "string")
   t.deepEquals(attribute.parsePart(" 2,3 ,4 "), "2,3 ,4", "string with numbers")
-  t.equals(rgbcolor.toString(attribute.parsePart("red")), "#ff0000", "named color")
-  t.equals(rgbcolor.toString(attribute.parsePart("#123")), "#112233", "hex color")
+  t.equals(rgbcolor.toString(/** @type {RGBColor} */(attribute.parsePart("red"))), "#ff0000", "named color")
+  t.equals(rgbcolor.toString(/** @type {RGBColor} */(attribute.parsePart("#123"))), "#112233", "hex color")
 
   t.end()
 })

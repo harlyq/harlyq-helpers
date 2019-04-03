@@ -94,7 +94,7 @@ export function stringify(attr) {
     if (attr.options) { return attr.options.map(option => stringify(option)).join("|") }
     if (rgbcolor.isColor(attr)) { return rgbcolor.toString(attr) }
     if ("x" in attr && "y" in attr) { return attr.x + " " + attr.y + ("z" in attr ? " " + attr.z : "") }
-    if (Array.isArray(attr)) { attr.length > 0 && typeof attr[0] === "number" ? attr.join(" ") : attr.join(",") }
+    if (attr.length && "0" in attr) { return typeof attr[0] === "number" ? attr.join(" ") : attr.join(",") }
   }
   return attr.toString()
 }
