@@ -14,7 +14,7 @@ export function lerp(a, b, t) {
 }
 
 /** @type {<TA extends {[key: string]: number}>(a: TA, b: {[key: string]: number}, t: number) => TA} */
-function lerpObject(a, b, t) {
+export function lerpObject(a, b, t) {
   let out = Object.assign({}, a); // copy values from a in case the keys do not exist in b
   for (let k in b) {
     out[k] = typeof a[k] !== "undefined" ? lerp(a[k], b[k], t) : b[k];
@@ -23,7 +23,7 @@ function lerpObject(a, b, t) {
 }
 
 /** @type {<TA extends number[] | Float32Array, TB extends number[] | Float32Array>(a: TA, b: TB, t: number) => number[]} */
-function lerpArray(a, b, t) {
+export function lerpArray(a, b, t) {
   let out = Array.from(a);
   for (let i = 0; i < b.length; i++) {
     out[i] = typeof a[i] !== "undefined" ? lerp(a[i], b[i], t) : b[i];
