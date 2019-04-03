@@ -3,7 +3,7 @@ import * as vecxyz from "./vecxyz.js"
 /**
  * @typedef {{x: number, y: number, z: number}} VecXYZ
  * @typedef {{x: number, y: number, z: number, w: number}} QuatXYZW
- * @typedef {Float32Array} Vertices
+ * @typedef {number[] | Float32Array} Vertices
  */
 
 // returns the 3D projected extents of 'vertices' onto 'axis'
@@ -36,6 +36,7 @@ export const projectOntoAxis = (function() {
 
 /** @type {<T extends Vertices>(out: T, oi: number) => T} */
 export function setZero(out, oi = 0) {
+  // @ts-ignore, can use fill on TypedArray
   return out.fill(0, oi, oi+3)
 }
 

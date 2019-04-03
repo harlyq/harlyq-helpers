@@ -4,7 +4,7 @@ import * as quatxyzw from "./quatxyzw.js";
 // remix of https://github.com/mrdoob/three.js/blob/master/src/math/Matrix4.js
 
 /**
- * @typedef {Float32Array} Affine4
+ * @typedef {Float32Array | number[]} Affine4
  * @typedef {{x: number, y: number, z: number}} VecXYZ
  * @typedef {{x: number, y: number, z: number, w: number}} QuatXYZW
  * @typedef {number} Radians
@@ -18,11 +18,10 @@ export function create() {
   return new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1])
 }
 
-/** @type {<T extends Affine4, TA extends Affine4, TT extends VecXYZ>(out: T, aff: TA, t: TT) => T */
+/** @type {<T extends Affine4, TA extends Affine4, TT extends VecXYZ>(out: T, aff: TA, t: TT) => T} */
 export function translateXYZ(out, aff, t) {
-  // @ts-ignore
-  if (out !== aff) {
-    out.set(aff)
+  for (let i = 0; i < aff.length; i++) {
+    out[i] = aff[i]
   }
 
   out[12] += t.x
@@ -33,9 +32,8 @@ export function translateXYZ(out, aff, t) {
 
 /** @type {<T extends Affine4, TA extends Affine4>(out: T, aff: TA, rad: Radians) => T} */
 export function rotateX(out, aff, rad) {
-  // @ts-ignore
-  if (out !== aff) {
-    out.set(aff)
+  for (let i = 0; i < aff.length; i++) {
+    out[i] = aff[i]
   }
 
   const cs = Math.cos(rad)
@@ -50,9 +48,8 @@ export function rotateX(out, aff, rad) {
 
 /** @type {<T extends Affine4, TA extends Affine4>(out: T, aff: TA, rad: Radians) => T} */
 export function rotateY(out, aff, rad) {
-  // @ts-ignore
-  if (out !== aff) {
-    out.set(aff)
+  for (let i = 0; i < aff.length; i++) {
+    out[i] = aff[i]
   }
 
   const cs = Math.cos(rad)
@@ -67,9 +64,8 @@ export function rotateY(out, aff, rad) {
 
 /** @type {<T extends Affine4, TA extends Affine4>(out: T, aff: TA, rad: Radians) => T} */
 export function rotateZ(out, aff, rad) {
-  // @ts-ignore
-  if (out !== aff) {
-    out.set(aff)
+  for (let i = 0; i < aff.length; i++) {
+    out[i] = aff[i]
   }
 
   const cs = Math.cos(rad)
@@ -84,7 +80,10 @@ export function rotateZ(out, aff, rad) {
 
 /** @type {<T extends Affine4, TA extends Affine4, TS extends VecXYZ>(out: T, aff: TA, scale: TS) => T} */
 export function scaleXYZ(out, aff, scale) {
-  out.set(aff)
+  for (let i = 0; i < aff.length; i++) {
+    out[i] = aff[i]
+  }
+
   out[0] *= scale.x
   out[5] *= scale.y
   out[10] *= scale.z

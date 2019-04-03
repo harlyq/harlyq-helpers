@@ -4,10 +4,11 @@ import * as utils from "./utils.js"
 /**
  * @typedef {{x: number, y: number, z: number}} VecXYZ
  * @typedef {{x: number, y: number, z: number, w: number}} QuatXYZW
+ * @typedef {number[] | Float32Array} Vertices
  */
 
 // returns the minimum distance between 'verticesA' and 'verticesB' along the 'axis'. Negative distances indicate overlap
-/** @typedef {<TA extends VecXYZ, TPA extends VecXYZ, TQA extends QuatXYZW, TPB extends VecXYZ, TQB extends QuatXYZW>(axis: TA, verticesA: Float32Array, verticesB: Float32Array, posA: TPA, quatA: TQA, posB: TPB, quatB: TQB) => number} TestSeparatingAxisFn */
+/** @typedef {<TA extends VecXYZ, TPA extends VecXYZ, TQA extends QuatXYZW, TPB extends VecXYZ, TQB extends QuatXYZW>(axis: TA, verticesA: Vertices, verticesB: Vertices, posA: TPA, quatA: TQA, posB: TPB, quatB: TQB) => number} TestSeparatingAxisFn */
 /** @type {TestSeparatingAxisFn} */
 export const testSeparatingAxis = (function() {
   let minMaxA = {min:0, max:0}
@@ -22,7 +23,7 @@ export const testSeparatingAxis = (function() {
   }
 })()
 
-/** @typedef {(vertices: Float32Array, indices: number[], point: Float32Array, pi: number) => boolean} IsPointInsideFn */
+/** @typedef {(vertices: Vertices, indices: number[], point: Vertices, pi: number) => boolean} IsPointInsideFn */
 /** @type {IsPointInsideFn} */
 export const isPointInside = (function() {
   let UP_X = new Float32Array([1,0,0])
@@ -63,7 +64,7 @@ export const isPointInside = (function() {
 })()
 
 
-/** @type {(vertices: Float32Array, stride: number) => number[]} */
+/** @type {(vertices: Vertices, stride: number) => number[]} */
 export function generateHullIndices(vertices, stride = 3) {
   let extremes = vertex3.generateExtremes(vertices, stride)
   let hull = extremes.slice()

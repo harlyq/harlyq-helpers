@@ -1,7 +1,7 @@
 /**
  * @typedef {{x: number, y: number, z: number}} VecXYZ
  * @typedef {{x: number, y: number, z: number, w: number}} QuatXYZW
- * @typedef {Float32Array} Affine4
+ * @typedef {Float32Array | number[]} Affine4
  * @typedef {number} Radians
  * @typedef {number} Distance
  */

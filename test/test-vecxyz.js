@@ -1,6 +1,5 @@
 import test from "tape"
 import * as vecxyz from "../src/vecxyz.js"
-import * as utils from "../src/utils.js"
 
 test("testing vecxyz.create", (t) => {
   t.deepEquals(vecxyz.create(), {x:0, y:0, z:0}, "default ctor" )
