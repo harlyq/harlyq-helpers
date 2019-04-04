@@ -1,6 +1,7 @@
-import "./test-affine.js"
+import "./test-affine4.js"
 import "./test-attribute.js"
 import "./test-hull.js"
+import "./test-interpolate.js"
 import "./test-overlap.js"
 import "./test-proximity.js"
 import "./test-pseudorandom.js"

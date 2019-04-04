@@ -1,9 +1,9 @@
 import * as affine4 from "./affine4.js"
 import * as attribute from "./attribute.js"
 import * as closestPoint from "./closest-point.js"
-import * as easing from "./easing.js"
 import * as extent from "./extent.js"
 import * as hull from "./hull.js"
+import * as interpolate from "./interpolate.js"
 import * as intersection from "./intersection.js"
 import * as overlap from "./overlap.js"
 import * as proximity from "./proximity.js"
@@ -19,8 +19,8 @@ import * as vertex3 from "./vertex3.js"
 export { affine4 }
 export { attribute }
 export { closestPoint }
-export { easing }
 export { extent }
+export { interpolate }
 export { intersection }
 export { hull }
 export { overlap }

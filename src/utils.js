@@ -8,29 +8,6 @@ export function euclideanModulo(v, m) {
   return ( ( v % m ) + m ) % m  
 }
 
-/** @type {(a: number, b: number, t: number) => number} */
-export function lerp(a, b, t) {
-  return a + (b - a)*t
-}
-
-/** @type {<TA extends {[key: string]: number}>(a: TA, b: {[key: string]: number}, t: number) => TA} */
-export function lerpObject(a, b, t) {
-  let out = Object.assign({}, a); // copy values from a in case the keys do not exist in b
-  for (let k in b) {
-    out[k] = typeof a[k] !== "undefined" ? lerp(a[k], b[k], t) : b[k];
-  }
-  return out
-}
-
-/** @type {<TA extends number[] | Float32Array, TB extends number[] | Float32Array>(a: TA, b: TB, t: number) => number[]} */
-export function lerpArray(a, b, t) {
-  let out = Array.from(a);
-  for (let i = 0; i < b.length; i++) {
-    out[i] = typeof a[i] !== "undefined" ? lerp(a[i], b[i], t) : b[i];
-  }
-  return out
-}
-
 /** @type {(a: any, b: any) => boolean} */
 export function deepEquals(a, b) {
   if (typeof a === "object" && typeof b === "object") {
