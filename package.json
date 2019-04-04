@@ -1,5 +1,5 @@
 {
-  "name": "helpers",
+  "name": "harlyq-helpers",
   "version": "0.4.2",
   "description": "helpful functions",
   "main": "src/index.js",
@@ -15,5 +15,6 @@
   },
   "peerDependencies": {
     "three": "^0.101.0"
-  }
+  },
+  "dependencies": {}
 }
