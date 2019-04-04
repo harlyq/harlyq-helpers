@@ -3,7 +3,7 @@ import * as attribute from "./attribute.js"
 import * as closestPoint from "./closest-point.js"
 import * as extent from "./extent.js"
 import * as hull from "./hull.js"
-import * as interpolate from "./interpolate.js"
+import * as interpolation from "./interpolation.js"
 import * as intersection from "./intersection.js"
 import * as overlap from "./overlap.js"
 import * as proximity from "./proximity.js"
@@ -20,7 +20,7 @@ export { affine4 }
 export { attribute }
 export { closestPoint }
 export { extent }
-export { interpolate }
+export { interpolation }
 export { intersection }
 export { hull }
 export { overlap }

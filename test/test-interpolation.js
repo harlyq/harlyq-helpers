@@ -1,5 +1,5 @@
 import test from "tape"
-import * as interpolate from "../src/interpolate.js"
+import * as interpolate from "../src/interpolation.js"
 
 test("interpolate.lerp", (t) => {
   t.equals(interpolate.lerp(1,2,0), 1, "to start")
