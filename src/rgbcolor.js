@@ -73,6 +73,14 @@ export function toString(a) {
   return "#" + toHex(a).toString(16).padStart(6, '0')
 }
 
+export function toArray(out, x) {
+  out[0] = x.r
+  out[1] = x.g
+  out[2] = x.b
+  if (x.a) out[3] = x.a
+  return out
+}
+
 // remix of https://github.com/mrdoob/three.js/blob/master/src/math/Color.js
 /** @type {Object.<string, number>} */
 export const COLOR_KEYWORDS = { 'aliceblue': 0xF0F8FF, 'antiquewhite': 0xFAEBD7, 'aqua': 0x00FFFF, 'aquamarine': 0x7FFFD4, 'azure': 0xF0FFFF,

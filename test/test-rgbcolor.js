@@ -52,6 +52,13 @@ test("rgbcolor.toString", (t) => {
   t.end()
 })
 
+test("rgbcolor.toArray", (t) => {
+  t.deepEquals(rgbcolor.toArray([], {r: 0, g: .5, b: 1, a: .2}), [0,.5,1,.2], "rgba")
+  t.deepEquals(rgbcolor.toArray([], {r: 0, g: .5, b: 1}), [0,.5,1], "rgb")
+  t.deepEquals(rgbcolor.toArray([1,1,1,1], {r: 0, g: .5, b: 1}), [0,.5,1,1], "rgb with alpha from array")
+  t.end()
+})
+
 test("rgbcolor.parse", (t) => {
   t.equals(/** @type RGBAColor */(rgbcolor.parse("rgba(255,255,0,0.1)")).a === 0.1 && rgbcolor.toString(rgbcolor.parse("rgba(255,255,0,0.1)")), "#ffff00", "rgba")
   t.equals(rgbcolor.toString(rgbcolor.parse("red")), "#ff0000", "named")
