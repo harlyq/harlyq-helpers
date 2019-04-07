@@ -56,6 +56,7 @@ test("rgbcolor.toArray", (t) => {
   t.deepEquals(rgbcolor.toArray([], {r: 0, g: .5, b: 1, a: .2}), [0,.5,1,.2], "rgba")
   t.deepEquals(rgbcolor.toArray([], {r: 0, g: .5, b: 1}), [0,.5,1], "rgb")
   t.deepEquals(rgbcolor.toArray([1,1,1,1], {r: 0, g: .5, b: 1}), [0,.5,1,1], "rgb with alpha from array")
+  t.deepEquals(rgbcolor.toArray([1,1,1,1], {r: 0, g: .5, b: 1, a:0}), [0,.5,1,0], "zero alpha")
   t.end()
 })
 

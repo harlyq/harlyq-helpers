@@ -77,7 +77,7 @@ export function toArray(out, x) {
   out[0] = x.r
   out[1] = x.g
   out[2] = x.b
-  if (x.a) out[3] = x.a
+  if (typeof x.a !== "undefined") out[3] = x.a
   return out
 }
 
