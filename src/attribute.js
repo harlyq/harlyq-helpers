@@ -98,3 +98,41 @@ export function stringify(attr) {
   }
   return attr.toString()
 }
+
+// splits a string by the separator, but ignores separators that are nested within
+// characters listed in nestedChars
+// e.g. nestedSplit(str, ",", ["''", '""', "{}", "[]"])
+export function nestedSplit(str, separator = ",", nestedChars = ["''", '""', "{}", "[]", "()"]) {
+  let split = []
+  let stack = []
+  let startI = 0 // position of current token
+  let k = 0 // separator index
+
+  for (let i = 0, n = str.length; i < n; i++) {
+    const c = str[i]
+    if (stack.length > 0 && c === stack[stack.length - 1][1]) {
+      stack.pop() // new nested chars started
+    } else {
+      for (let nest of nestedChars) {
+        if (c === nest[0]) {
+          stack.push(nest) // last nested chars completed
+        }
+      }
+    }
+
+    if (stack.length === 0 && c === separator[k]) {
+      // no nested chars and separator found
+      if (++k === separator.length) {
+        // separator complete
+        split.push(str.substring(startI, i - k + 1))
+        startI = i + 1
+        k = 0
+      }
+    } else {
+      k = 0 // reset the separator match
+    }
+  }
+
+  split.push(str.substring(startI, str.length))
+  return split
+}

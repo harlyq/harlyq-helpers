@@ -63,3 +63,15 @@ test("attribute.stringify", (t) => {
   
   t.end()
 })
+
+test("test.nestedsplit", (t) => {
+  t.deepEquals(attribute.nestedSplit(""), [""], "empty")
+  t.deepEquals(attribute.nestedSplit("a,b"), ["a","b"], "two params")
+  t.deepEquals(attribute.nestedSplit(" a , b"), [" a "," b"], "two params, with spacing")
+  t.deepEquals(attribute.nestedSplit(" a , b,    c"), [" a "," b","    c"], "three params")
+  t.deepEquals(attribute.nestedSplit(" a .. b..    c", ".."), [" a "," b","    c"], ".. split")
+  t.deepEquals(attribute.nestedSplit(" (a,b,c) .. [d,e]..    {f}", ".."), [" (a,b,c) "," [d,e]","    {f}"], "nesting")
+  t.deepEquals(attribute.nestedSplit(" (a,b,c) .. [{d.1,d.2},e]..    {[f.1,(f.2,f.3)]}", ".."), [" (a,b,c) "," [{d.1,d.2},e]","    {[f.1,(f.2,f.3)]}"], "nested nesting")
+  
+  t.end()
+})
