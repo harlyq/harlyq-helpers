@@ -12,6 +12,7 @@ import * as quatxyzw from "./quatxyzw.js"
 import * as rgbcolor from "./rgbcolor.js"
 import * as selector from "./selector.js"
 import * as utils from "./utils.js"
+import * as three_helper from "./three_helper.js"
 import * as vecxyz from "./vecxyz.js"
 import * as vertex3 from "./vertex3.js"
 
@@ -30,5 +31,6 @@ export { quatxyzw }
 export { rgbcolor }
 export { selector }
 export { utils }
+export { three_helper }
 export { vecxyz }
 export { vertex3 }
