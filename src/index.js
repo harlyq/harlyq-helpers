@@ -1,4 +1,5 @@
 import * as affine4 from "./affine4.js"
+import * as aframeHelper from "./aframe-helper.js"
 import * as attribute from "./attribute.js"
 import * as closestPoint from "./closest-point.js"
 import * as extent from "./extent.js"
@@ -12,12 +13,13 @@ import * as quatxyzw from "./quatxyzw.js"
 import * as rgbcolor from "./rgbcolor.js"
 import * as selector from "./selector.js"
 import * as utils from "./utils.js"
-import * as three_helper from "./three_helper.js"
+import * as threeHelper from "./three-helper.js"
 import * as vecxyz from "./vecxyz.js"
 import * as vertex3 from "./vertex3.js"
 
 // exports will tree shake correctly (unless bundled)
 export { affine4 }
+export { aframeHelper }
 export { attribute }
 export { closestPoint }
 export { extent }
@@ -31,6 +33,6 @@ export { quatxyzw }
 export { rgbcolor }
 export { selector }
 export { utils }
-export { three_helper }
+export { threeHelper }
 export { vecxyz }
 export { vertex3 }

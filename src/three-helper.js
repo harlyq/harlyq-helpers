@@ -4,23 +4,36 @@
  * 
  */
 
- /** @type {(rootObject3D: object, canvas: object) => void} */
+function verifyMaterialNeedsUpdate(material, canvas) {
+  for (let map of ["map", "alphaMap", "aoMap", "bumpMap", "displacementMap", "emissiveMap", "envMap", "lighMap", "metalnessMap", "normalMap", "roughnessMap"]) {
+    if (material[map] && material[map].image === canvas) {
+      material[map].needsUpdate = true
+    }
+  }
+}
+
+function verifyUniformNeedsUpdate(material, canvas) {
+  if (material.uniforms && 
+      material.uniforms.map && 
+      material.uniforms.map.value && 
+      typeof material.uniforms.map.value === "object" && 
+      material.uniforms.map.value.image === canvas) {
+    material.uniforms.map.value.needsUpdate = true
+  }
+}
+
+/** @type {(rootObject3D: object, canvas: object) => void} */
 export function updateMaterialsUsingThisCanvas(rootObject3D, canvas) {
   rootObject3D.traverse((node) => {
     if (node.material) {
-      for (let map of ["map", "alphaMap", "aoMap", "bumpMap", "displacementMap", "emissiveMap", "envMap", "lighMap", "metalnessMap", "normalMap", "roughnessMap"]) {
-        if (node.material[map] && node.material[map].image === canvas) {
-          node.material[map].needsUpdate = true
+      if (Array.isArray(node.material)) {
+        for (let mat of node.material) {
+          verifyMaterialNeedsUpdate(mat, canvas)
+          verifyUniformNeedsUpdate(mat, canvas)
         }
-      }
-
-      if (node.material.uniforms) {
-        for (let key in node.material.uniforms) {
-          const uniform = node.material.uniforms[key]
-          if (uniform.value && typeof uniform.value === "object" && uniform.value.image === canvas) {
-            uniform.value.needsUpdate = true
-          }
-        }
+      } else {
+        verifyMaterialNeedsUpdate(node.material, canvas)
+        verifyUniformNeedsUpdate(node.material, canvas)
       }
     }
   })
