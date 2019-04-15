@@ -44,3 +44,13 @@ test("utils.getWithPath", (t) => {
   t.end()
 })
 
+test("utils.deepCopy", (t) => {
+  t.deepEquals(utils.deepCopy(""), "", "empty string")
+  t.deepEquals(utils.deepCopy(1), 1, "number")
+  t.deepEquals(utils.deepCopy([]), [], "empty array")
+  t.deepEquals(utils.deepCopy({}), {}, "empty object")
+  t.deepEquals(utils.deepCopy({a:1, b:"hello", c:undefined}), {a:1, b:"hello", c:undefined}, "object")
+  t.deepEquals(utils.deepCopy([1,"help",false]), [1,"help",false], "array")
+  t.deepEquals(utils.deepCopy({x: [1,"help",false], y: 2}), {x: [1,"help",false], y: 2}, "object with array")
+  t.end()
+})

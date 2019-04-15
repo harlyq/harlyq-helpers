@@ -53,6 +53,25 @@ export function deepEquals(a, b) {
   return a === b
 }
 
+/** @type {(a: any) => any} */
+export function deepCopy(a) {
+  if (Array.isArray(a)) {
+    let arrayCopy = []
+    for (let i = 0; i < a.length; i++) {
+      arrayCopy[i] = deepCopy(a[i])
+    }
+    return arrayCopy
+  } else if (typeof a === "object") {
+    let objectCopy = {}
+    for (let k in a) {
+      objectCopy[k] = deepCopy(a[k])
+    }
+    return objectCopy
+  } else {
+    return a
+  }
+}
+
 /** @type {(a: number, b: number, step: number) => number[]} */
 export function range(a, b = undefined, step = undefined) {
   if (b === undefined) {

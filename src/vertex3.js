@@ -34,6 +34,14 @@ export const projectOntoAxis = (function() {
   }  
 })()
 
+/** @type {<T extends Vertices>(out: T, x: number, y: number, z: number, oi: number) => T} */
+export function set(out, x=0, y=0, z=0, oi=0) {
+  out[oi] = x
+  out[oi+1] = y
+  out[oi+2] = z
+  return out
+}
+
 /** @type {<T extends Vertices>(out: T, oi: number) => T} */
 export function setZero(out, oi = 0) {
   // @ts-ignore, can use fill on TypedArray
@@ -171,3 +179,16 @@ export function createFromIndices(vertices, indices) {
   }
   return newVertices
 }
+
+export function average(out, vertices) {
+  let x = 0, y = 0, z = 0
+  const n = vertices.length
+  for (let i = 0; i < n; i += 3) {
+    x += vertices[i]
+    y += vertices[i+1]
+    z += vertices[i+2]
+  }
+
+  return out.set(out, x/n, y/n, z/n)
+}
+
