@@ -59,33 +59,26 @@ export function parseRangeOptions(str) {
   return { options }
 }
 
-/** @typedef {(att: Attribute, randFn: () => number) => AttributePart} RandomizeFn */
-/** @type {RandomizeFn} */
-export const randomize = (function() {
-  let col = {r: 0, g: 0, b: 0}
-  let vec = []
+/** @type {(att: Attribute, randFn: () => number) => AttributePart} */
+export function randomize(attr, randFn = Math.random) {
+  if (attr.range) {
+    const min = attr.range[0]
+    const max = attr.range[1]
 
-  return /** @type {RandomizeFn} */ function randomize(attr, randFn = Math.random) {
-    if (attr.range) {
-      const min = attr.range[0]
-      const max = attr.range[1]
-
-      if (rgbcolor.isColor(min)) {
-        return pseudorandom.color(col, /** @type {RGBColor} */ (min), /** @type {RGBColor} */ (max))
-      } else if (Array.isArray(min) && min.length > 0 && typeof min[0] === "number") {
-        return pseudorandom.vector(vec, /** @type {number[]} */ (min), /** @type {number[]} */ (max))
-      // } else if (typeof min === "number") {
-      //   return pseudorandom.float(min, max) // not needed all numbers should be in a float array
-      } else {
-        return min
-      }
-      
-    } else if (attr.options) {
-      return pseudorandom.entry(attr.options, randFn)
+    if (rgbcolor.isColor(min)) {
+      return pseudorandom.color({r:0, g:0, b:0}, /** @type {RGBColor} */ (min), /** @type {RGBColor} */ (max))
+    } else if (Array.isArray(min) && min.length > 0 && typeof min[0] === "number") {
+      return pseudorandom.vector([], /** @type {number[]} */ (min), /** @type {number[]} */ (max))
+    // } else if (typeof min === "number") {
+    //   return pseudorandom.float(min, max) // not needed all numbers should be in a float array
+    } else {
+      return min
     }
+    
+  } else if (attr.options) {
+    return pseudorandom.entry(attr.options, randFn)
   }
-
-})()
+}
 
 /** @type {(attr: any) => string} */
 export function stringify(attr) {

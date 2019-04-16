@@ -75,3 +75,30 @@ test("test.nestedsplit", (t) => {
   
   t.end()
 })
+
+test("test.randomize", (t) => {
+  let testA = true
+  let testB = true
+  let testC = true
+  let testD = true
+
+  for (let i = 0; i < 100; i++) {
+    const stringA = attribute.randomize({options: ["a","b","c"]})
+    const arrayB = attribute.randomize({range: [[1],[5]]})
+    const colorC = attribute.randomize({range: [{r:.1,g:.3,b:.5}, {r:.2,g:.4,b:.6}]})
+    const arrayD = attribute.randomize({range: [[-1,5], [2]]})
+
+    // @ts-ignore
+    testA = testA || ["a","b","c"].includes(stringA)
+    testB = testB || (arrayB[0] >= 1 && arrayB[0] < 5)
+    // @ts-ignore
+    testC = testC || (colorC.r >= .1 && colorC.r < .2 && colorC.g >= .3 && colorC.g < .3 && colorC.b >= .5 && colorC.b < .6 )
+    testD = testD || (arrayD[0] >= -1 && arrayD[0] < 2 && arrayD[1] === 5)
+  }
+
+  t.ok(testA, "string")
+  t.ok(testB, "one number")
+  t.ok(testC, "color")
+  t.ok(testC, "array or numbers")
+  t.end()
+})
