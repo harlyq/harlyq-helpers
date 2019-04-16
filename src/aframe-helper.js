@@ -18,11 +18,12 @@ export const setProperty = (() => {
   return /** @type { SetPropertyFn } */function setProperty(target, prop, value) {
     let fn = OBJECT3D_FAST_SET[prop]
     if (fn) {
-      if (Array.isArray(value)) {
-      } else if (typeof value === "object") {
-        value = [value.x, value.y, value.z]
-      } else {
-        value = value.split(" ").map(trim)
+      if (!Array.isArray(value)) {
+        if (typeof value === "object") {
+          value = [value.x, value.y, value.z]
+        } else {
+          value = value.split(" ").map(trim)
+        }        
       }
       value.length = 3
       target.object3D[prop].set(...value.map(fn))
@@ -54,3 +55,106 @@ export const setProperty = (() => {
   
 })()
 
+/** @type {() => {start: (delay: number, callback: () => void) => void, stop: () => void, pause: () => void, resume: () => void }} */
+export function basicTimer() {
+  let sendEventTimer
+  let timeOfStart
+  let timeoutCallback
+  let timeRemaining
+
+  function start(delay, callback) {
+    stop()
+    
+    if (delay > 0) {
+      sendEventTimer = setTimeout(callback, delay*1000)
+      timeOfStart = Date.now()
+      timeoutCallback = callback
+    } else {
+      callback()
+    }
+  }
+
+  function stop() {
+    clearTimeout(sendEventTimer)
+    sendEventTimer = undefined
+    timeOfStart = undefined
+    timeRemaining = undefined
+    timeoutCallback = undefined
+  }
+
+  function pause() {
+    if (sendEventTimer) {
+      let remaining = Date.now() - timeOfStart
+      stop()
+      timeRemaining = remaining
+    }
+  }
+
+  function resume() {
+    if (timeRemaining) {
+      start(timeRemaining, timeoutCallback)
+      timeRemaining = undefined
+    }
+  }
+
+  return {
+    start,
+    stop,
+    pause,
+    resume
+  }
+}
+
+
+/** @type { () => {set: (el: HTMLElement, selector: string, scope: string, eventName: string, callbackFn: (e: any) => boolean) => void, add: () => void, remove: () => void, getElementsInScope: (el: HTMLElement, selector: string, scope: string, eventEl: HTMLElement) => void }} */
+export function scopedListener() {
+  let elements = []
+  let event
+  let callback
+
+  function set(el, selector, scope, eventName, callbackFn) {
+    remove()
+    elements = getElementsInScope(el, selector, scope)
+    event = eventName
+    callback = callbackFn
+  }
+
+  function add() {
+    if (event && callback) {
+      for (let el of elements) {
+        // console.log("scopedListener:add", el.id, event)
+        el.addEventListener(event, callback)
+      }
+    }
+  }
+
+  function remove() {
+    if (event && callback) {
+      for (let el of elements) {
+        // console.log("scopedListener:remove", el.id, event)
+        el.removeEventListener(event, callback)
+      }
+    }
+  }
+
+  function getElementsInScope(el, selector, scope, eventEl) {
+    switch (scope) {
+      case "self": return selector === "" ? [el] : el.querySelectorAll(selector) || [el]
+      case "parent": return selector === "" ? [el] : el.parentNode.querySelectorAll(selector) || [el]
+      case "event": {
+        const bestEl = eventEl ? eventEl : el
+        return selector === "" ? [bestEl] : bestEl.querySelectorAll(selector) || [bestEl]
+      }
+      case "document": 
+      default:
+        return selector === "" ? [el] : document.querySelectorAll(selector) || [el]
+    }
+  }
+
+  return {
+    set,
+    add,
+    remove,
+    getElementsInScope,
+  }
+}
