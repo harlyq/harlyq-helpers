@@ -8,9 +8,9 @@ import * as rgbcolor from "../src/rgbcolor.js"
 
 test("attribute.parsePart", (t) => {
   t.deepEquals(attribute.parsePart(""), "", "empty")
-  t.deepEquals(attribute.parsePart("1"), 1, "single number")
+  t.deepEquals(attribute.parsePart("1"), [1], "single number")
   t.deepEquals(attribute.parsePart(" 2  3  4"), [2,3,4], "vector")
-  t.deepEquals(attribute.parsePart(" 2.5 "), 2.5, "decimal number")
+  t.deepEquals(attribute.parsePart(" 2.5 "), [2.5], "decimal number")
   t.deepEquals(attribute.parsePart(" lesser   "), "lesser", "string")
   t.deepEquals(attribute.parsePart(" 2,3 ,4 "), "2,3 ,4", "string with numbers")
   t.equals(rgbcolor.toString(/** @type {RGBColor} */(attribute.parsePart("red"))), "#ff0000", "named color")
@@ -35,9 +35,9 @@ test("attribute.parseRangeOptions", (t) => {
 test("attribute.parse", (t) => {
   t.deepEquals(attribute.parse(""), { options: [""] }, "empty")
   t.deepEquals(attribute.parse("a"), { options: ["a"] }, "string")
-  t.deepEquals(attribute.parse("-1.75"), { options: [-1.75] }, "number")
+  t.deepEquals(attribute.parse("-1.75"), { options: [[-1.75]] }, "number")
   t.deepEquals(attribute.parse("1.125 2.5 6"), { options: [[1.125,2.5,6]] }, "vector")
-  t.deepEquals(attribute.parse("2.25..-6.75"), { range: [2.25, -6.75] }, "range")
+  t.deepEquals(attribute.parse("2.25..-6.75"), { range: [[2.25], [-6.75]] }, "range")
   t.deepEquals(attribute.parse("black..#fff"), { range: [{ r:0,g:0,b:0 }, { r:1,g:1,b:1 }] }, "range of color")
   t.deepEquals(attribute.parse("top..bottom"), { range: ["top", "bottom"] }, "range of string")
   t.deepEquals(attribute.parse("9 -1..0 4 .5"), { range: [[9,-1], [0,4,.5]] }, "range of vector")

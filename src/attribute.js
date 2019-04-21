@@ -3,7 +3,7 @@ import * as rgbcolor from "./rgbcolor.js"
 
 /**
  * @typedef {{r: number, g: number, b: number}} RGBColor
- * @typedef {number[] | RGBColor | string | number} AttributePart
+ * @typedef {number[] | RGBColor | string} AttributePart
  * @typedef {{range?: AttributePart[], options?: AttributePart[]}} Attribute
  */
 
@@ -29,7 +29,7 @@ export const parsePart = (function() {
 
     let vec = str.split(" ").filter(x => x !== "").map(toNumber)
     if (!vec.some(isNaN)) {
-      return vec.length > 1 ? vec : vec[0]
+      return vec
     }
   
     let col = rgbcolor.parse(str.trim())
@@ -66,11 +66,11 @@ export function randomize(attr, randFn = Math.random) {
     const max = attr.range[1]
 
     if (rgbcolor.isColor(min)) {
-      return pseudorandom.color({r:0, g:0, b:0}, /** @type {RGBColor} */ (min), /** @type {RGBColor} */ (max), randFn)
+      return pseudorandom.color({r:0, g:0, b:0}, /** @type {RGBColor} */ (min), /** @type {RGBColor} */ (max))
     } else if (Array.isArray(min) && min.length > 0 && typeof min[0] === "number") {
-      return pseudorandom.vector([], /** @type {number[]} */ (min), /** @type {number[]} */ (max), randFn)
-    } else if (typeof min === "number" && typeof max === "number") {
-      return pseudorandom.float(min, max, randFn)
+      return pseudorandom.vector([], /** @type {number[]} */ (min), /** @type {number[]} */ (max))
+    // } else if (typeof min === "number") {
+    //   return pseudorandom.float(min, max) // not needed all numbers should be in a float array
     } else {
       return min
     }
