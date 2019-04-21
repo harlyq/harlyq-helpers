@@ -66,9 +66,9 @@ export function randomize(attr, randFn = Math.random) {
     const max = attr.range[1]
 
     if (rgbcolor.isColor(min)) {
-      return pseudorandom.color({r:0, g:0, b:0}, /** @type {RGBColor} */ (min), /** @type {RGBColor} */ (max))
+      return pseudorandom.color({r:0, g:0, b:0}, /** @type {RGBColor} */ (min), /** @type {RGBColor} */ (max), randFn)
     } else if (Array.isArray(min) && min.length > 0 && typeof min[0] === "number") {
-      return pseudorandom.vector([], /** @type {number[]} */ (min), /** @type {number[]} */ (max))
+      return pseudorandom.vector([], /** @type {number[]} */ (min), /** @type {number[]} */ (max), randFn)
     // } else if (typeof min === "number") {
     //   return pseudorandom.float(min, max) // not needed all numbers should be in a float array
     } else {
