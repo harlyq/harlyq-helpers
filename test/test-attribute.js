@@ -64,7 +64,7 @@ test("attribute.stringify", (t) => {
   t.end()
 })
 
-test("test.nestedsplit", (t) => {
+test("attribute.nestedsplit", (t) => {
   t.deepEquals(attribute.nestedSplit(""), [""], "empty")
   t.deepEquals(attribute.nestedSplit("a,b"), ["a","b"], "two params")
   t.deepEquals(attribute.nestedSplit(" a , b"), [" a "," b"], "two params, with spacing")
@@ -76,7 +76,7 @@ test("test.nestedsplit", (t) => {
   t.end()
 })
 
-test("test.randomize", (t) => {
+test("attribute.randomize", (t) => {
   let testA = true
   let testB = true
   let testC = true
