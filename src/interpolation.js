@@ -21,6 +21,21 @@ export function lerpArray(a, b, t) {
   return out
 }
 
+export function lerpKeys(keys, r, easingFn = Linear) {
+  const n = keys.length
+
+  if (r <= 0 || n <= 1) {
+    return [0,0]
+  } else if (r >= 1) {
+    return [n-2,1]
+  }
+
+  const k = r*(n - 1)
+  const i = ~~k
+  const t = easingFn(k - i)
+  return [i,t]
+}
+
 // remix of https://github.com/tweenjs/tween.js/blob/master/src/Tween.js
 
 export function Linear(k) {
