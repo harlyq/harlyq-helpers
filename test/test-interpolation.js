@@ -2,6 +2,7 @@ import test from "tape"
 import * as interpolate from "../src/interpolation.js"
 
 test("interpolate.lerp", (t) => {
+  t.equals(interpolate.lerp(1,undefined,0), 1, "no b")
   t.equals(interpolate.lerp(1,2,0), 1, "to start")
   t.equals(interpolate.lerp(1,2,1), 2, "to end")
   t.equals(interpolate.lerp(1,2,-1), 0, "before start")
@@ -13,6 +14,7 @@ test("interpolate.lerp", (t) => {
 })
 
 test("interpolate.lerpArray", (t) => {
+  t.deepEquals(interpolate.lerpArray([1,2,3],undefined,0), [1,2,3], "no b")
   t.deepEquals(interpolate.lerpArray([],[],.5), [], "no values")
   t.deepEquals(interpolate.lerpArray([1],[-1],0), [1], "one value, to 0")
   t.deepEquals(interpolate.lerpArray([1],[-1],1), [-1], "one value, to 1")
@@ -24,6 +26,7 @@ test("interpolate.lerpArray", (t) => {
 })
 
 test("interpolate.lerpObject", (t) => {
+  t.deepEquals(interpolate.lerpObject({x:5},undefined, 0), {x:5}, "no b")
   t.deepEquals(interpolate.lerpObject({},{}, .25), {}, "no values")
   t.deepEquals(interpolate.lerpObject({a:0, b:1},{a:10, b:-5}, .5), {a:5, b:-2}, "two values")
   t.deepEquals(interpolate.lerpObject({a:0},{a:10, b:-5}, .5), {a:5, b:-5}, "a smaller than b")
@@ -34,6 +37,7 @@ test("interpolate.lerpObject", (t) => {
 test("interpolate.lerpKeys", (t) => {
   t.deepEquals(interpolate.lerpKeys([0,1,2], 0), [0,0], "start")
   t.deepEquals(interpolate.lerpKeys([0,1,2], 1), [1,1], "end")
+  t.deepEquals(interpolate.lerpKeys([1], 0), [0,0], "one element start")
   t.deepEquals(interpolate.lerpKeys([1], 1), [0,0], "one element end")
   t.deepEquals(interpolate.lerpKeys([0,1,2], .5), [1,0], "mid of 3")
   t.deepEquals(interpolate.lerpKeys([0,1,2,4], .5), [1,0.5], "mid of 4")
