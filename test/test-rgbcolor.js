@@ -71,3 +71,15 @@ test("rgbcolor.parse", (t) => {
 
   t.end()
 })
+
+test("rgbColor.isColor", (t) => {
+  t.notOk(rgbcolor.isColor(""), "empty string")
+  t.notOk(rgbcolor.isColor({}), "empty object")
+  t.notOk(rgbcolor.isColor(0), "number")
+  t.notOk(rgbcolor.isColor([.1,.2,.3]), "array")
+  t.notOk(rgbcolor.isColor({r:.1,g:.2}), "partial color")
+  t.ok(rgbcolor.isColor({r:.1,b:.5,g:.2}), "color")
+  t.ok(rgbcolor.isColor({r:.1,b:.5,g:.2,x:1,y:2}), "extra parameters")
+
+  t.end()
+})

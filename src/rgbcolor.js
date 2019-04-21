@@ -8,7 +8,7 @@ import * as utils from "./utils.js"
 
 /** @type {(a: any) => boolean} */
 export function isColor(a) {
-  return "r" in a && "g" in a && "b" in a
+  return typeof a === "object" && "r" in a && "g" in a && "b" in a
 }
 
 /** @type {<T extends RGBColor>(out: T, hex: number) => T} */

@@ -41,3 +41,12 @@ test("testing vecxyz.add", (t) => {
   t.end()
 })
 
+test("testing vecxyz.isVecXYZ", (t) => {
+  t.notOk(vecxyz.isVecXYZ(""), "empty string")
+  t.notOk(vecxyz.isVecXYZ(1), "number")
+  t.notOk(vecxyz.isVecXYZ({}), "empty object")
+  t.notOk(vecxyz.isVecXYZ([1,2,3]), "array")
+  t.ok(vecxyz.isVecXYZ({x:1, y:1, z:2}), "vecxyz")
+  t.ok(vecxyz.isVecXYZ({x:1, y:1, z:2, s:.1, t:.2}), "extra parameters")
+  t.end()
+})

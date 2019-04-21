@@ -20,7 +20,7 @@ export const UNIT_Z = Object.freeze({x: 0, y: 0, z: 1})
 
 /** @type {(a: any) => boolean} */
 export function isVecXYZ(a) {
-  return "x" in a && "y" in a && "z" in a
+  return typeof a === "object" && "x" in a && "y" in a && "z" in a
 }
 
 /** @type {(x: number, y: number, z: number) => VecXYZ } */
