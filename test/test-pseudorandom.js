@@ -33,7 +33,7 @@ test("pseudorandom.entry", (t) => {
     indexes.push( pseudorandom.index(list.length) )
     integers.push( pseudorandom.integer(1, 6) )
     floats.push( pseudorandom.float(1, 6) )
-    colors.push( pseudorandom.color({}, { r:.4,g:.5,b:.6 }, { r:.8, g:.9, b:1 }) )
+    colors.push( pseudorandom.color({r:0,g:0,b:0}, { r:.4,g:.5,b:.6 }, { r:.8, g:.9, b:1 }) )
   }
 
   t.ok(entries.every(x => list.includes(x)), "entries in range")
