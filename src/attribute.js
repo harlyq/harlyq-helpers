@@ -2,8 +2,11 @@ import * as pseudorandom from "./pseudorandom.js"
 import * as rgbcolor from "./rgbcolor.js"
 
 /**
+ * @typedef {{x: number, y: number}} VecXY
+ * @typedef {{x: number, y: number, z: number}} VecXYZ
+ * @typedef {{x: number, y: number, z: number, w: number}} VecXYZW
  * @typedef {{r: number, g: number, b: number}} RGBColor
- * @typedef {number[] | RGBColor | string} AttributePart
+ * @typedef {number | VecXY | VecXYZ | VecXYZW | RGBColor | string} AttributePart
  * @typedef {{range?: AttributePart[], options?: AttributePart[]}} Attribute
  */
 
@@ -29,7 +32,12 @@ export const parsePart = (function() {
 
     let vec = str.split(" ").filter(x => x !== "").map(toNumber)
     if (!vec.some(isNaN)) {
-      return vec
+      switch (vec.length) {
+        case 1: return vec[0]
+        case 2: return {x: vec[0], y: vec[1]}
+        case 3: return {x: vec[0], y: vec[1], z: vec[2]}
+        case 4: return {x: vec[0], y: vec[1], z: vec[2], w: vec[3]}
+      }
     }
   
     let col = rgbcolor.parse(str.trim())
@@ -67,10 +75,10 @@ export function randomize(attr, randFn = Math.random) {
 
     if (rgbcolor.isColor(min)) {
       return pseudorandom.color({r:0, g:0, b:0}, /** @type {RGBColor} */ (min), /** @type {RGBColor} */ (max), randFn)
-    } else if (Array.isArray(min) && min.length > 0 && typeof min[0] === "number") {
-      return pseudorandom.vector([], /** @type {number[]} */ (min), /** @type {number[]} */ (max), randFn)
-    // } else if (typeof min === "number") {
-    //   return pseudorandom.float(min, max) // not needed all numbers should be in a float array
+    } else if (typeof min === "object" && "x" in min && typeof max === "object" && "x" in max) {
+      return pseudorandom.vector({x:0, y: 0}, (min), (max), randFn)
+    } else if (typeof min === "number" && typeof max === "number") {
+      return pseudorandom.float(min, max)
     } else {
       return min
     }
@@ -86,8 +94,8 @@ export function stringify(attr) {
     if (attr.range) { return stringify(attr.range[0]) + ".." + stringify(attr.range[1]) }
     if (attr.options) { return attr.options.map(option => stringify(option)).join("|") }
     if (rgbcolor.isColor(attr)) { return rgbcolor.toString(attr) }
-    if ("x" in attr && "y" in attr) { return attr.x + " " + attr.y + ("z" in attr ? " " + attr.z : "") }
-    if (attr.length && "0" in attr) { return typeof attr[0] === "number" ? attr.join(" ") : attr.join(",") }
+    if ("x" in attr && "y" in attr) { return attr.x + " " + attr.y + ("z" in attr ? " " + attr.z : "") + ("w" in attr ? " " + attr.w : "") }
+    if (attr.length && "0" in attr) { return attr.join(",") }
   }
   return attr.toString()
 }

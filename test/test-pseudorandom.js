@@ -26,6 +26,9 @@ test("pseudorandom.entry", (t) => {
   let integers = []
   let floats = []
   let colors = []
+  let vec2s = []
+  let vec3s = []
+  let vec4s = []
   const list = [1,2,3,4,5,6]
 
   for (let i = 0; i < 1000; i++) {
@@ -33,7 +36,10 @@ test("pseudorandom.entry", (t) => {
     indexes.push( pseudorandom.index(list.length) )
     integers.push( pseudorandom.integer(1, 6) )
     floats.push( pseudorandom.float(1, 6) )
-    colors.push( pseudorandom.color({}, { r:.4,g:.5,b:.6 }, { r:.8, g:.9, b:1 }) )
+    colors.push( pseudorandom.color({r:0,g:0,b:0}, { r:.4,g:.5,b:.6 }, { r:.8, g:.9, b:1 }) )
+    vec2s.push( pseudorandom.vector({x:0,y:0}, {x:-1,y:-2}, {x:1,y:-1}) )
+    vec3s.push( pseudorandom.vector({x:0,y:0}, {x:-1,y:-2,z:-3}, {x:1,y:-1,z:-2}) )
+    vec4s.push( pseudorandom.vector({x:0,y:0}, {x:-1,y:-2,z:-3,w:-4}, {x:1,y:-1,z:-2,w:-3}) )
   }
 
   t.ok(entries.every(x => list.includes(x)), "entries in range")
@@ -45,6 +51,9 @@ test("pseudorandom.entry", (t) => {
   t.ok(waldWolfowitz(indexes, 0, list.length - 1), "indexes well distributed")
   t.ok(waldWolfowitz(integers, 1, 6), "integers well distributed")
   t.ok(waldWolfowitz(floats, 1, 6), "floats well distributed")
+  t.ok(vec2s.every(vec => vec.x >= -1 && vec.x < 1 && vec.y >= -2 && vec.y < -1), "vec2s in range")
+  t.ok(vec3s.every(vec => vec.x >= -1 && vec.x < 1 && vec.y >= -2 && vec.y < -1 && vec.z >= -3 && vec.z < -2), "vec3s in range")
+  t.ok(vec4s.every(vec => vec.x >= -1 && vec.x < 1 && vec.y >= -2 && vec.y < -1 && vec.z >= -3 && vec.z < -2 && vec.w >= -4 && vec.w < -3), "vec4s in range")
 
   t.end()
 })

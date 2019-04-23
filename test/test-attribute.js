@@ -8,9 +8,9 @@ import * as rgbcolor from "../src/rgbcolor.js"
 
 test("attribute.parsePart", (t) => {
   t.deepEquals(attribute.parsePart(""), "", "empty")
-  t.deepEquals(attribute.parsePart("1"), [1], "single number")
-  t.deepEquals(attribute.parsePart(" 2  3  4"), [2,3,4], "vector")
-  t.deepEquals(attribute.parsePart(" 2.5 "), [2.5], "decimal number")
+  t.deepEquals(attribute.parsePart("1"), 1, "single number")
+  t.deepEquals(attribute.parsePart(" 2  3  4"), {x:2, y:3, z:4}, "vector")
+  t.deepEquals(attribute.parsePart(" 2.5 "), 2.5, "decimal number")
   t.deepEquals(attribute.parsePart(" lesser   "), "lesser", "string")
   t.deepEquals(attribute.parsePart(" 2,3 ,4 "), "2,3 ,4", "string with numbers")
   t.equals(rgbcolor.toString(/** @type {RGBColor} */(attribute.parsePart("red"))), "#ff0000", "named color")
@@ -35,12 +35,12 @@ test("attribute.parseRangeOptions", (t) => {
 test("attribute.parse", (t) => {
   t.deepEquals(attribute.parse(""), { options: [""] }, "empty")
   t.deepEquals(attribute.parse("a"), { options: ["a"] }, "string")
-  t.deepEquals(attribute.parse("-1.75"), { options: [[-1.75]] }, "number")
-  t.deepEquals(attribute.parse("1.125 2.5 6"), { options: [[1.125,2.5,6]] }, "vector")
-  t.deepEquals(attribute.parse("2.25..-6.75"), { range: [[2.25], [-6.75]] }, "range")
+  t.deepEquals(attribute.parse("-1.75"), { options: [-1.75] }, "number")
+  t.deepEquals(attribute.parse("1.125 2.5 6"), { options: [{x:1.125, y:2.5, z:6}] }, "vector")
+  t.deepEquals(attribute.parse("2.25..-6.75"), { range: [2.25, -6.75] }, "range")
   t.deepEquals(attribute.parse("black..#fff"), { range: [{ r:0,g:0,b:0 }, { r:1,g:1,b:1 }] }, "range of color")
   t.deepEquals(attribute.parse("top..bottom"), { range: ["top", "bottom"] }, "range of string")
-  t.deepEquals(attribute.parse("9 -1..0 4 .5"), { range: [[9,-1], [0,4,.5]] }, "range of vector")
+  t.deepEquals(attribute.parse("9 -1..0 4 .5"), { range: [{x:9, y:-1}, {x:0, y:4, z:.5}] }, "range of vector")
 
   t.end()
 })
@@ -49,7 +49,7 @@ test("attribute.stringify", (t) => {
   t.equals(attribute.stringify(""), "", "empty")
   t.equals(attribute.stringify({ r:1,g:1,b:1 }), "#ffffff", "color")
   t.equals(attribute.stringify({ x:-1,y:.5,z:2 }), "-1 0.5 2", "vecxyz")
-  t.equals(attribute.stringify(new Float32Array([1,-2,-.25])), "1 -2 -0.25", "float32array")
+  t.equals(attribute.stringify(new Float32Array([1,-2,-.25])), "1,-2,-0.25", "float32array")
   t.equals(attribute.stringify("blah"), "blah", "string")
   t.equals(attribute.stringify(true), "true", "boolean")
   t.equals(attribute.stringify(-10.8), "-10.8", "number")
@@ -58,7 +58,9 @@ test("attribute.stringify", (t) => {
   t.equals(attribute.stringify({ options: ["a","b","c"] }), "a|b|c", "string options")
   t.equals(attribute.stringify({ range: [10,12.5] }), "10..12.5", "number range")
   t.equals(attribute.stringify({ range: [{ r:0,g:0,b:0 }, { r:1,g:1,b:1 }] }), "#000000..#ffffff", "color range")
-  t.equals(attribute.stringify( attribute.parse("9 -1..0 4 .5") ), "9 -1..0 4 0.5", "parse range")
+  t.equals(attribute.stringify( attribute.parse(".8 .. -6") ), "0.8..-6", "parse number range")
+  t.equals(attribute.stringify( attribute.parse("9 -1..0 4 .5") ), "9 -1..0 4 0.5", "parse vector range")
+  t.equals(attribute.stringify( attribute.parse("9 -1..0 4 .5 18") ), "9 -1..0 4 0.5 18", "parse vec4 range")
   t.equals(attribute.stringify( attribute.parse("blue||green|red") ), "#0000ff||#008000|#ff0000", "parse color options")
   
   t.end()
@@ -84,16 +86,17 @@ test("attribute.randomize", (t) => {
 
   for (let i = 0; i < 100; i++) {
     const stringA = attribute.randomize({options: ["a","b","c"]})
-    const arrayB = attribute.randomize({range: [[1],[5]]})
+    const numberB = attribute.randomize({range: [1,5]})
     const colorC = attribute.randomize({range: [{r:.1,g:.3,b:.5}, {r:.2,g:.4,b:.6}]})
-    const arrayD = attribute.randomize({range: [[-1,5], [2]]})
+    const vectorD = attribute.randomize({range: [{x:-1,y:5}, {x:2,y:5}]})
 
     // @ts-ignore
     testA = testA || ["a","b","c"].includes(stringA)
-    testB = testB || (arrayB[0] >= 1 && arrayB[0] < 5)
+    testB = testB || (numberB >= 1 && numberB < 5)
     // @ts-ignore
     testC = testC || (colorC.r >= .1 && colorC.r < .2 && colorC.g >= .3 && colorC.g < .3 && colorC.b >= .5 && colorC.b < .6 )
-    testD = testD || (arrayD[0] >= -1 && arrayD[0] < 2 && arrayD[1] === 5)
+    // @ts-ignore
+    testD = testD || (vectorD.x >= -1 && vectorD.x < 2 && vectorD.y === 5)
   }
 
   t.ok(testA, "string")

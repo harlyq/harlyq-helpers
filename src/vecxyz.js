@@ -6,6 +6,8 @@
  * @typedef {number} Distance
  */
 
+const DEG_TO_RAD = Math.PI/180
+
 /** @type {VecXYZ} */
 export const ZERO = Object.freeze({x: 0, y: 0, z: 0})
 
@@ -407,5 +409,13 @@ export const setFromCoplanarPoints = (function() {
 /** @type {<T extends VecXYZ>(a: T) => string} */
 export function toString(a) {
   return `(${a.x.toFixed(2)},${a.y.toFixed(2)},${a.z.toFixed(2)})`
+}
+
+/** @type {<T extends VecXYZ, TA extends VecXYZ>(out: T, a: TA) => T} */
+export function degToRad(out, vecDeg) {
+  out.x = vecDeg.x*DEG_TO_RAD
+  out.y = vecDeg.y*DEG_TO_RAD
+  out.z = vecDeg.z*DEG_TO_RAD
+  return out
 }
 

@@ -35,26 +35,12 @@ export function color(out, rgbMin, rgbMax, randFn = Math.random) {
   return out
 }
 
-/** @type {(out: number[], vecMin: number[], vecMax: number[], randFn: () => number) => number[]} */
+/** @type {<T extends {x:number, y:number, z?:number, w?:number}>(out: T, vecMin: T, vecMax: T, randFn: () => number) => T} */
 export function vector(out, vecMin, vecMax, randFn = Math.random) {
-  const lengthOfMin = vecMin.length
-  const lengthOfMax = vecMax.length
-  const m = Math.min(lengthOfMin, lengthOfMax)
-  out.length = Math.max(lengthOfMin, lengthOfMax)
-
-  for (let i = 0; i < m; i++) {
-    out[i] = float(vecMin[i], vecMax[i], randFn)
-  }
-
-  if (lengthOfMax > lengthOfMin) {
-    for (let i = m; i < lengthOfMax; i++) {
-      out[i] = vecMax[i]
-    }
-  } else {
-    for (let i = m; i < lengthOfMin; i++) {
-      out[i] = vecMin[i]
-    }
-  }
+  out.x = float(vecMin.x, vecMax.x, randFn)
+  out.y = float(vecMin.y, vecMax.y, randFn)
+  if ('z' in vecMin && 'z' in vecMax) { out.z = float(vecMin.z, vecMax.z, randFn) }
+  if ('w' in vecMin && 'w' in vecMax) { out.w = float(vecMin.w, vecMax.w, randFn) }
   return out
 }
 
