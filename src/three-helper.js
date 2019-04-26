@@ -56,19 +56,21 @@ export const setFromObject3D = (function() {
       return ext
     }
 
-    // HACK we force the worldmatrix to identity for the object, so we can get a bounding box
-    // based around the origin
+    // HACK we force the worldmatrix to identity for the object and remmove the parent
+    // so we can get a bounding box based around the origin
     tempPosition.copy(object3D.position)
     tempQuaternion.copy(object3D.quaternion)
     tempScale.copy(object3D.scale)
+    const tempParent = object3D.parent
 
+    object3D.parent = null
     object3D.position.set(0,0,0)
     object3D.quaternion.set(0,0,0,1)
     object3D.scale.set(1,1,1)
 
     tempBox3.setFromObject(object3D) // expensive for models
-    // ext.setFromObject(object3D) // expensive for models
 
+    object3D.parent = tempParent
     object3D.position.copy(tempPosition)
     object3D.quaternion.copy(tempQuaternion)
     object3D.scale.copy(tempScale)
