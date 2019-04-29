@@ -39,9 +39,9 @@ export function updateMaterialsUsingThisCanvas(rootObject3D, canvas) {
   })
 }
 
-/** @typedef {<T extends Extent>(out: T, object3D: object) => T} SetFromObject3DFn */
-/** @type {SetFromObject3DFn} */
-export const setFromObject3D = (function() {
+/** @typedef {<T extends Extent>(out: T, object3D: object) => T} SetOBBFromObject3DFn */
+/** @type {SetOBBFromObject3DFn} */
+export const setOBBFromObject3D = (function() {
   // @ts-ignore
   let tempPosition = new THREE.Vector3()
   // @ts-ignore
@@ -51,7 +51,7 @@ export const setFromObject3D = (function() {
   // @ts-ignore
   let tempBox3 = new THREE.Box3()
 
-  return /** @type {SetFromObject3DFn} */function setFromObject3D(ext, object3D) {
+  return /** @type {SetOBBFromObject3DFn} */function setOBBFromObject3D(ext, object3D) {
     if (object3D.children.length === 0) {
       return ext
     }
