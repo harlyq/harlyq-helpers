@@ -21,6 +21,8 @@ export const setProperty = (() => {
       if (!Array.isArray(value)) {
         if (typeof value === "object") {
           value = [value.x, value.y, value.z]
+        } else if (typeof value === "number") {
+          value = [value]
         } else {
           value = value.split(" ").map(trim)
         }        
