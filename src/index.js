@@ -2,6 +2,7 @@ import * as affine4 from "./affine4.js"
 import * as aframeHelper from "./aframe-helper.js"
 import * as attribute from "./attribute.js"
 import * as closestPoint from "./closest-point.js"
+import * as domHelper from "./dom-helper.js"
 import * as extent from "./extent.js"
 import * as hull from "./hull.js"
 import * as interpolation from "./interpolation.js"
@@ -22,6 +23,7 @@ export { affine4 }
 export { aframeHelper }
 export { attribute }
 export { closestPoint }
+export { domHelper }
 export { extent }
 export { interpolation }
 export { intersection }
