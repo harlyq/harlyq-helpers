@@ -175,8 +175,11 @@ export function loadTemplate(template, callback) {
       }
     )
   
+  } else if (/\<svg/.test(template)) {
+    callback( template.trim() )
   } else {
     const templateEl = template ? document.querySelector(template) : undefined
-    this.templateContent = templateEl ? templateEl.textContent.trim() : template.trim()
+    callback( templateEl ? templateEl.textContent.trim() : template.trim() )
   }
 }
+
