@@ -97,7 +97,7 @@ export function stringify(attr) {
     if ("x" in attr && "y" in attr) { return attr.x + " " + attr.y + ("z" in attr ? " " + attr.z : "") + ("w" in attr ? " " + attr.w : "") }
     if (attr.length && "0" in attr) { return attr.join(",") }
   }
-  return attr.toString()
+  return typeof attr !== "undefined" ? attr.toString() : undefined
 }
 
 // splits a string by the separator, but ignores separators that are nested within

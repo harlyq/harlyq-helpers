@@ -40,7 +40,7 @@ export const setProperty = (() => {
         // @ts-ignore
         AFRAME.utils.entity.setComponentProperty(target, parts.join("."), attribute.stringify(value)) // does this work for vectors??
       } else {
-        target.removeAttribute(parts) // removes a component or mixin, resets an attribute to default, or removes the attribute if not in the schema
+        target.removeAttribute(parts[0], parts[1]) // removes a component or mixin, resets an attribute to default, or removes the attribute if not in the schema
       }
       return
     }
@@ -165,6 +165,7 @@ export function loadTemplate(template, callback) {
   const match = template && template.match(/url\((.+)\)/)
   if (match) {
     const filename = match[1]
+    // @ts-ignore
     const fileLoader = new THREE.FileLoader()
     fileLoader.load(
       filename, 
