@@ -36,9 +36,9 @@ export const setProperty = (() => {
     if (parts.length <= 2) {
       // component or component.property
       parts[0] = parts[0].replace(/[A-Z]/g, x => "-" + x.toLowerCase()) // convert component names from camelCase to kebab-case
-      if (value) {
+      if (value || typeof value === "boolean" || typeof value === "number") {
         // @ts-ignore
-        AFRAME.utils.entity.setComponentProperty(target, parts.join("."), attribute.stringify(value)) // does this work for vectors??
+        AFRAME.utils.entity.setComponentProperty(target, parts.join("."), attribute.stringify(value))
       } else {
         target.removeAttribute(parts[0], parts[1]) // removes a component or mixin, resets an attribute to default, or removes the attribute if not in the schema
       }
@@ -56,6 +56,17 @@ export const setProperty = (() => {
   }   
   
 })()
+
+/** @type {(el: HTMLElement, prop: string) => string} */
+export function getProperty(el, prop) {
+  const parts = prop.split(".")
+  if (parts.length === 1) {
+    return el.getAttribute(prop)
+  } else if (parts.length <= 2) {
+    const attr = el.getAttribute(parts[0])
+    return typeof attr === "object" ? attr[parts[1]] : undefined
+  }
+}
 
 /** @type {() => {start: (delay: number, callback: () => void) => void, stop: () => void, pause: () => void, resume: () => void }} */
 export function basicTimer() {
