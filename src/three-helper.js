@@ -87,6 +87,29 @@ export const setOBBFromObject3D = (function() {
   }
 })()
 
+export function generateOrientedBoundingBox(obj3D, debugColor) {
+  // cache boundingBox and boundingSphere
+  obj3D.boundingBox = obj3D.boundingBox || new THREE.Box3()
+  obj3D.boundingSphere = obj3D.boundingSphere || new THREE.Sphere()
+  if (obj3D.boundingBoxDebug) {
+    obj3D.remove(obj3D.boundingBoxDebug)
+    obj3D.boundingBoxDebug = undefined
+  }
+
+  setOBBFromObject3D(obj3D.boundingBox, obj3D)
+
+  if (!obj3D.boundingBox.isEmpty()) {
+    obj3D.boundingBox.getBoundingSphere(obj3D.boundingSphere)
+
+    if (debugColor) {
+      obj3D.boundingBoxDebug = new THREE.Box3Helper(obj3D.boundingBox, debugColor)
+      obj3D.boundingBoxDebug.name = "orientedBoundingDebug"
+      obj3D.add(obj3D.boundingBoxDebug)
+    }
+  }
+}
+  
+  
 // adapted from d3-threeD.js
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
