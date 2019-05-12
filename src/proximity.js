@@ -8,6 +8,32 @@ import * as affine4 from "./affine4.js"
  * @typedef {number} Distance
  */
 
+/** @typedef {<EN extends VecXYZ, EX extends VecXYZ, AN extends VecXYZ, AX extends VecXYZ>(extentsMin: EN, extentsMax: EX, boxAMin: AN, boxAMax: AX, affineA: Affine4, affineB: Affine4) => void} SeparatingAxisFn */
+/** @type {SeparatingAxisFn} */
+export const separatingAxis = (function () {
+  const vertA = {x:0, y:0, z:0}
+
+  return /** @type {SeparatingAxisFn} */function separatingAxis(extentsMin, extentsMax, boxAMin, boxAMax, affineA, affineB) {
+    // map boxA into boxB space, and determine the extents
+    for (let corner = 0; corner < 8; corner++) {
+      vertA.x = corner % 2 ? boxAMax.x : boxAMin.x
+      vertA.y = (corner >>> 1) % 2 ? boxAMax.y : boxAMin.y
+      vertA.z = (corner >>> 2) % 2 ? boxAMax.z : boxAMin.z
+    
+      affine4.multiplyVecXYZ( vertA, affineA, vertA )
+      affine4.invertAndMultiplyVecXYZ( vertA, affineB, vertA )
+    
+      if (corner === 0) {
+        vecxyz.copy(extentsMin, vertA)
+        vecxyz.copy(extentsMax, vertA)
+      } else {
+        vecxyz.min(extentsMin, vertA, extentsMin)
+        vecxyz.max(extentsMax, vertA, extentsMax)
+      }
+    }
+  }
+})()
+
 /** @type {<PA extends VecXYZ, BN extends VecXYZ>(pointA: PA, planeBNormal: BN, planeBConstant: number) => number} */
 export function pointToPlane(pointA, planeBNormal, planeBConstant) {
   return vecxyz.dot( planeBNormal, pointA ) + planeBConstant
@@ -46,29 +72,12 @@ export function aabbToAabb(aabbAMin, aabbAMax, aabbBMin, aabbBMax) {
 /** @typedef {<AN extends VecXYZ, AX extends VecXYZ, BN extends VecXYZ, BX extends VecXYZ>(boxAMin: AN, boxAMax: AX, affineA: Affine4, boxBMin: BN, boxBMax: BX, affineB: Affine4) => number} BoxToBoxFn */
 /** @type {BoxToBoxFn} */
 export const boxToBox = (function() {
-  let vertA = {x:0,y:0,z:0}
   let extentsMin = {x:0,y:0,z:0}
   let extentsMax = {x:0,y:0,z:0}
 
   /** @type {<AN extends VecXYZ, AX extends VecXYZ, BN extends VecXYZ, BX extends VecXYZ>(boxAMin: AN, boxAMax: AX, affineA: Affine4, boxBMin: BN, boxBMax: BX, affineB: Affine4) => number} */
   function boxSATDistance(boxAMin, boxAMax, affineA, boxBMin, boxBMax, affineB) {
-    // map boxB into boxA space, and determine the extents
-    for (let corner = 0; corner < 8; corner++) {
-      vertA.x = corner % 2 ? boxAMax.x : boxAMin.x
-      vertA.y = (corner >>> 1) % 2 ? boxAMax.y : boxAMin.y
-      vertA.z = (corner >>> 2) % 2 ? boxAMax.z : boxAMin.z
-
-      affine4.multiplyVecXYZ( vertA, affineA, vertA )
-      affine4.invertAndMultiplyVecXYZ( vertA, affineB, vertA )
-
-      if (corner === 0) {
-        vecxyz.copy(extentsMin, vertA)
-        vecxyz.copy(extentsMax, vertA)
-      } else {
-        vecxyz.min(extentsMin, vertA, extentsMin)
-        vecxyz.max(extentsMax, vertA, extentsMax)
-      }
-    }
+    separatingAxis(extentsMin, extentsMax, boxAMin, boxAMax, affineA, affineB)
 
     // returns the distance
     return Math.max(extentsMin.x - boxBMax.x, extentsMin.y - boxBMax.y, extentsMin.z - boxBMax.z,
