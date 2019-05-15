@@ -70,7 +70,7 @@ export function generateHullIndices(vertices, stride = 3) {
 }
 
 
-function generateHullTriangles(vertices, indices, n) {
+export function generateHullTriangles(vertices, indices, n) {
   n = n || indices.length
 
   /** @typedef { {ai: number, bi: number, ci: number, normal: Vertices, } } HullFace */
