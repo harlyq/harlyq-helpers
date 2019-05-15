@@ -74,6 +74,11 @@ export function normalize(out, a, ai = 0, oi = 0) {
   return out
 }
 
+/** @type {<TA extends Vertices>(a: TA, ai: number) => number} */
+export function length(a, ai = 0) {
+  return Math.hypot(a[ai], a[ai+1], a[ai+2])
+}
+
 /** @type {<TA extends Vertices, TB extends Vertices>(a: TA, b: TB, ai: number, bi: number, oi: number) => number} */
 export function dot(a, b, ai = 0, bi = 0) {
   return a[ai]*b[bi] + a[ai+1]*b[bi+1] + a[ai+2]*b[bi+2]
@@ -84,6 +89,7 @@ export function dotXYZ(a, vec, ai = 0) {
   return a[ai]*vec.x + a[ai+1]*vec.y + a[ai+2]*vec.z
 }
 
+// out = a + b*s
 /** @type {<T extends Vertices, TA extends Vertices, TB extends Vertices>(out: T, a: TA, b: TB, s: number, ai: number, bi: number, oi: number) => T} */
 export function scaleAndAdd(out, a, b, s, ai = 0, bi = 0, oi = 0) {
   out[oi] = a[ai] + b[bi]*s
@@ -120,23 +126,6 @@ export function cross(out, a, b, ai = 0, bi = 0, oi = 0) {
   out[oi] = ay*bz - az*by
   out[oi+1] = az*bx - ax*bz
   out[oi+2] = ax*by - ay*bx
-  return out
-}
-
-/** @type {<T extends VecXYZ, TV extends Vertices>(out: T, vertices: TV, stride: number) => T} */
-export function centroid(out, vertices, stride = 3) {
-  const n = vertices.length/stride
-
-  vecxyz.setZero(out)
-  for (let i = 0; i < vertices.length; i += stride) {
-    out.x += vertices[i]
-    out.y += vertices[i+1]
-    out.z += vertices[i+2]
-  }
-  out.x /= n
-  out.y /= n
-  out.z /= n
-
   return out
 }
 
@@ -180,15 +169,72 @@ export function createFromIndices(vertices, indices) {
   return newVertices
 }
 
-export function average(out, vertices) {
+/** @type {<T extends Vertices, TV extends Vertices>(out: T, vertices: TV, oi?: number, stride?: number) => Vertices} */
+export function average(out, vertices, oi = 0, stride = 3) {
   let x = 0, y = 0, z = 0
   const n = vertices.length
-  for (let i = 0; i < n; i += 3) {
+  for (let i = 0; i < n; i += stride) {
     x += vertices[i]
     y += vertices[i+1]
     z += vertices[i+2]
   }
 
-  return out.set(out, x/n, y/n, z/n)
+  return set(out, x/n, y/n, z/n, oi)
 }
 
+// sets the vector to the normal of the plane formed by points p0, p1 and p2
+/** @typedef {<T extends Vertices, TP0 extends Vertices, TP1 extends Vertices, TP2 extends Vertices>(out: T, a: TP0, b: TP1, c: TP2, ai?: number, bi?: number, ci?: number, oi?: number) => T} SetFromCoplanarPointsFn */
+/** @type {SetFromCoplanarPointsFn} */
+export const setFromCoplanarPoints = (function() {
+  let vbc = new Float32Array(3)
+  let vba = new Float32Array(3)
+  let crossProduct = new Float32Array(3)
+
+  return /** @type {SetFromCoplanarPointsFn} */function setFromCoplanerPoints(out, a, b, c, ai = 0, bi = 0, ci = 0, oi = 0) {
+    sub(vbc, c, b, ci, bi)
+    sub(vba, a, b, ai, bi)
+    return normalize( out, cross(crossProduct, vbc, vba), 0, oi )
+  }
+})()
+
+// from https://en.wikipedia.org/wiki/Centroid
+/** @type {<T extends Vertices, TV extends Vertices>(out: T, vertices: TV, indices: number[], oi?: number) => T} */
+export function centroidFromIndices(out, vertices, indices, oi = 0) {
+  const n = indices.length
+
+  let x = 0, y = 0, z = 0
+
+  for (let j = 0; j < indices.length; j++) {
+    const i = indices[j]
+    x += vertices[i]/n
+    y += vertices[i+1]/n
+    z += vertices[i+2]/n
+  }
+
+  return set(out, x, y, z, oi)
+}
+
+// from https://en.wikipedia.org/wiki/Coplanarity
+/** @typedef {<TA extends Vertices, TB extends Vertices, TC extends Vertices, TD extends Vertices>(a: TA, b: TB, c: TC, d: TD, tolerance: number, ai: number, bi: number, ci: number, di: number) => boolean} AreCoplanarFn */
+/** @type {AreCoplanarFn} */
+export const areCoplanar = (function() {
+  const ba = new Float32Array(3)
+  const ca = new Float32Array(3)
+  const da = new Float32Array(3)
+  return /** @type {AreCoplanarFn} */ function areCoplanar(a, b, c, d, tolerance = 1e-5, ai=0, bi=0, ci=0, di=0) {
+    sub(ba, b, a, bi, ai)
+    sub(ca, c, a, ci, ai)
+    sub(da, d, a, di, ai)
+
+    // ideally we would use normalized vectors, but do we want the extra cost?
+    return Math.abs( dot( da, cross(ba, ba, ca) ) ) < tolerance
+  }
+})()
+
+/** @type {<T extends Vertices, TA extends Vertices>(out: T, a: TA, s: number, ai?: number, oi?: number) => T} */
+export function multiplyScalar(out, a, s, ai=0, oi=0) {
+  out[oi] = a[ai]*s
+  out[oi+1] = a[ai+1]*s
+  out[oi+2] = a[ai+2]*s
+  return out
+}
