@@ -132,7 +132,7 @@ export function cross(out, a, b, ai = 0, bi = 0, oi = 0) {
 // returns a sorted list of indices into vertices which represent the max and min extents along the x, y and z axis (at most 6 values)
 /** @type {<TV extends Vertices>(vertices: TV, stride: number) => number[]} */
 export function generateExtremes(vertices, stride = 3) {
-  let extremes = new Array(6).fill(0)
+  let extremes = new Array(6).fill(0) // two vertices for each axis (a min and a max)
   let min = new Float32Array(3)
   let max = new Float32Array(3)
   const INDICES_FOR_MAX = 3

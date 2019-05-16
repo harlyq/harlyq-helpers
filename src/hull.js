@@ -1,4 +1,5 @@
 import * as vertex3 from "./vertex3.js"
+import * as utils from "./utils.js"
 
 /**
  * @typedef {{x: number, y: number, z: number}} VecXYZ
@@ -9,22 +10,55 @@ import * as vertex3 from "./vertex3.js"
 /** @typedef {(vertices: Vertices, indices: number[], point: Vertices, pi?: number) => boolean} IsPointInsideFn */
 /** @type {IsPointInsideFn} */
 export const isPointInside = (function() {
-  const minAxis = new Float32Array(3)
-  const maxAxis = new Float32Array(3)
+  const X_AXIS = new Float32Array([1,0,0])
+  const Y_AXIS = new Float32Array([0,1,0])
   const delta = new Float32Array(3)
+  const front = new Float32Array(3)
+  const right = new Float32Array(3)
+  const up = new Float32Array(3)
 
   return /** @type {IsPointInsideFn} */function isPointInside(vertices, indices, point, pi = 0) {
-    for (let i = 0; i < indices.length; i++) {
+    // generate an axis with forward from point to index0, and up towards 0,1,0 (if possible)
+    // this will be used as the basis for determining the spherical coordinates of each index
+    vertex3.sub(front, vertices, point, indices[0], pi)
+    vertex3.normalize(front, front)
+    vertex3.copy( up, Math.abs( vertex3.dot(front, Y_AXIS) ) > 0.99 ? X_AXIS : Y_AXIS )
+    vertex3.normalize( right, vertex3.cross(right, front, up) )
+    vertex3.normalize( up, vertex3.cross(up, right, front) )
+
+
+    // because we use an axis with forward from point to index0, index0 is always at angle 0
+    let minPhi = 0
+    let maxPhi = 0
+    for (let i = 1; i < indices.length; i++) {
+      if (indices[i] === pi) {
+        continue
+      }
+
       vertex3.sub(delta, vertices, point, indices[i], pi)
-      vertex3.min(minAxis, delta, minAxis)
-      vertex3.max(maxAxis, delta, maxAxis)
+      vertex3.normalize(delta, delta)
+
+
+      // determine the spherical coordinates for delta
+      // phi will be 0 in the direction of the forward and PI for -forward
+      // theta will be 0 for up and PI/-PI for -up
+      // rounding errors can produce a dot product outside (-1,1) so clamp it to that range
+      let phi = Math.acos( utils.clamp( vertex3.dot(front, delta), -1, 1 ) )
+
+      // if theta goes above PI/2 or below -PI/2 then it is underneath the right vector, so 
+      // switch phi to a negative number, this gives our phi a range of (-PI,PI) centered at 0 on the forward
+      // Code is a faster version of: let theta = Math.abs( Math.atan2(vertex3.dot(right, delta), vertex3.dot(up, delta)) ); if (theta > Math.PI*0.5) { phi = -phi }
+      if (vertex3.dot(up, delta) < 0) { 
+        phi = -phi
+      }
+
+      minPhi = Math.min(phi, minPhi)
+      maxPhi = Math.max(phi, maxPhi)
     }
-  
-    // If the angle to all hull vertices is greather than PI, then the point
-    // is inside of the hull
-    return Math.acos(minAxis[0]) - Math.acos(maxAxis[0]) > Math.PI &&
-      Math.acos(minAxis[1]) - Math.acos(maxAxis[1]) > Math.PI &&
-      Math.acos(minAxis[2]) - Math.acos(maxAxis[2]) > Math.PI
+
+    // if the range of phi angles is larger than PI, then all vertices surround 'point', and thus 'point' is inside
+    // of the hull
+    return maxPhi - minPhi > Math.PI
   }
 })()
 
@@ -58,9 +92,11 @@ export function generateHullIndices(vertices, stride = 3) {
       // remove points that are now inside the hull, we can ignore
       // the extremes and the last point added because they are guaranteed
       // to not be inside the hull
-      for (let j = extremes.length; j < hull.length - 1; j++) {
+      for (let j = extremes.length; j < hull.length - 1; ) {
         if (isPointInside(vertices, hull, vertices, hull[j])) {
           hull.splice(j, 1)
+        } else {
+          j++
         }
       }
     }
