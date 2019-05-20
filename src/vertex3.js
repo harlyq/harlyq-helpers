@@ -57,6 +57,14 @@ export function copy(out, a, ai = 0, oi = 0) {
 }
 
 /** @type {<T extends Vertices, TA extends Vertices, TB extends Vertices>(out: T, a: TA, b: TB, ai: number, bi: number, oi: number) => T} */
+export function add(out, a, b, ai = 0, bi = 0, oi = 0) {
+  out[oi] = a[ai] + b[bi]
+  out[oi+1] = a[ai+1] + b[bi+1]
+  out[oi+2] = a[ai+2] + b[bi+2]
+  return out
+}
+
+/** @type {<T extends Vertices, TA extends Vertices, TB extends Vertices>(out: T, a: TA, b: TB, ai: number, bi: number, oi: number) => T} */
 export function sub(out, a, b, ai = 0, bi = 0, oi = 0) {
   out[oi] = a[ai] - b[bi]
   out[oi+1] = a[ai+1] - b[bi+1]

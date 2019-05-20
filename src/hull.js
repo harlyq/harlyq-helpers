@@ -7,6 +7,63 @@ import * as utils from "./utils.js"
  * @typedef {number[] | Float32Array} Vertices
  */
 
+// ITERATIVE VERSION
+// /** @type { IsPointInsideFn } */
+// export function isPointInside( vertices, indices, point, pi ) {
+//   console.assert( indices[ 0 ] !== pi )
+
+//   const EPSILON = 1e-6
+//   const normal = new Float32Array( 3 )
+//   const a = new Float32Array( 3 )
+//   const ap = new Float32Array( 3 )
+//   const pab = new Float32Array( 3 )
+//   const pb = new Float32Array( 3 )
+//   const ab = new Float32Array( 3 )
+//   let failList = [0] // 0 is the first chosen index
+
+//   vertex3.copy( a, vertices, indices[ 0 ] ) // initially a and b are both at index0
+//   vertex3.sub( pab, a, point, 0, pi )
+//   vertex3.normalize( normal, pab )
+
+//   for ( let i = 0; i < indices.length; ) {
+//     const bi = indices[i]
+//     vertex3.sub( pb, vertices, point, bi, pi )
+//     const cosine = vertex3.dot( pb, normal )
+//     if ( cosine < -EPSILON ) { // ideally < 0, but there may be some rounding error
+//       if ( failList.includes(bi) ) {
+//         // we are failing something again, our approximation is not getting better so there is no
+//         // solution and we must be inside
+//         return true
+//       }
+
+//       // re-estimate the normal to be the line from 'point' to the projection of 'point' onto 'ab'
+//       // pa' = dot( -pa,unit(ab) )*unit(ab) + a - p
+//       vertex3.sub( ab, vertices, a, bi )
+//       vertex3.sub( ap, point, a, pi )
+//       vertex3.normalize( ab, ab )
+//       const dotAB = vertex3.dot( ap, ab )
+//       vertex3.multiplyScalar( pab, ab, dotAB )
+//       vertex3.add( pab, a, pab )
+//       vertex3.sub( pab, pab, point, 0, pi )
+
+//       if (pab[0] === 0 && pab[1] === 0 && pab[2] === 0) {
+//         return true // point is on the line ab, consider it to be inside
+//       }
+
+//       vertex3.normalize( normal, pab )
+//       vertex3.copy(a, vertices, bi) // next a point will be our last fail
+
+//       failList.push(bi)
+//       i = 0 // retest all vertices
+
+//     } else {
+//       i++
+//     }
+//   }
+
+//   return false
+// }
+
 /** @typedef {(vertices: Vertices, indices: number[], point: Vertices, pi?: number) => boolean} IsPointInsideFn */
 /** @type {IsPointInsideFn} */
 export const isPointInside = (function() {
@@ -45,9 +102,8 @@ export const isPointInside = (function() {
       // rounding errors can produce a dot product outside (-1,1) so clamp it to that range
       let phi = Math.acos( utils.clamp( vertex3.dot(front, delta), -1, 1 ) )
 
-      // if theta goes above PI/2 or below -PI/2 then it is underneath the right vector, so 
-      // switch phi to a negative number, this gives our phi a range of (-PI,PI) centered at 0 on the forward
-      // Code is a faster version of: let theta = Math.abs( Math.atan2(vertex3.dot(right, delta), vertex3.dot(up, delta)) ); if (theta > Math.PI*0.5) { phi = -phi }
+      // if the projection on the up vector is below 0 then switch phi to a negative number, 
+      // this gives our phi a range of (-PI,PI) centered at 0 on the forward
       if (vertex3.dot(up, delta) < 0) { 
         phi = -phi
       }
@@ -62,10 +118,10 @@ export const isPointInside = (function() {
   }
 })()
 
-/** @type {(point: Vertices, vertices: Vertices, indices: number[], pi: number) => boolean} */
-export function isPointInVertices(point, vertices, indices, pi = 0) {
+/** @type {(point: Vertices, vertices: Vertices, indices: number[], pointI: number) => boolean} */
+export function isPointInVertices(point, vertices, indices, pointI = 0) {
   for (let j = 0; j < indices.length; j++) {
-    if (vertex3.equals(point, vertices, 1e-6, pi, indices[j])) {
+    if (vertex3.equals(point, vertices, 1e-6, pointI, indices[j])) {
       return true
     }
   }
