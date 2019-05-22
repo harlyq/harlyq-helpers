@@ -23,3 +23,10 @@ test("hull.generateHullIndices", (t) => {
   t.end()
 })
 
+// empscripten version
+// test("hull.generateHullTriangles2", (t) => {
+//   let vertices = [-1,-1,-1, -1,-1,1, -1,1,-1, -1,1,1, 1,-1,-1, 1,-1,1, 1,1,-1, 1,1,1]
+//   t.deepEquals(hull.generateHullTriangles2(vertices), [0,6,12,0,12,3,0,3,6,9,3,15,6,3,9,3,12,15,12,6,18,6,9,18,15,12,18,9,15,21,15,18,21,18,9,21], "cube")
+
+//   t.end()
+// })

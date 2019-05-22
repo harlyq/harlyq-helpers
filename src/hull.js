@@ -1,5 +1,6 @@
 import * as vertex3 from "./vertex3.js"
 import * as utils from "./utils.js"
+// import hullCModule from "../build/hull.c.mjs"
 
 /**
  * @typedef {{x: number, y: number, z: number}} VecXYZ
@@ -83,16 +84,18 @@ export const isPointInside = (function() {
     vertex3.normalize( right, vertex3.cross(right, front, up) )
     vertex3.normalize( up, vertex3.cross(up, right, front) )
 
+    let angles = [], modAngles = []
 
     // because we use an axis with forward from point to index0, index0 is always at angle 0
     let minPhi = 0
     let maxPhi = 0
     for (let i = 1; i < indices.length; i++) {
-      if (indices[i] === pi) {
+      const vi = indices[i]
+      if (vi === pi) {
         continue
       }
 
-      vertex3.sub(delta, vertices, point, indices[i], pi)
+      vertex3.sub(delta, vertices, point, vi, pi)
       vertex3.normalize(delta, delta)
 
 
@@ -101,15 +104,21 @@ export const isPointInside = (function() {
       // theta will be 0 for up and PI/-PI for -up
       // rounding errors can produce a dot product outside (-1,1) so clamp it to that range
       let phi = Math.acos( utils.clamp( vertex3.dot(front, delta), -1, 1 ) )
+      const oldPhi = phi
 
       // if the projection on the up vector is below 0 then switch phi to a negative number, 
       // this gives our phi a range of (-PI,PI) centered at 0 on the forward
-      if (vertex3.dot(up, delta) < 0) { 
-        phi = -phi
-      }
+      const upDot  = vertex3.dot(up, delta)
+      phi = (upDot < 0) ? -phi : phi
+
+      angles.push([i, vi, oldPhi, phi, upDot, vertices[vi], vertices[vi+1], vertices[vi+2]])
 
       minPhi = Math.min(phi, minPhi)
       maxPhi = Math.max(phi, maxPhi)
+    }
+
+    if (angles.length > 1e10 || modAngles.length > 1e10) {
+      return true
     }
 
     // if the range of phi angles is larger than PI, then all vertices surround 'point', and thus 'point' is inside
@@ -202,10 +211,10 @@ export function generateHullTriangles(vertices, indices, n) {
 
   /** @type {(faceIndices: number[]) => number[][]} */
   function getEdgesFromFaces(faceIndices) {
-    return faceIndices.map(index => {
+    return faceIndices.flatMap(index => {
       const face = hullFaces[index]
       return [[face.ai,face.bi], [face.ai,face.ci], [face.bi,face.ci]]
-    }).flat()
+    })
   }
 
   /** @type {(edges: number[][]) => number[][]} */
@@ -268,7 +277,8 @@ export function generateHullTriangles(vertices, indices, n) {
     }
 
     // update the centroid with the new vertex
-    vertex3.multiplyScalar(hullCenter, vertex3.scaleAndAdd(hullCenter, vertices, hullCenter, numProcessed, xi, 0), 1/(numProcessed + 1))
+    vertex3.scaleAndAdd(hullCenter, vertices, hullCenter, numProcessed, xi, 0)
+    vertex3.multiplyScalar(hullCenter, hullCenter, 1/(numProcessed + 1))
 
     // remove faceIndices from higest to lowest faceIndices[index], so each index is still valid after previous removals
     for (let index = faceIndices.length - 1; index >= 0; --index) {
@@ -286,3 +296,22 @@ export function generateHullTriangles(vertices, indices, n) {
   return hullFaces.flatMap(face => [face.ai, face.bi, face.ci])
 }
 
+// export const c = hullCModule()
+// const cGenerateHullTriangles = c.cwrap('generateHullTriangles', 'number', ['number', 'array', 'number', 'number'])
+
+// export function generateHullTriangles2(vertices, stride = 3) {
+//   const verticesTyped = vertices.buffer ? vertices : Float32Array.from(vertices)
+
+//   const verticesUint8 = new Uint8Array(verticesTyped.buffer, 0, verticesTyped.byteLength)
+//   const outIndicesPtr = c._malloc(1024*3*4); // offset into c.HEAPU8.buffer
+
+//   const numIndices = cGenerateHullTriangles(outIndicesPtr, verticesUint8, vertices.length, stride)
+//   const indices = numIndices > 0 ? new Int32Array(c.HEAPU8.buffer, outIndicesPtr, numIndices) : []
+//   c._free(outIndicesPtr)
+
+//   if (numIndices < 0) {
+//     console.error("cGenerateHullTriangles failed: ", numIndices)
+//   }
+
+//   return indices
+// }

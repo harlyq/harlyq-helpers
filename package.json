@@ -6,6 +6,8 @@
   "main": "src/index.js",
   "module": "src/index.js",
   "scripts": {
+    "build-c": "emcc -g4 src/hull.c -o build/hull.c.mjs -s EXTRA_EXPORTED_RUNTIME_METHODS=['cwrap']",
+    "test-c": "emcc test/test-hull.c -o build/test-hull.c.js && node build/test-hull.c.js",
     "test": "rollup test/test-index.js --format cjs --file build/test-bundle.js && node build/test-bundle.js",
     "test-brk": "rollup test/test-index.js --format cjs --file build/test-bundle.js && node --inspect-brk build/test-bundle.js"
   },
@@ -15,7 +17,8 @@
     "tape": "^4.10.1"
   },
   "peerDependencies": {
-    "three": "^0.101.0"
+    "three": "^0.101.0",
+    "aframe": "^0.9.2"
   },
   "dependencies": {}
 }
