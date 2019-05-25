@@ -200,7 +200,7 @@ export function onEvents(element, callback) {
   let hasListeners = false
   let listeners = []
 
-  function on(names) {
+  function setEvents(names) {
     removeListeners()
     listeners = names.split(",").map(x => x.trim()).filter(x => x)
     addListeners()
@@ -230,5 +230,5 @@ export function onEvents(element, callback) {
     }
   }
 
-  return { on, play, pause }
+  return { setEvents, play, pause }
 }
