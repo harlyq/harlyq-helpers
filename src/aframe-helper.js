@@ -195,3 +195,40 @@ export function loadTemplate(template, callback) {
   }
 }
 
+export function onEvents(element, callback) {
+  let isPlaying = false
+  let hasListeners = false
+  let listeners = []
+
+  function on(names) {
+    removeListeners()
+    listeners = names.split(",").map(x => x.trim()).filter(x => x)
+    addListeners()
+  }
+
+  function play() {
+    isPlaying = true
+    addListeners()
+  }
+
+  function pause() {
+    removeListeners()
+    isPlaying = false
+  }
+
+  function addListeners() {
+    if (isPlaying && !hasListeners) {
+      listeners.forEach(eventName => element.addEventListener(eventName, callback))
+      hasListeners = listeners.length > 0
+    }
+  }
+
+  function removeListeners() {
+    if (hasListeners) {
+      listeners.forEach(eventName => element.removeEventListener(eventName, callback))
+      hasListeners = false
+    }
+  }
+
+  return { on, play, pause }
+}
