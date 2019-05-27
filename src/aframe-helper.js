@@ -238,5 +238,5 @@ export function onEvents(element, callback) {
     }
   }
 
-  return { setEvents, play, pause }
+  return { setEvents, add, remove }
 }
