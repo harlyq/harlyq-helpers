@@ -65,6 +65,8 @@ export function getProperty(el, prop) {
     return el.getAttribute(prop)
 
   } else if (parts.length <= 2) {
+    parts[0] = parts[0].replace(/[A-Z]/g, x => "-" + x.toLowerCase()) // convert component names from camelCase to kebab-case
+    
     const attr = el.getAttribute(parts[0])
     return typeof attr === "object" ? attr[parts[1]] : undefined
     
