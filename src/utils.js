@@ -101,7 +101,7 @@ export function unorderedRemoveAt(list, i) {
 /** @type {(root: {[key: string]: any}, properties: string[]) => any} */
 export function getWithPath(root, properties) {
   let path = root
-  let parts = properties.slice().reverse()
+  let parts = properties && Array.isArray(properties) ? properties.slice().reverse() : []
   while (path && parts.length > 0) {
     path = path[parts.pop()]
   }

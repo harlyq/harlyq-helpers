@@ -41,6 +41,7 @@ test("utils.getWithPath", (t) => {
   t.equals(utils.getWithPath({a: 1, b: {c: {x: "hello"}, d: 3}}, ["b","c","y"]), undefined, "invalid leaf")
   t.equals(utils.getWithPath({a: 1, b: {c: {x: "hello"}, d: 3}}, ["a"]), 1, "valid first level")
   t.equals(utils.getWithPath({a: 1, b: {c: {x: "hello"}, d: 3}}, ["b","w"]), undefined, "invalid branch")
+  t.equals(utils.getWithPath(undefined, undefined), undefined, "undefined")
   t.end()
 })
 

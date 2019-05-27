@@ -46,10 +46,10 @@ export const setProperty = (() => {
     }
   
     // e.g. object3dmap.mesh.material.uniforms.color
-    const path = utils.getWithPath(target, parts)
+    const path = utils.getWithPath(target, parts.slice(0, -1))
     if (path) {
-      // this only works for boolean, string, color and an array of one element
-      path[prop] = Array.isArray(value) && value.length === 1 ? value[0] : value
+      // this only works for boolean, string, color and number
+      path[ parts[parts.length - 1] ] = value
     } else {
       console.warn(`unknown path for setProperty() '${prop}'`)
     }
@@ -60,11 +60,17 @@ export const setProperty = (() => {
 /** @type {(el: HTMLElement, prop: string) => string} */
 export function getProperty(el, prop) {
   const parts = prop.split(".")
+
   if (parts.length === 1) {
     return el.getAttribute(prop)
+
   } else if (parts.length <= 2) {
     const attr = el.getAttribute(parts[0])
     return typeof attr === "object" ? attr[parts[1]] : undefined
+    
+  } else {
+    const value = utils.getWithPath(el, parts)
+    return value
   }
 }
 

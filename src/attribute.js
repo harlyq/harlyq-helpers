@@ -1,3 +1,4 @@
+import * as domHelper from "./dom-helper.js"
 import * as pseudorandom from "./pseudorandom.js"
 import * as rgbcolor from "./rgbcolor.js"
 
@@ -96,6 +97,7 @@ export function stringify(attr) {
     if (rgbcolor.isColor(attr)) { return rgbcolor.toString(attr) }
     if ("x" in attr && "y" in attr) { return attr.x + " " + attr.y + ("z" in attr ? " " + attr.z : "") + ("w" in attr ? " " + attr.w : "") }
     if (attr.length && "0" in attr) { return attr.join(",") }
+    if (attr instanceof HTMLElement) { return domHelper.getDebugName(attr) }
   }
   return typeof attr !== "undefined" ? attr.toString() : undefined
 }
