@@ -214,12 +214,12 @@ export function onEvents(element, callback) {
     addListeners()
   }
 
-  function play() {
+  function add() {
     isPlaying = true
     addListeners()
   }
 
-  function pause() {
+  function remove() {
     removeListeners()
     isPlaying = false
   }
