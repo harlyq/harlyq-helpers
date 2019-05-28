@@ -15,7 +15,7 @@ export function findMatchingAncestor(node, selector) {
 }
 
 export function getDebugName(el) {
-  return el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') + (el.classList.length > 0 ? '.' + el.classList.join('.') : '')
+  return el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') + (el.classList.length > 0 ? '.' + Array.from( el.classList ).join('.') : '')
 }
 
 // for large DOMs with few changes, checking the mutations is faster than querySelectorAll()

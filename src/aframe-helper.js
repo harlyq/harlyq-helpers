@@ -76,20 +76,20 @@ export function getProperty(el, prop) {
   }
 }
 
-/** @type {() => {start: (callback: () => void, delay: number) => any, clear: (timer: any) => void, clearAllTimeouts: () => void, pause: () => void, resume: () => void }} */
+/** @type {() => {startTimer: (delay: number, callback: () => void) => any, clearTimer: (timer: any) => void, clearAllTimers: () => void, pause: () => void, resume: () => void }} */
 export function basicClock() {
   let timers = []
 
-  function startInternal( timer, delay, callback ) {
-    timer.id = setTimeout( () => { clear( timer ); callback() }, delay*1000)
+  function startTimerInternal( timer, delay, callback ) {
+    timer.id = setTimeout( () => { clearTimer( timer ); callback() }, delay*1000)
     timer.startTime = Date.now()
     timer.callback = callback
   }
 
-  function start( callback, delay ) {
+  function startTimer( delay, callback ) {
     if (delay > 0) {
       const newTimer = {}
-      startInternal( newTimer, delay, callback )
+      startTimerInternal( newTimer, delay, callback )
       timers.push( newTimer )
       return newTimer
 
@@ -98,7 +98,7 @@ export function basicClock() {
     }
   }
 
-  function clear( timer ) {
+  function clearTimer( timer ) {
     const index = timers.indexOf( timer )
     if ( index >= 0 ) {
       clearTimeout( timer.id )
@@ -106,7 +106,7 @@ export function basicClock() {
     }
   }
 
-  function clearAllTimeouts() {
+  function clearAllTimers() {
     for ( let timer of timers ) {
       clearTimeout( timer.id )
     }
@@ -123,16 +123,16 @@ export function basicClock() {
   function resume() {
     for ( let timer of timers ) {
       if ( timer.resumeTime ) {
-        startInternal( timer, timer.resumeTime, timer.callback )
+        startTimerInternal( timer, timer.resumeTime, timer.callback )
         delete timer.resumeTime
       }
     }
   }
 
   return {
-    start,
-    clear,
-    clearAllTimeouts,
+    startTimer,
+    clearTimer,
+    clearAllTimers,
     pause,
     resume
   }
@@ -146,7 +146,7 @@ export function getElementsInScope( el, selector, selectorScope, eventEl ) {
     case "event": return selector && eventEl instanceof HTMLElement ? eventEl.querySelectorAll( selector ) : [ el ]
     case "document": 
     default:
-      return selector !== "" ? document.querySelectorAll( selector ) : [ el ]
+      return selector ? document.querySelectorAll( selector ) : [ el ]
   }
 }
 
@@ -159,7 +159,7 @@ export function scopedEvents( thisEl, callback ) {
   let eventTypes = parseEventNames( eventNames )
  
   function parseEventNames( eventNames ) {
-    return typeof eventNames === "string" ? eventNames.split( "," ).map( x => x.trim() ) : []
+    return eventNames && typeof eventNames === "string" ? eventNames.split( "," ).map( x => x.trim() ) : []
   }
 
   function set( newEventNames, newSource, newScope ) {
