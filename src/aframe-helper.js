@@ -81,7 +81,7 @@ export function basicClock() {
   let timers = []
 
   function startInternal( timer, delay, callback ) {
-    timer.id = setTimeout( () => { clearTimeout( timer ); callback() }, delay*1000)
+    timer.id = setTimeout( () => { clear( timer ); callback() }, delay*1000)
     timer.startTime = Date.now()
     timer.callback = callback
   }
@@ -116,7 +116,7 @@ export function basicClock() {
   function pause() {
     for ( let timer of timers ) {
       timer.resumeTime = Date.now() - timer.startTime
-      window.clearTimeout( timer.id )
+      clearTimeout( timer.id )
     }
   }
 
