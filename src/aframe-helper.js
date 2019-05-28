@@ -76,99 +76,133 @@ export function getProperty(el, prop) {
   }
 }
 
-/** @type {() => {start: (delay: number, callback: () => void) => void, stop: () => void, pause: () => void, resume: () => void }} */
-export function basicTimer() {
-  let sendEventTimer
-  let timeOfStart
-  let timeoutCallback
-  let timeRemaining
+/** @type {() => {start: (callback: () => void, delay: number) => any, clear: (timer: any) => void, clearAllTimeouts: () => void, pause: () => void, resume: () => void }} */
+export function basicClock() {
+  let timers = []
 
-  function start(delay, callback) {
-    stop()
-    
+  function startInternal( timer, delay, callback ) {
+    timer.id = setTimeout( () => { clearTimeout( timer ); callback() }, delay*1000)
+    timer.startTime = Date.now()
+    timer.callback = callback
+  }
+
+  function start( callback, delay ) {
     if (delay > 0) {
-      sendEventTimer = setTimeout(callback, delay*1000)
-      timeOfStart = Date.now()
-      timeoutCallback = callback
+      const newTimer = {}
+      startInternal( newTimer, delay, callback )
+      timers.push( newTimer )
+      return newTimer
+
     } else {
       callback()
     }
   }
 
-  function stop() {
-    clearTimeout(sendEventTimer)
-    sendEventTimer = undefined
-    timeOfStart = undefined
-    timeRemaining = undefined
-    timeoutCallback = undefined
+  function clear( timer ) {
+    const index = timers.indexOf( timer )
+    if ( index >= 0 ) {
+      clearTimeout( timer.id )
+      timers.splice( index, 1 )
+    }
+  }
+
+  function clearAllTimeouts() {
+    for ( let timer of timers ) {
+      clearTimeout( timer.id )
+    }
+    timers.length = 0
   }
 
   function pause() {
-    if (sendEventTimer) {
-      let remaining = Date.now() - timeOfStart
-      stop()
-      timeRemaining = remaining
+    for ( let timer of timers ) {
+      timer.resumeTime = Date.now() - timer.startTime
+      window.clearTimeout( timer.id )
     }
   }
 
   function resume() {
-    if (timeRemaining) {
-      start(timeRemaining, timeoutCallback)
-      timeRemaining = undefined
+    for ( let timer of timers ) {
+      if ( timer.resumeTime ) {
+        startInternal( timer, timer.resumeTime, timer.callback )
+        delete timer.resumeTime
+      }
     }
   }
 
   return {
     start,
-    stop,
+    clear,
+    clearAllTimeouts,
     pause,
     resume
   }
 }
 
 
-/** @type { () => {set: (el: HTMLElement, selector: string, scope: string, eventName: string, callbackFn: (e: any) => boolean) => void, add: () => void, remove: () => void, getElementsInScope: (el: HTMLElement, selector: string, scope: string, eventEl: HTMLElement) => void }} */
-export function scopedListener() {
-  let elements = []
-  let event
-  let callback
+export function getElementsInScope( el, selector, selectorScope, eventEl ) {
+  switch ( selectorScope ) {
+    case "self": return selector ? el.querySelectorAll( selector ) : [ el ]
+    case "parent": return selector ? el.parentNode.querySelectorAll( selector ) : [ el ]
+    case "event": return selector && eventEl instanceof HTMLElement ? eventEl.querySelectorAll( selector ) : [ el ]
+    case "document": 
+    default:
+      return selector !== "" ? document.querySelectorAll( selector ) : [ el ]
+  }
+}
 
-  function set(el, selector, scope, eventName, callbackFn) {
-    remove()
-    elements = getElementsInScope(el, selector, scope)
-    event = eventName
-    callback = callbackFn
+
+/** @type { ( eventNames: string, callback: EventListener ) => any } */
+export function scopedEvents( thisEl, callback ) {
+  let eventNames, source, scope
+  let hasListeners = false
+  let elements = []
+  let eventTypes = parseEventNames( eventNames )
+ 
+  function parseEventNames( eventNames ) {
+    return typeof eventNames === "string" ? eventNames.split( "," ).map( x => x.trim() ) : []
+  }
+
+  function set( newEventNames, newSource, newScope ) {
+    const wasListening = hasListeners
+
+    if ( wasListening && ( newEventNames !== eventNames || newSource !== source || newScope !== scope ) ) {
+      remove()
+    }
+
+    source = newSource
+    scope = newScope
+
+    if ( eventNames !== newEventNames ) {
+      eventNames = newEventNames
+      eventTypes = parseEventNames( eventNames )
+    }
+
+    elements = getElementsInScope( thisEl, source, scope, undefined )
+
+    if ( wasListening ) {
+      add()
+    }
   }
 
   function add() {
-    if (event && callback) {
-      for (let el of elements) {
-        // console.log("scopedListener:add", el.id, event)
-        el.addEventListener(event, callback)
+    if ( !hasListeners ) {
+      for ( let el of elements ) {
+        for ( let type of eventTypes ) {
+          el.addEventListener( type, callback )
+        }
       }
+      hasListeners = true
     }
   }
 
   function remove() {
-    if (event && callback) {
-      for (let el of elements) {
-        // console.log("scopedListener:remove", el.id, event)
-        el.removeEventListener(event, callback)
+    if ( hasListeners ) {
+      for ( let el of elements ) {
+        for ( let type of eventTypes ) {
+          el.removeEventListener( type, callback )
+        }
       }
-    }
-  }
-
-  function getElementsInScope(el, selector, scope, eventEl) {
-    switch (scope) {
-      case "self": return selector === "" ? [el] : el.querySelectorAll(selector) || [el]
-      case "parent": return selector === "" ? [el] : el.parentNode.querySelectorAll(selector) || [el]
-      case "event": {
-        const bestEl = eventEl ? eventEl : el
-        return selector === "" ? [bestEl] : bestEl.querySelectorAll(selector) || [bestEl]
-      }
-      case "document": 
-      default:
-        return selector === "" ? [el] : document.querySelectorAll(selector) || [el]
+      hasListeners = false
     }
   }
 
@@ -176,7 +210,6 @@ export function scopedListener() {
     set,
     add,
     remove,
-    getElementsInScope,
   }
 }
 
@@ -201,42 +234,4 @@ export function loadTemplate(template, callback) {
     const templateEl = template ? document.querySelector(template) : undefined
     callback( templateEl ? templateEl.textContent.trim() : template.trim() )
   }
-}
-
-export function onEvents(element, callback) {
-  let isPlaying = false
-  let hasListeners = false
-  let listeners = []
-
-  function setEvents(names) {
-    removeListeners()
-    listeners = names.split(",").map(x => x.trim()).filter(x => x)
-    addListeners()
-  }
-
-  function add() {
-    isPlaying = true
-    addListeners()
-  }
-
-  function remove() {
-    removeListeners()
-    isPlaying = false
-  }
-
-  function addListeners() {
-    if (isPlaying && !hasListeners) {
-      listeners.forEach(eventName => element.addEventListener(eventName, callback))
-      hasListeners = listeners.length > 0
-    }
-  }
-
-  function removeListeners() {
-    if (hasListeners) {
-      listeners.forEach(eventName => element.removeEventListener(eventName, callback))
-      hasListeners = false
-    }
-  }
-
-  return { setEvents, add, remove }
 }
