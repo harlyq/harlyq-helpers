@@ -213,7 +213,7 @@ export function scopedEvents( thisEl, callback ) {
   }
 }
 
-export function loadTemplate(template, callback) {
+export function loadTemplate(template, testString, callback) {
   const match = template && template.match(/url\((.+)\)/)
   if (match) {
     const filename = match[1]
@@ -228,10 +228,12 @@ export function loadTemplate(template, callback) {
       }
     )
   
-  } else if (/\<svg/.test(template)) {
+  } else if ( template.includes(testString) ) {
     callback( template.trim() )
+
   } else {
     const templateEl = template ? document.querySelector(template) : undefined
     callback( templateEl ? templateEl.textContent.trim() : template.trim() )
+    
   }
 }
