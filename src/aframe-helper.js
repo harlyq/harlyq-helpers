@@ -228,7 +228,7 @@ export function loadTemplate(template, testString, callback) {
       }
     )
   
-  } else if ( template.includes(testString) ) {
+  } else if ( testString && template.includes(testString) ) {
     callback( template.trim() )
 
   } else {
