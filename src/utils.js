@@ -109,3 +109,14 @@ export function getWithPath(root, properties) {
   return path
 }
 
+/** @type { <T>(list: T[], fn: (v: T) => boolean ) => number } */
+export function count(list, fn) {
+  let num = 0
+  
+  for (let i = 0; i < list.length; i++) {
+    if (fn(list[i])) {
+      num++
+    }
+  }
+  return num
+}

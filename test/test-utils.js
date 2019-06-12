@@ -55,3 +55,11 @@ test("utils.deepCopy", (t) => {
   t.deepEquals(utils.deepCopy({x: [1,"help",false], y: 2}), {x: [1,"help",false], y: 2}, "object with array")
   t.end()
 })
+
+test("utils.count", (t) => {
+  t.equals(utils.count([], () => false), 0, "empty")
+  t.equals(utils.count([1,2,3,4], (v) => v > 3), 1, "some numbers")
+  t.equals(utils.count([1,2,3,4], (v) => v > 0), 4, "all numbers")
+  t.equals(utils.count(["aa","ab","ca","d"], (v) => v.includes("a")), 3, "strings")
+  t.end()
+})
