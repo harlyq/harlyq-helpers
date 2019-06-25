@@ -1,5 +1,6 @@
 import * as attribute from "./attribute.js"
 import * as utils from "./utils.js"
+import * as domHelper from "./dom-helper.js"
 
 // *value* can be boolean, string, color or array of numbers
 /** 
@@ -237,3 +238,24 @@ export function loadTemplate(template, testString, callback) {
     
   }
 }
+
+export function info(component, ...msg) {
+  console.info(getComponentDebugName(component), ...msg)
+}
+
+export function log(component, ...msg) {
+  console.log(getComponentDebugName(component), ...msg)
+}
+
+export function warn(component, ...msg) {
+  console.warn(getComponentDebugName(component), ...msg)
+}
+
+export function error(component, ...msg) {
+  console.error(getComponentDebugName(component), ...msg)
+}
+
+export function getComponentDebugName(component) {
+  return domHelper.getDebugName(component.el) + '[' + component.attrName + ']'
+}
+
