@@ -63,3 +63,89 @@ test("utils.count", (t) => {
   t.equals(utils.count(["aa","ab","ca","d"], (v) => v.includes("a")), 3, "strings")
   t.end()
 })
+
+test("utils.blocks", (t) => {
+  const noBlocks = utils.blocks(0)
+  t.equals(noBlocks.maxUsed(), 0, "empty, none used")
+  t.equals(noBlocks.allocate(1), undefined, "empty, cannot allocate")
+  t.equals(noBlocks.release(1), 0, "empty, cannot release")
+  t.equals(noBlocks.maxUsed(), 0, "empty, still none used")
+
+  const oneBlock = utils.blocks(1)
+  t.equals(oneBlock.maxUsed(), 0, "one block, unused")
+  t.equals(oneBlock.allocate(1), 0, "one block, allocated")
+  t.equals(oneBlock.maxUsed(), 1, "one block, one used")
+  t.equals(oneBlock.allocate(1), undefined, "one block, cannot allocate two blocks")
+  t.equals(oneBlock.release(1), 0, "one block, cannot free past the end")
+  t.equals(oneBlock.maxUsed(), 1, "one block, still one used")
+  t.equals(oneBlock.release(0), 1, "one block, free allocated block")
+  t.equals(oneBlock.maxUsed(), 0, "one block, all available")
+
+  const twoBlock = utils.blocks(20)
+  t.equals(twoBlock.allocate(10), 0, "two block, one allocated")
+  t.equals(twoBlock.maxUsed(), 10, "two block, confirm one allocated")
+  t.equals(twoBlock.allocate(10), 10, "two block, second allocate")
+  t.equals(twoBlock.maxUsed(), 20, "two block, confirm all allocated")
+  t.equals(twoBlock.release(0), 10, "two block, free first block")
+  t.equals(twoBlock.maxUsed(), 20, "two block, last block still allocated")
+  t.equals(twoBlock.release(10), 10, "two block, free second block")
+  t.equals(twoBlock.maxUsed(), 0, "two block, all blocks free")
+  t.equals(twoBlock.allocate(20), 0, "two block, allocate all blocks")
+  t.equals(twoBlock.maxUsed(), 20, "two block, all blocks used")
+
+  const threeBlock = utils.blocks(300)
+  t.equals(threeBlock.allocate(100), 0, "three block, first allocated")
+  t.equals(threeBlock.allocate(100), 100, "three block, second allocated")
+  t.equals(threeBlock.allocate(100), 200, "three block, third allocated")
+  t.equals(threeBlock.release(0), 100, "three block, release the first block")
+  t.equals(threeBlock.allocate(100), 0, "three block, reallocate first block")
+  t.equals(threeBlock.release(100), 100, "three block, release the second block")
+  t.equals(threeBlock.allocate(100), 100, "three block, reallocate second block")
+  t.equals(threeBlock.release(200), 100, "three block, release the third block")
+  t.equals(threeBlock.allocate(100), 200, "three block, reallocate third block")
+  t.equals(threeBlock.release(200), 100, "three block, free last block")
+  t.equals(threeBlock.maxUsed(), 200, "three block, confirm last block free")
+  t.equals(threeBlock.release(0), 100, "three block, free first block")
+  t.equals(threeBlock.maxUsed(), 200, "three block, confirm last block still free")
+  t.equals(threeBlock.release(100), 100, "three block, free second block")
+  t.equals(threeBlock.maxUsed(), 0, "three block, confirm all blocks free")
+  t.equals(threeBlock.allocate(100), 0, "three block, re-allocate first")
+  t.equals(threeBlock.allocate(100), 100, "three block, re-allocate second")
+  t.equals(threeBlock.allocate(100), 200, "three block, re-allocate third")
+  t.equals(threeBlock.release(100), 100, "three block, free second")
+  t.equals(threeBlock.maxUsed(), 300, "three block, confirm max at third block")
+  t.equals(threeBlock.release(200), 100, "three block, free third")
+  t.equals(threeBlock.maxUsed(), 100, "three block, confirm second and third block freed")
+  t.equals(threeBlock.release(0), 100, "three block, free first")
+  t.equals(threeBlock.maxUsed(), 0, "three block, confirm no allocations")
+  t.end()
+
+  const tenBlocks = utils.blocks(30)
+  for (let i = 0; i < 10; i++) { 
+    tenBlocks.allocate(3) 
+  }
+  t.equals(tenBlocks.maxUsed(), 30, "ten blocks, all allocated part 1")
+  for (let i = 0; i < 10; i++) {
+    tenBlocks.release(i*3)
+  }
+  t.equals(tenBlocks.maxUsed(), 0, "ten blocks, all released from the beginning")
+
+  for (let i = 0; i < 10; i++) { 
+    tenBlocks.allocate(3) 
+  }
+  t.equals(tenBlocks.maxUsed(), 30, "ten blocks, all allocated part 2")
+  for (let i = 9; i >= 0; i--) {
+    tenBlocks.release(i*3)
+  }
+  t.equals(tenBlocks.maxUsed(), 0, "ten blocks, all released from the end")
+
+  for (let i = 0; i < 10; i++) { 
+    tenBlocks.allocate(3) 
+  }
+  t.equals(tenBlocks.maxUsed(), 30, "ten blocks, all allocated part 3")
+  for (let i of [2,0,9,5,8,1,3,4,7,6]) {
+    tenBlocks.release(i*3)
+  }
+  t.equals(tenBlocks.maxUsed(), 0, "ten blocks, all released non-sequentially")
+
+})

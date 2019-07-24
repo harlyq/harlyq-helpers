@@ -12,11 +12,11 @@ import * as rgbcolor from "./rgbcolor.js"
 
 /** @type {(str: string) => Attribute} */
 export function parse(str) {
-  const rangeOptions = parseRangeOptions(str)
-  if (rangeOptions.range) {
-    return { range: rangeOptions.range.map(part => parsePart(part)) }
+  const rangeOption = parseRangeOption(str)
+  if (rangeOption.range) {
+    return { range: rangeOption.range.map(part => parsePart(part)) }
   } else {
-    return { options: rangeOptions.options.map(part => parsePart(part)) }
+    return { options: rangeOption.options.map(part => parsePart(part)) }
   }
 }
 
@@ -49,11 +49,82 @@ export const parsePart = (function() {
   }
 })()
 
+function validateNumber(number) {
+  return typeof number === "number"
+}
+
+function validateVec3(vec3) {
+  return typeof vec3 === "object" && "x" in vec3 && "y" in vec3 && "z" in vec3
+}
+
+function validateColor(color) {
+  return typeof color === "object" && "r" in color && "g" in color && "b" in color
+}
+
+function validateRangeOption(part, validateItemFn) {
+  if (part.range) { return part.range.every(validateItemFn) }
+  if (part.options) { return part.options.every(validateItemFn) }
+  return false
+}
+
+function parseValue(str, validateFn) {
+  const rangeOption = parse(str)
+  return validateRangeOption(rangeOption, validateFn) ? rangeOption : undefined
+}
+
+function parseArray(str, validateFn, permitEmpty = false) {
+  if (str === "") {
+    return []
+  }
+  
+  const rangeOptions = nestedSplit(str, ",").flatMap(partStr => parse(partStr))
+  return rangeOptions.every(part => (permitEmpty && part) || validateRangeOption(part, validateFn)) ? rangeOptions : undefined
+}
+
+export function parseColor(str) {
+  return parseValue(str, validateColor)
+}
+
+export function parseColorArray(str, permitEmpty = false) {
+  return parseArray(str, validateColor, permitEmpty)
+}
+
+export function parseNumber(str) {
+  return parseValue(str, validateNumber)
+}
+
+export function parseNumberArray(str, permitEmpty = false) {
+  return parseArray(str, validateNumber, permitEmpty)
+}
+
+export function parseVec3(str) {
+  return parseValue(str, validateVec3)
+}
+
+export function parseVec3Array(str, permitEmpty = false) {
+  return parseArray(str, validateVec3, permitEmpty)
+}
+
+/** @type {(rule: Attribute) => number} */
+export function getMaximum(rule) {
+  if (rule.options) {
+    if (rule.options.length > 0 && typeof rule.options[0] === "number") {
+      // @ts-ignore
+      return Math.max(...rule.options)
+    }
+  } else if (rule.range) {
+    if (typeof rule.range[0] === "number") {
+      // @ts-ignore
+      return Math.max(...rule.range)
+    }
+  }
+  return undefined
+} 
 
 // Convert a string "1..3" into {range: ["1","3"]}
 // Convert a string "1|2|3" into {options: ["1","2","3"]}
 /** @type {(str: string) => {options?: string[], range?: string[]}} */
-export function parseRangeOptions(str) {
+export function parseRangeOption(str) {
   const options = str.split("|")
   if (options.length > 1) {
     return { options }
@@ -86,6 +157,11 @@ export function randomize(attr, randFn = Math.random) {
   } else if (attr.options) {
     return pseudorandom.entry(attr.options, randFn)
   }
+}
+
+/** @type {(att: Attribute[], randFn: () => number) => AttributePart[]} */
+export function randomizeArray(attrArray, randFn = Math.random) {
+  return attrArray.map(part => randomize(part, randFn))
 }
 
 /** @type {(attr: any) => string} */

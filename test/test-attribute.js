@@ -20,14 +20,14 @@ test("attribute.parsePart", (t) => {
 })
 
 
-test("attribute.parseRangeOptions", (t) => {
-  t.deepEquals(attribute.parseRangeOptions("1 2 3"), { options: ["1 2 3"]}, "no range or options")
-  t.deepEquals(attribute.parseRangeOptions("1 2..3 4 5"), { range: ["1 2","3 4 5"]}, "range")
-  t.deepEquals(attribute.parseRangeOptions("a|b|c"), { options: ["a","b","c"]}, "options")
-  t.deepEquals(attribute.parseRangeOptions("1 2||3"), { options: ["1 2","","3"]}, "empty option")
-  t.deepEquals(attribute.parseRangeOptions("..3"), { range: ["","3"]}, "empty range")
-  t.deepEquals(attribute.parseRangeOptions("1..3 | 2.5..6"), { options: ["1..3 "," 2.5..6"]}, "both range and options")
-  t.deepEquals(attribute.parseRangeOptions("1..3..-2"), { range: ["1","3"]}, "multiple ranges")
+test("attribute.parseRangeOption", (t) => {
+  t.deepEquals(attribute.parseRangeOption("1 2 3"), { options: ["1 2 3"]}, "no range or options")
+  t.deepEquals(attribute.parseRangeOption("1 2..3 4 5"), { range: ["1 2","3 4 5"]}, "range")
+  t.deepEquals(attribute.parseRangeOption("a|b|c"), { options: ["a","b","c"]}, "options")
+  t.deepEquals(attribute.parseRangeOption("1 2||3"), { options: ["1 2","","3"]}, "empty option")
+  t.deepEquals(attribute.parseRangeOption("..3"), { range: ["","3"]}, "empty range")
+  t.deepEquals(attribute.parseRangeOption("1..3 | 2.5..6"), { options: ["1..3 "," 2.5..6"]}, "both range and options")
+  t.deepEquals(attribute.parseRangeOption("1..3..-2"), { range: ["1","3"]}, "multiple ranges")
 
   t.end()
 })
@@ -103,5 +103,66 @@ test("attribute.randomize", (t) => {
   t.ok(testB, "one number")
   t.ok(testC, "color")
   t.ok(testC, "array or numbers")
+  t.end()
+})
+
+test("attribute.parseColor", (t) => {
+  t.deepEquals(attribute.parseColor(""), undefined, "empty")
+  t.deepEquals(attribute.parseColor("black"), { options: [{r:0,g:0,b:0}] }, "color string")
+  t.deepEquals(attribute.parseColor("rgb(100%,100%,100%)"), { options: [{r:1,g:1,b:1}] }, "rgb string")
+  t.deepEquals(attribute.parseColor("red..lime"), { range: [{r:1,g:0,b:0}, {r:0,g:1,b:0}] }, "color range")
+  t.deepEquals(attribute.parseColor("rgb(255,255,255)|blue|yellow"), { options: [{r:1,g:1,b:1}, {r:0,g:0,b:1}, {r:1,g:1,b:0}] }, "color options")
+  t.end()
+})
+
+test("attribute.parseColorArray", (t) => {
+  t.deepEquals(attribute.parseColorArray(""), [], "empty")
+  t.deepEquals(attribute.parseColorArray("black"), [ { options: [{r:0,g:0,b:0}] } ], "one color string")
+  t.deepEquals(attribute.parseColorArray("rgb(100%,100%,100%)"), [ { options: [{r:1,g:1,b:1}] } ], "one rgb string")
+  t.deepEquals(attribute.parseColorArray("red..lime"), [ { range: [{r:1,g:0,b:0}, {r:0,g:1,b:0}] } ], "one color range")
+  t.deepEquals(attribute.parseColorArray("rgb(255,255,255)|blue|yellow"), [ { options: [{r:1,g:1,b:1}, {r:0,g:0,b:1}, {r:1,g:1,b:0}] } ], "one color options")
+  t.deepEquals(attribute.parseColorArray("rgb(255,255,255)|blue|yellow, red..lime, rgb(50%,50%,50%)"), [ { options: [{r:1,g:1,b:1}, {r:0,g:0,b:1}, {r:1,g:1,b:0}] }, { range: [{r:1,g:0,b:0}, {r:0,g:1,b:0}] }, { options: [{r:.5,g:.5,b:.5}] } ], "multiple colors")
+  t.end()
+})
+
+test("attribute.parseNumber", (t) => {
+  t.deepEquals(attribute.parseNumber(""), undefined, "empty")
+  t.deepEquals(attribute.parseNumber("10"), { options: [10] }, "one number")
+  t.deepEquals(attribute.parseNumber("-5..23"), { range: [-5, 23] }, "number range")
+  t.deepEquals(attribute.parseNumber(".1|-.2|.3"), { options: [.1, -.2, .3] }, "number options")
+  t.end()
+})
+
+test("attribute.parseNumberArray", (t) => {
+  t.deepEquals(attribute.parseNumberArray(""), [], "empty")
+  t.deepEquals(attribute.parseNumberArray("10"), [ { options: [10] } ], "one number")
+  t.deepEquals(attribute.parseNumberArray("-5..23"), [ { range: [-5, 23] } ], "one number range")
+  t.deepEquals(attribute.parseNumberArray(".1|-.2|.3"), [ { options: [.1, -.2, .3] } ], "one number options")
+  t.deepEquals(attribute.parseNumberArray(".1|-.2|.3, -5..23, 10"), [ { options: [.1, -.2, .3] }, { range: [-5, 23] }, { options: [10] } ], "multiple numbers")
+  t.end()
+})
+
+test("attribute.parseVec3", (t) => {
+  t.deepEquals(attribute.parseVec3(""), undefined, "empty")
+  t.deepEquals(attribute.parseVec3("1 2 3"), { options: [{x:1,y:2,z:3}] }, "one vec3")
+  t.deepEquals(attribute.parseVec3("-1 -2 -3..2 4 6"), { range: [{x:-1,y:-2,z:-3}, {x:2,y:4,z:6}] }, "vec3 range")
+  t.deepEquals(attribute.parseVec3(".1 .2 .3|-.2 .2 -.2|4 6 9"), { options: [{x:.1,y:.2,z:.3}, {x:-.2,y:.2,z:-.2}, {x:4,y:6,z:9}] }, "vec3 options")
+  t.end()
+})
+
+test("attribute.parseVec3array", (t) => {
+  t.deepEquals(attribute.parseVec3Array(""), [], "empty")
+  t.deepEquals(attribute.parseVec3Array("1 2 3"), [ { options: [{x:1,y:2,z:3}] } ], "one vec3")
+  t.deepEquals(attribute.parseVec3Array("-1 -2 -3..2 4 6"), [ { range: [{x:-1,y:-2,z:-3}, {x:2,y:4,z:6}] } ], "vec3 range")
+  t.deepEquals(attribute.parseVec3Array(".1 .2 .3|-.2 .2 -.2|4 6 9"), [ { options: [{x:.1,y:.2,z:.3}, {x:-.2,y:.2,z:-.2}, {x:4,y:6,z:9}] } ], "vec3 options")
+  t.deepEquals(attribute.parseVec3Array(".1 .2 .3|-.2 .2 -.2|4 6 9, -1 -2 -3..2 4 6, 1 2 3" ), [ { options: [{x:.1,y:.2,z:.3}, {x:-.2,y:.2,z:-.2}, {x:4,y:6,z:9}] }, { range: [{x:-1,y:-2,z:-3}, {x:2,y:4,z:6}] }, { options: [{x:1,y:2,z:3}] } ], "mutiple vec3s")
+  t.end()
+})
+
+test("attribute.getMaximum", (t) => {
+  t.deepEquals(attribute.getMaximum(attribute.parse("")), undefined, "empty")
+  t.deepEquals(attribute.getMaximum(attribute.parse("3")), 3, "single number")
+  t.deepEquals(attribute.getMaximum(attribute.parse("-1..4")), 4, "range")
+  t.deepEquals(attribute.getMaximum(attribute.parse("-2|.3|6.75")), 6.75, "options")
   t.end()
 })

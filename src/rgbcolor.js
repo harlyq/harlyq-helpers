@@ -129,23 +129,29 @@ export function parse(str) {
         if ( color = /^(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(,\s*([0-9]*\.?[0-9]+)\s*)?$/.exec( components ) ) {
 
           // rgb(255,0,0) rgba(255,0,0,0.5)
-          return {
+          const rgb = {
             r: Math.min( 255, parseInt( color[ 1 ], 10 ) ) / 255,
             g: Math.min( 255, parseInt( color[ 2 ], 10 ) ) / 255,
             b: Math.min( 255, parseInt( color[ 3 ], 10 ) ) / 255,
-            a: color[5] ? parseFloat( color[5] ) : undefined,
           }
+          if (color[5]) {
+            rgb.a = parseFloat( color[5] )
+          }
+          return rgb
         }
 
         if ( color = /^(\d+)\%\s*,\s*(\d+)\%\s*,\s*(\d+)\%\s*(,\s*([0-9]*\.?[0-9]+)\s*)?$/.exec( components ) ) {
 
           // rgb(100%,0%,0%) rgba(100%,0%,0%,0.5)
-          return {
+          const rgb = {
             r: Math.min( 100, parseInt( color[ 1 ], 10 ) ) / 100,
             g: Math.min( 100, parseInt( color[ 2 ], 10 ) ) / 100,
             b: Math.min( 100, parseInt( color[ 3 ], 10 ) ) / 100,
-            a: color[5] ? parseFloat( color[5] ) : undefined,
           }
+          if (color[5]) {
+            rgb.a = parseFloat( color[5] )
+          }
+          return rgb
         }
         break;
 
@@ -155,9 +161,11 @@ export function parse(str) {
         if ( color = /^([0-9]*\.?[0-9]+)\s*,\s*(\d+)\%\s*,\s*(\d+)\%\s*(,\s*([0-9]*\.?[0-9]+)\s*)?$/.exec( components ) ) {
 
           // hsl(120,50%,50%) hsla(120,50%,50%,0.5)
-          const rgba = setHSL({r:0,g:0,b:0,a:0}, parseFloat( color[ 1 ] )/360, parseInt( color[ 2 ], 10 )/100, parseInt( color[ 3 ], 10 )/100);
-          rgba.a = color[5] ? parseFloat( color[5] ) : undefined
-          return rgba
+          const rgb = setHSL({r:0,g:0,b:0,a:0}, parseFloat( color[ 1 ] )/360, parseInt( color[ 2 ], 10 )/100, parseInt( color[ 3 ], 10 )/100);
+          if (color[5]) {
+            rgb.a = parseFloat( color[5] )
+          }
+          return rgb
         }
         break;
 

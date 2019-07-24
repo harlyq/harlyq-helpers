@@ -120,3 +120,98 @@ export function count(list, fn) {
   }
   return num
 }
+
+/** @type { (maxBlocks: number) => { allocate: (requestedSize: number) => number | undefined, release: (index: number) => boolean, maxUsed: () => number } } */
+export function blocks(maxBlocks) {
+  const freeBlocks = [ { index: 0, size: maxBlocks } ] // list of available blocks, sorted by increasing index
+  const usedBlocks = []
+
+  function allocate(requestedSize) {
+    // search from the end of the free block list so we prefer to re-use
+    // previously allocated blocks, rather than the larger initial block
+    for (let j = freeBlocks.length - 1; j >= 0; j--) {
+      const block = freeBlocks[j]
+      const remainder = block.size - requestedSize
+
+      if (remainder >= 0) {
+        // new block is the beginning of the free block
+        let newBlock
+
+        if (remainder > 0) {
+          newBlock = { index: block.index, size: requestedSize }
+          block.index += requestedSize
+          block.size = remainder
+        } else {
+          newBlock = block
+          freeBlocks.splice(j, 1)
+        }
+
+        usedBlocks.push(newBlock)
+        return newBlock.index
+      }
+    }
+
+    return undefined
+  }
+
+  function release(index) {
+    for (let i = 0; i < usedBlocks.length; i++) {
+      const block = usedBlocks[i]
+      if (block.index === index) {
+        const freedCount = block.size
+        usedBlocks.splice(i, 1)
+        insertFreeBlock(block)
+        return freedCount
+      }
+    }
+    return 0
+  }
+
+  function maxUsed() {
+    return usedBlocks.reduce((highest, block) => Math.max(highest, block.index + block.size), 0)
+  }
+
+  function insertFreeBlock(mergeBlock) {
+    let freed = false
+
+    for (let j = 0; !freed && j < freeBlocks.length; j++) {
+      const otherBlock = freeBlocks[j]
+      if (otherBlock.index == mergeBlock.index + mergeBlock.size) {
+        // otherBlock immediately after mergeBlock
+        otherBlock.index = mergeBlock.index
+        otherBlock.size += mergeBlock.size
+        freed = true
+
+      } else if (otherBlock.index + otherBlock.size === mergeBlock.index) {
+        // otherBlock immediately before mergeBlock
+        otherBlock.size += mergeBlock.size
+
+        // if the mergeBlock also joins to the next block, then merge 
+        // otherBlock, mergeBlock and nextBlock
+        const nextBlock = freeBlocks[j + 1]
+        if (nextBlock && nextBlock.index === otherBlock.index + otherBlock.size) {
+          otherBlock.size += nextBlock.size
+          freeBlocks.splice(j + 1, 1) // remove nextBlock
+        }
+        freed = true
+
+      } else if (otherBlock.index > mergeBlock.index) {
+        // otherBlock is after merge block, but not joined
+        freeBlocks.splice(j, 0, mergeBlock)
+        freed = true
+
+      }
+    }
+
+    if (!freed) {
+      // add the block to the end of the list
+      freeBlocks.push(mergeBlock)
+    }
+  }
+
+  return {
+    allocate,
+    release,
+    maxUsed,
+  }
+}
