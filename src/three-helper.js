@@ -356,3 +356,55 @@ export function generateOrientedBoundingBox(obj3D, debugColor) {
      return path;
  };
  
+ export const randomPointInTriangle = (function() {
+  let v1 = new THREE.Vector3()
+  let v2 = new THREE.Vector3()
+
+  // see http://mathworld.wolfram.com/TrianglePointPicking.html
+  return function randomPointInTriangle(vertices, pos) {
+    // assume each set of 3 vertices (each vertex has 3 floats) is a triangle
+    let triangleOffset = Math.floor(Math.random()*vertices.length/9)*9
+    v1.fromArray(vertices, triangleOffset)
+    v2.fromArray(vertices, triangleOffset + 3)
+    pos.fromArray(vertices, triangleOffset + 6)
+
+    let r1, r2
+    do {
+      r1 = Math.random()
+      r2 = Math.random()
+    } while (r1 + r2 > 1) // discard points outside of the triangle
+
+    v2.sub(v1).multiplyScalar(r1)
+    pos.sub(v1).multiplyScalar(r2).add(v2).add(v1)
+  }  
+})()
+
+export const randomPointOnTriangleEdge = (function() {
+  let v1 = new THREE.Vector3()
+  let v2 = new THREE.Vector3()
+
+  return function randomPointOnTriangleEdge(vertices, pos) {
+    // assume each set of 3 vertices (each vertex has 3 floats) is a triangle
+    const triangleOffset = Math.floor(Math.random()*vertices.length/9)*9
+    const r = Math.random()*3 // integer part is the vertex, fractional part is the ratio to the next edge
+
+    if (r > 2) {
+      v1.fromArray(vertices, triangleOffset + 6)
+      v2.fromArray(vertices, triangleOffset)
+    } else if (r > 1) {
+      v1.fromArray(vertices, triangleOffset + 3)
+      v2.fromArray(vertices, triangleOffset + 6)
+    } else {
+      v1.fromArray(vertices, triangleOffset)
+      v2.fromArray(vertices, triangleOffset + 3)
+    }
+
+    pos.copy(v2).sub(v1).multiplyScalar( r - Math.floor(r) ).add(v1)
+  }  
+})()
+
+export function randomVertex(vertices, pos) {
+  let index = Math.floor( Math.random()*vertices.length/3 )*3
+  pos.fromArray(vertices, index)
+}
+

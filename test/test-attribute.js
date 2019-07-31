@@ -103,6 +103,8 @@ test("attribute.randomize", (t) => {
   t.ok(testB, "one number")
   t.ok(testC, "color")
   t.ok(testC, "array or numbers")
+  t.equals(attribute.randomize(undefined), undefined, "undefined")
+  t.equals(attribute.randomizeArray(undefined), undefined, "undefined array")
   t.end()
 })
 
@@ -130,6 +132,7 @@ test("attribute.parseNumber", (t) => {
   t.deepEquals(attribute.parseNumber("10"), { options: [10] }, "one number")
   t.deepEquals(attribute.parseNumber("-5..23"), { range: [-5, 23] }, "number range")
   t.deepEquals(attribute.parseNumber(".1|-.2|.3"), { options: [.1, -.2, .3] }, "number options")
+  t.deepEquals(attribute.parseNumber(".1|-.2|.3", x => -x), { options: [-.1, .2, -.3] }, "number options, negate modifier")
   t.end()
 })
 
@@ -139,6 +142,7 @@ test("attribute.parseNumberArray", (t) => {
   t.deepEquals(attribute.parseNumberArray("-5..23"), [ { range: [-5, 23] } ], "one number range")
   t.deepEquals(attribute.parseNumberArray(".1|-.2|.3"), [ { options: [.1, -.2, .3] } ], "one number options")
   t.deepEquals(attribute.parseNumberArray(".1|-.2|.3, -5..23, 10"), [ { options: [.1, -.2, .3] }, { range: [-5, 23] }, { options: [10] } ], "multiple numbers")
+  t.deepEquals(attribute.parseNumberArray(".1|-.2|.3, -5..23, 10", false, x => 2*x), [ { options: [.2, -.4, .6] }, { range: [-10, 46] }, { options: [20] } ], "multiple numbers, 2x multiplier")
   t.end()
 })
 
@@ -147,6 +151,7 @@ test("attribute.parseVec3", (t) => {
   t.deepEquals(attribute.parseVec3("1 2 3"), { options: [{x:1,y:2,z:3}] }, "one vec3")
   t.deepEquals(attribute.parseVec3("-1 -2 -3..2 4 6"), { range: [{x:-1,y:-2,z:-3}, {x:2,y:4,z:6}] }, "vec3 range")
   t.deepEquals(attribute.parseVec3(".1 .2 .3|-.2 .2 -.2|4 6 9"), { options: [{x:.1,y:.2,z:.3}, {x:-.2,y:.2,z:-.2}, {x:4,y:6,z:9}] }, "vec3 options")
+  t.deepEquals(attribute.parseVec3(".1 .5 .25|-.5 .5 -.5|4 6 9", vec => ({x: vec.x*2, y: vec.y*2, z: vec.z*2}) ), { options: [{x:.2,y:1,z:.5}, {x:-1,y:1,z:-1}, {x:8,y:12,z:18}] }, "vec3 options, 2x multiplier")
   t.end()
 })
 
@@ -156,6 +161,7 @@ test("attribute.parseVec3array", (t) => {
   t.deepEquals(attribute.parseVec3Array("-1 -2 -3..2 4 6"), [ { range: [{x:-1,y:-2,z:-3}, {x:2,y:4,z:6}] } ], "vec3 range")
   t.deepEquals(attribute.parseVec3Array(".1 .2 .3|-.2 .2 -.2|4 6 9"), [ { options: [{x:.1,y:.2,z:.3}, {x:-.2,y:.2,z:-.2}, {x:4,y:6,z:9}] } ], "vec3 options")
   t.deepEquals(attribute.parseVec3Array(".1 .2 .3|-.2 .2 -.2|4 6 9, -1 -2 -3..2 4 6, 1 2 3" ), [ { options: [{x:.1,y:.2,z:.3}, {x:-.2,y:.2,z:-.2}, {x:4,y:6,z:9}] }, { range: [{x:-1,y:-2,z:-3}, {x:2,y:4,z:6}] }, { options: [{x:1,y:2,z:3}] } ], "mutiple vec3s")
+  t.deepEquals(attribute.parseVec3Array(".1 .2 .3|-.2 .2 -.2|4 6 9, -1 -2 -3..2 4 6, 1 2 3", false, vec => ({x: -vec.x, y: -vec.y, z: -vec.z}) ), [ { options: [{x:-.1,y:-.2,z:-.3}, {x:.2,y:-.2,z:.2}, {x:-4,y:-6,z:-9}] }, { range: [{x:1,y:2,z:3}, {x:-2,y:-4,z:-6}] }, { options: [{x:-1,y:-2,z:-3}] } ], "mutiple vec3s, negate modifier")
   t.end()
 })
 
@@ -164,5 +170,13 @@ test("attribute.getMaximum", (t) => {
   t.deepEquals(attribute.getMaximum(attribute.parse("3")), 3, "single number")
   t.deepEquals(attribute.getMaximum(attribute.parse("-1..4")), 4, "range")
   t.deepEquals(attribute.getMaximum(attribute.parse("-2|.3|6.75")), 6.75, "options")
+  t.end()
+})
+
+test("attribute.getAverage", (t) => {
+  t.deepEquals(attribute.getAverage(attribute.parse("")), undefined, "empty")
+  t.deepEquals(attribute.getAverage(attribute.parse("3")), 3, "single number")
+  t.deepEquals(attribute.getAverage(attribute.parse("-1..4")), 1.5, "range")
+  t.deepEquals(attribute.getAverage(attribute.parse("-2|.5|6.75")), 1.75, "options")
   t.end()
 })

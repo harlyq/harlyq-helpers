@@ -1,6 +1,8 @@
 import * as pseudorandom from "./pseudorandom.js"
 import * as rgbcolor from "./rgbcolor.js"
 
+export const IDENTITY_FN = x => x
+
 /**
  * @typedef {{x: number, y: number}} VecXY
  * @typedef {{x: number, y: number, z: number}} VecXYZ
@@ -10,13 +12,13 @@ import * as rgbcolor from "./rgbcolor.js"
  * @typedef {{range?: AttributePart[], options?: AttributePart[]}} Attribute
  */
 
-/** @type {(str: string) => Attribute} */
-export function parse(str) {
+/** @type {(str: string, conversionFn?: (any) => any) => Attribute} */
+export function parse(str, conversionFn = IDENTITY_FN) {
   const rangeOption = parseRangeOption(str)
   if (rangeOption.range) {
-    return { range: rangeOption.range.map(part => parsePart(part)) }
+    return { range: rangeOption.range.map(part => conversionFn( parsePart(part)) ) }
   } else {
-    return { options: rangeOption.options.map(part => parsePart(part)) }
+    return { options: rangeOption.options.map(part => conversionFn( parsePart(part)) ) }
   }
 }
 
@@ -67,17 +69,17 @@ function validateRangeOption(part, validateItemFn) {
   return false
 }
 
-function parseValue(str, validateFn) {
-  const rangeOption = parse(str)
+function parseValue(str, validateFn, conversionFn = IDENTITY_FN) {
+  const rangeOption = parse(str, conversionFn)
   return validateRangeOption(rangeOption, validateFn) ? rangeOption : undefined
 }
 
-function parseArray(str, validateFn, permitEmpty = false) {
+function parseArray(str, validateFn, permitEmpty = false, conversionFn = IDENTITY_FN) {
   if (str === "") {
     return []
   }
   
-  const rangeOptions = nestedSplit(str, ",").flatMap(partStr => parse(partStr))
+  const rangeOptions = nestedSplit(str, ",").flatMap(partStr => parse(partStr, conversionFn))
   return rangeOptions.every(part => (permitEmpty && part) || validateRangeOption(part, validateFn)) ? rangeOptions : undefined
 }
 
@@ -85,24 +87,24 @@ export function parseColor(str) {
   return parseValue(str, validateColor)
 }
 
-export function parseColorArray(str, permitEmpty = false) {
-  return parseArray(str, validateColor, permitEmpty)
+export function parseColorArray(str, permitEmpty = false, conversionFn = IDENTITY_FN) {
+  return parseArray(str, validateColor, permitEmpty, conversionFn)
 }
 
-export function parseNumber(str) {
-  return parseValue(str, validateNumber)
+export function parseNumber(str, conversionFn = IDENTITY_FN) {
+  return parseValue(str, validateNumber, conversionFn)
 }
 
-export function parseNumberArray(str, permitEmpty = false) {
-  return parseArray(str, validateNumber, permitEmpty)
+export function parseNumberArray(str, permitEmpty = false, conversionFn = IDENTITY_FN) {
+  return parseArray(str, validateNumber, permitEmpty, conversionFn)
 }
 
-export function parseVec3(str) {
-  return parseValue(str, validateVec3)
+export function parseVec3(str, conversionFn = IDENTITY_FN) {
+  return parseValue(str, validateVec3, conversionFn)
 }
 
-export function parseVec3Array(str, permitEmpty = false) {
-  return parseArray(str, validateVec3, permitEmpty)
+export function parseVec3Array(str, permitEmpty = false, conversionFn = IDENTITY_FN) {
+  return parseArray(str, validateVec3, permitEmpty, conversionFn)
 }
 
 /** @type {(rule: Attribute) => number} */
@@ -116,6 +118,22 @@ export function getMaximum(rule) {
     if (typeof rule.range[0] === "number") {
       // @ts-ignore
       return Math.max(...rule.range)
+    }
+  }
+  return undefined
+} 
+
+/** @type {(rule: Attribute) => number} */
+export function getAverage(rule) {
+  const sum = list => list.reduce((total,x) => total + x, 0)
+
+  if (rule.options) {
+    if (rule.options.length > 0 && typeof rule.options[0] === "number") {
+      return sum(rule.options)/rule.options.length
+    }
+  } else if (rule.range) {
+    if (typeof rule.range[0] === "number") {
+      return sum(rule.range)/rule.range.length
     }
   }
   return undefined
@@ -140,7 +158,7 @@ export function parseRangeOption(str) {
 
 /** @type {(att: Attribute, randFn: () => number) => AttributePart} */
 export function randomize(attr, randFn = Math.random) {
-  if (attr.range) {
+  if (attr && attr.range) {
     const min = attr.range[0]
     const max = attr.range[1]
 
@@ -154,14 +172,14 @@ export function randomize(attr, randFn = Math.random) {
       return min
     }
     
-  } else if (attr.options) {
+  } else if (attr && attr.options) {
     return pseudorandom.entry(attr.options, randFn)
   }
 }
 
 /** @type {(att: Attribute[], randFn: () => number) => AttributePart[]} */
 export function randomizeArray(attrArray, randFn = Math.random) {
-  return attrArray.map(part => randomize(part, randFn))
+  return attrArray && attrArray.map(part => randomize(part, randFn))
 }
 
 /** @type {(attr: any) => string} */
