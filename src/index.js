@@ -7,6 +7,7 @@ import * as extent from "./extent.js"
 import * as hull from "./hull.js"
 import * as interpolation from "./interpolation.js"
 import * as intersection from "./intersection.js"
+import * as jsonHelper from "./json-helper.js"
 // import * as nodeHelper from "./node-helper.js"
 import * as overlap from "./overlap.js"
 import * as proximity from "./proximity.js"
@@ -28,6 +29,7 @@ export { domHelper }
 export { extent }
 export { interpolation }
 export { intersection }
+export { jsonHelper }
 export { hull }
 // export { nodeHelper }
 export { overlap }
