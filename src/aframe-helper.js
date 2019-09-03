@@ -1,6 +1,7 @@
 import * as attribute from "./attribute.js"
 import * as utils from "./utils.js"
 import * as domHelper from "./dom-helper.js"
+import * as jsonHelper from "./json-helper.js"
 
 // *value* can be boolean, string, color or array of numbers
 /** 
@@ -47,7 +48,7 @@ export const setProperty = (() => {
     }
   
     // e.g. object3dmap.mesh.material.uniforms.color
-    const path = utils.getWithPath(target, parts.slice(0, -1))
+    const path = jsonHelper.getWithPath(target, parts.slice(0, -1))
     if (path) {
       // this only works for boolean, string, color and number
       path[ parts[parts.length - 1] ] = value
@@ -72,7 +73,7 @@ export function getProperty(el, prop) {
     return typeof attr === "object" ? attr[parts[1]] : undefined
     
   } else {
-    const value = utils.getWithPath(el, parts)
+    const value = jsonHelper.getWithPath(el, parts)
     return value
   }
 }
