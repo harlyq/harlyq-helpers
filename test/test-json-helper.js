@@ -35,3 +35,43 @@ test("jsonHelper.deepCopy", (t) => {
   t.end()
 })
 
+test("jsonHelper.query", (t) => {
+  t.deepEquals(jsonHelper.query(undefined, () => (t.fail('undefined should never query'), false), () => t.fail('undefined should never output')), undefined, 'undefined')
+  t.deepEquals(jsonHelper.query(null, () => (t.fail('null should never query'), false), () => t.fail('null should never output')), undefined, 'null')
+  t.deepEquals(jsonHelper.query([], () => false, () => t.fail('empty array should never output')), undefined, 'empty array')
+  t.deepEquals(jsonHelper.query({}, () => false, () => t.fail('empty object should never output')), undefined, 'empty object')
+  t.deepEquals(jsonHelper.query( [{a:1},{a:2},{a:3}] , q => q.a >= 2), {a:2}, 'array of simple objects')
+  t.deepEquals(jsonHelper.query( [{a:1},{a:2},{a:3}] , q => q.a >= 2, d => d.a), 2, 'array of simple objects, with feature extraction')
+  t.deepEquals(jsonHelper.query( {u: [0], x: {b:1, c:1}, y: {c:3} } , q => 'b' in q), {b:1, c:1}, 'nested objects, check for property')
+  t.deepEquals(jsonHelper.query( {u: [0], x: [{b:1, c:1}, {b:2, c:2}], y: {b:3, c:3} } , q => 'b' in q), {b:1, c:1}, 'multiple nested objects, check for property')
+  t.deepEquals(jsonHelper.query( [ [1,2,3], [4,5,6,7], [8,9,10], [11] ] , q => q.length === 3), [1,2,3], 'nested arrays, check length')
+  t.end()
+})
+
+test("jsonHelper.queryAll", (t) => {
+  t.deepEquals(jsonHelper.queryAll(undefined, () => (t.fail('undefined should never query'), false), () => t.fail('undefined should never output')), [], 'undefined')
+  t.deepEquals(jsonHelper.queryAll(null, () => (t.fail('null should never query'), false), () => t.fail('null should never output')), [], 'null')
+  t.deepEquals(jsonHelper.queryAll([], () => false, () => t.fail('empty array should never output')), [], 'empty array')
+  t.deepEquals(jsonHelper.queryAll({}, () => false, () => t.fail('empty object should never output')), [], 'empty object')
+  t.deepEquals(jsonHelper.queryAll( [{a:1},{a:2},{a:3}] , q => q.a >= 2), [{a:2}, {a:3}], 'array of simple objects')
+  t.deepEquals(jsonHelper.queryAll( [{a:1},{a:2},{a:3}] , q => q.a >= 2, d => d.a), [2,3], 'array of simple objects, with feature extraction')
+  t.deepEquals(jsonHelper.queryAll( {x: {b:1, c:1}, y: {c:3} } , q => 'b' in q), [{b:1, c:1}], 'nested objects, check for property')
+  t.deepEquals(jsonHelper.queryAll( {x: [{b:1, c:1}, {b:2, c:2}], y: {b:3, c:3} } , q => 'b' in q), [{b:1, c:1}, {b:2, c:2}, {b:3, c:3}], 'multiple nested objects, check for property')
+  t.deepEquals(jsonHelper.queryAll( [ [1,2,3], [4,5,6,7], [8,9,10], [11] ] , q => q.length === 3), [ [1,2,3], [8,9,10] ], 'nested arrays, check length')
+  t.deepEquals(jsonHelper.queryAll( [ [1,2,3], [4,5,6,7], [8,9,10], [11] ] , q => q.length === 5), [], 'nested arrays, check length, no matches')
+  t.end()
+})
+
+test("jsonHelper.countAll", (t) => {
+  t.deepEquals(jsonHelper.countAll( undefined, () => (t.fail('undefined should never query'), false) ), 0, 'undefined')
+  t.deepEquals(jsonHelper.countAll( null, () => (t.fail('null should never query'), false) ), 0, 'null')
+  t.deepEquals(jsonHelper.countAll( [], () => false ), 0, 'empty array')
+  t.deepEquals(jsonHelper.countAll( {}, () => false ), 0, 'empty object')
+  t.deepEquals(jsonHelper.countAll( [{a:1},{a:2},{a:3}] , q => q.a >= 2), 2, 'array of simple objects')
+  t.deepEquals(jsonHelper.countAll( {x: {b:1, c:1}, y: {c:3} } , q => 'b' in q), 1, 'nested objects, check for property')
+  t.deepEquals(jsonHelper.countAll( {x: [{b:1, c:1}, {b:2, c:2}], y: {b:3, c:3} } , q => 'b' in q), 3, 'multiple nested objects, check for property')
+  t.deepEquals(jsonHelper.countAll( [ [1,2,3], [4,5,6,7], [8,9,10], [11] ] , q => q.length === 3), 2, 'nested arrays, check length')
+  t.deepEquals(jsonHelper.countAll( [ [1,2,3], [4,5,6,7], [8,9,10], [11] ] , q => q.length === 5), 0, 'nested arrays, check length, no matches')
+  t.end()
+})
+

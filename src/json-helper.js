@@ -1,49 +1,72 @@
+const IDENTITY_FN = x => x
 
-export function query(json, queryFn, dataFn) {
+/** @type {(json: any, queryFn: (json: any) => boolean, dataFn: (json: any, path: string[]) => any ) => any } */
+export function query(json, queryFn, dataFn = IDENTITY_FN) {
   return queryInternal(json, queryFn, dataFn, true, [])
 }
 
-export function queryAll(json, queryFn, dataFn) {
-  return queryInternal(json, queryFn, dataFn, false, [])
+// depth first traversal
+/** @type {(json: any, queryFn: (json: any) => boolean, dataFn: (json: any, path: string[]) => any ) => any } */
+export function queryAll(json, queryFn, dataFn = IDENTITY_FN) {
+  const result = queryInternal(json, queryFn, dataFn, false, [])
+  return result ? result : []
 }
 
+/** @type {(json: any, queryFn: (json: any) => boolean, dataFn: (json: any, path: string[]) => any, onlyFirst: boolean, path: string[] ) => any } */
 function queryInternal(json, queryFn, dataFn, onlyFirst, path) {
   let results = []
+  
+  if ( typeof json === 'object' && json !== null ) {
+    const use = queryFn( json )
 
-  if ( Array.isArray(json) ) {
-    for ( let i = 0; i < json.length; i++ ) {
-      const arrayResult = queryInternal( json[i], queryFn, dataFn, onlyFirst, path.concat(i) )
-      if ( arrayResult && onlyFirst ) {
-        return arrayResult
-      } else if ( arrayResult ) {
-        results.push( arrayResult )
+    if ( use ) {    
+      const answer = dataFn( json, path )
+      if ( onlyFirst ) {
+        return answer
+      } else {
+        results.push( answer )
       }
     }
     
-  } else if (typeof json === "object") {
-    const answer = queryFn( json )
+    const keys = Object.keys( json )
 
-    if (answer) {
-      const recordResult = dataFn( answer, path, json )
-      if (recordResult && onlyFirst) {
-        return recordResult
-      } else if (recordResult) {
-        results.push(recordResult)
-      }
-
-    } else {
-      for (let key in json) {
-        const keyResult = queryInternal( json[key], queryFn, dataFn, onlyFirst, path.concat(key) )
-        if (keyResult && onlyFirst) {
-          return keyResult
-        } else if (keyResult) {
-          results.push(keyResult)
+    for ( let i = 0; i < keys.length; i++ ) {
+      const key = keys[i]
+      const arrayResult = queryInternal( json[key], queryFn, dataFn, onlyFirst, path.concat(key) )
+      if ( arrayResult !== undefined ) {
+        if ( onlyFirst ) {
+          return arrayResult
+        } else if ( arrayResult ) {
+          results.push( ...arrayResult )
         }
       }
     }
   }
 
-  return results
+  return onlyFirst ? results[0] : results.length > 0 ? results : undefined
+}
+
+/** @type {(json: any, queryFn: (json: any) => boolean) => number } */
+export function countAll(json, queryFn) {
+  let count = 0
+
+  if ( typeof json === 'object' && json !== null ) {
+    if ( queryFn( json ) ) {
+      count++
+    }
+
+    if ( Array.isArray(json) ) {
+      for ( let i = 0; i < json.length; i++ ) {
+        count += countAll( json[i], queryFn )
+      }  
+    } else {
+      for ( let key in json ) {
+        count += countAll( json[key], queryFn )
+      }
+    }
+  }
+
+  return count
 }
 
 /** @type {(a: any, b: any) => boolean} */
