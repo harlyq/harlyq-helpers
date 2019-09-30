@@ -16,9 +16,9 @@ export const IDENTITY_FN = x => x
 export function parse(str, conversionFn = IDENTITY_FN) {
   const rangeOption = parseRangeOption(str)
   if (rangeOption.range) {
-    return { range: rangeOption.range.map(part => conversionFn( parsePart(part)) ) }
+    return { range: rangeOption.range.map( part => conversionFn( parsePart(part) ) ) }
   } else {
-    return { options: rangeOption.options.map(part => conversionFn( parsePart(part)) ) }
+    return { options: rangeOption.options.map( part => conversionFn( parsePart(part) ) ) }
   }
 }
 
@@ -69,42 +69,68 @@ function validateRangeOption(part, validateItemFn) {
   return false
 }
 
+/** @type {<T>(str: string, validateFn: (value:T) => boolean, conversionFn: (value:T) => T) => Attribute} */
 function parseValue(str, validateFn, conversionFn = IDENTITY_FN) {
   const rangeOption = parse(str, conversionFn)
   return validateRangeOption(rangeOption, validateFn) ? rangeOption : undefined
 }
 
-function parseArray(str, validateFn, permitEmpty = false, conversionFn = IDENTITY_FN) {
-  if (str === "") {
+/** @type {<T>(str: string, validateFn: (value:T) => boolean, permitEmpty: boolean, conversionFn: (value:T) => T) => Attribute[]} */
+function parseArray(str, validateFn, permitEmpty, conversionFn = IDENTITY_FN) {
+  if (str.trim() === "") {
     return []
   }
   
-  const rangeOptions = nestedSplit(str, ",").flatMap(partStr => parse(partStr, conversionFn))
-  return rangeOptions.every(part => (permitEmpty && part) || validateRangeOption(part, validateFn)) ? rangeOptions : undefined
+  const rangeOptions = nestedSplit(str, ",").flatMap( partStr => {
+    const str = partStr.trim()
+    return !permitEmpty || str ? parse(str, conversionFn) : undefined
+   } )
+  return rangeOptions.every( part => permitEmpty && part === undefined ? true : validateRangeOption(part, validateFn) ) ? rangeOptions : undefined
 }
 
+/** @type {(str: string, conversionFn: (RGBColor) => RGBColor) => Attribute} */
 export function parseColor(str) {
   return parseValue(str, validateColor)
 }
 
-export function parseColorArray(str, permitEmpty = false, conversionFn = IDENTITY_FN) {
-  return parseArray(str, validateColor, permitEmpty, conversionFn)
+/** @type {(str: string, conversionFn: (RGBColor) => RGBColor) => Attribute[]} */
+export function parseColorArray(str, conversionFn = IDENTITY_FN) {
+  return parseArray(str, validateColor, false, conversionFn)
 }
 
+/** @type {(str: string, conversionFn: (RGBColor) => RGBColor) => Attribute[]} */
+export function parseColorSparseArray(str, conversionFn = IDENTITY_FN) {
+  return parseArray(str, validateColor, true, conversionFn)
+}
+
+/** @type {(str: string, conversionFn: (number) => number) => Attribute} */
 export function parseNumber(str, conversionFn = IDENTITY_FN) {
   return parseValue(str, validateNumber, conversionFn)
 }
 
-export function parseNumberArray(str, permitEmpty = false, conversionFn = IDENTITY_FN) {
-  return parseArray(str, validateNumber, permitEmpty, conversionFn)
+/** @type {(str: string, conversionFn: (number) => number) => Attribute[]} */
+export function parseNumberArray(str, conversionFn = IDENTITY_FN) {
+  return parseArray(str, validateNumber, false, conversionFn)
 }
 
+/** @type {(str: string, conversionFn: (number) => number) => Attribute[]} */
+export function parseNumberSparseArray(str, conversionFn = IDENTITY_FN) {
+  return parseArray(str, validateNumber, true, conversionFn)
+}
+
+/** @type {(str: string, conversionFn: (value:VecXYZ) => VecXYZ) => Attribute} */
 export function parseVec3(str, conversionFn = IDENTITY_FN) {
   return parseValue(str, validateVec3, conversionFn)
 }
 
-export function parseVec3Array(str, permitEmpty = false, conversionFn = IDENTITY_FN) {
-  return parseArray(str, validateVec3, permitEmpty, conversionFn)
+/** @type {(str: string, conversionFn: (value: VecXYZ) => VecXYZ) => Attribute[]} */
+export function parseVec3Array(str, conversionFn = IDENTITY_FN) {
+  return parseArray(str, validateVec3, false, conversionFn)
+}
+
+/** @type {(str: string, conversionFn: (value: VecXYZ) => VecXYZ) => Attribute[]} */
+export function parseVec3SparseArray(str, conversionFn = IDENTITY_FN) {
+  return parseArray(str, validateVec3, true, conversionFn)
 }
 
 /** @type {(rule: Attribute) => number} */

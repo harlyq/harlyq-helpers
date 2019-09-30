@@ -124,6 +124,7 @@ test("attribute.parseColorArray", (t) => {
   t.deepEquals(attribute.parseColorArray("red..lime"), [ { range: [{r:1,g:0,b:0}, {r:0,g:1,b:0}] } ], "one color range")
   t.deepEquals(attribute.parseColorArray("rgb(255,255,255)|blue|yellow"), [ { options: [{r:1,g:1,b:1}, {r:0,g:0,b:1}, {r:1,g:1,b:0}] } ], "one color options")
   t.deepEquals(attribute.parseColorArray("rgb(255,255,255)|blue|yellow, red..lime, rgb(50%,50%,50%)"), [ { options: [{r:1,g:1,b:1}, {r:0,g:0,b:1}, {r:1,g:1,b:0}] }, { range: [{r:1,g:0,b:0}, {r:0,g:1,b:0}] }, { options: [{r:.5,g:.5,b:.5}] } ], "multiple colors")
+  t.deepEquals(attribute.parseColorSparseArray(", red..lime, rgb(50%,50%,50%)"), [ undefined, { range: [{r:1,g:0,b:0}, {r:0,g:1,b:0}] }, { options: [{r:.5,g:.5,b:.5}] } ], "multiple colors")
   t.end()
 })
 
@@ -142,7 +143,8 @@ test("attribute.parseNumberArray", (t) => {
   t.deepEquals(attribute.parseNumberArray("-5..23"), [ { range: [-5, 23] } ], "one number range")
   t.deepEquals(attribute.parseNumberArray(".1|-.2|.3"), [ { options: [.1, -.2, .3] } ], "one number options")
   t.deepEquals(attribute.parseNumberArray(".1|-.2|.3, -5..23, 10"), [ { options: [.1, -.2, .3] }, { range: [-5, 23] }, { options: [10] } ], "multiple numbers")
-  t.deepEquals(attribute.parseNumberArray(".1|-.2|.3, -5..23, 10", false, x => 2*x), [ { options: [.2, -.4, .6] }, { range: [-10, 46] }, { options: [20] } ], "multiple numbers, 2x multiplier")
+  t.deepEquals(attribute.parseNumberArray(".1|-.2|.3, -5..23, 10", x => 2*x), [ { options: [.2, -.4, .6] }, { range: [-10, 46] }, { options: [20] } ], "multiple numbers, 2x multiplier")
+  t.deepEquals(attribute.parseNumberSparseArray(".1|-.2|.3, , 10", x => 2*x), [ { options: [.2, -.4, .6] }, undefined, { options: [20] } ], "sparse, multiple numbers, 2x multiplier")
   t.end()
 })
 
@@ -161,7 +163,8 @@ test("attribute.parseVec3array", (t) => {
   t.deepEquals(attribute.parseVec3Array("-1 -2 -3..2 4 6"), [ { range: [{x:-1,y:-2,z:-3}, {x:2,y:4,z:6}] } ], "vec3 range")
   t.deepEquals(attribute.parseVec3Array(".1 .2 .3|-.2 .2 -.2|4 6 9"), [ { options: [{x:.1,y:.2,z:.3}, {x:-.2,y:.2,z:-.2}, {x:4,y:6,z:9}] } ], "vec3 options")
   t.deepEquals(attribute.parseVec3Array(".1 .2 .3|-.2 .2 -.2|4 6 9, -1 -2 -3..2 4 6, 1 2 3" ), [ { options: [{x:.1,y:.2,z:.3}, {x:-.2,y:.2,z:-.2}, {x:4,y:6,z:9}] }, { range: [{x:-1,y:-2,z:-3}, {x:2,y:4,z:6}] }, { options: [{x:1,y:2,z:3}] } ], "mutiple vec3s")
-  t.deepEquals(attribute.parseVec3Array(".1 .2 .3|-.2 .2 -.2|4 6 9, -1 -2 -3..2 4 6, 1 2 3", false, vec => ({x: -vec.x, y: -vec.y, z: -vec.z}) ), [ { options: [{x:-.1,y:-.2,z:-.3}, {x:.2,y:-.2,z:.2}, {x:-4,y:-6,z:-9}] }, { range: [{x:1,y:2,z:3}, {x:-2,y:-4,z:-6}] }, { options: [{x:-1,y:-2,z:-3}] } ], "mutiple vec3s, negate modifier")
+  t.deepEquals(attribute.parseVec3Array(".1 .2 .3|-.2 .2 -.2|4 6 9, -1 -2 -3..2 4 6, 1 2 3", vec => ({x: -vec.x, y: -vec.y, z: -vec.z}) ), [ { options: [{x:-.1,y:-.2,z:-.3}, {x:.2,y:-.2,z:.2}, {x:-4,y:-6,z:-9}] }, { range: [{x:1,y:2,z:3}, {x:-2,y:-4,z:-6}] }, { options: [{x:-1,y:-2,z:-3}] } ], "mutiple vec3s, negate modifier")
+  t.deepEquals(attribute.parseVec3SparseArray(".1 .2 .3|-.2 .2 -.2|4 6 9, -1 -2 -3..2 4 6,", vec => ({x: -vec.x, y: -vec.y, z: -vec.z}) ), [ { options: [{x:-.1,y:-.2,z:-.3}, {x:.2,y:-.2,z:.2}, {x:-4,y:-6,z:-9}] }, { range: [{x:1,y:2,z:3}, {x:-2,y:-4,z:-6}] }, undefined ], "sparse, mutiple vec3s, negate modifier")
   t.end()
 })
 
