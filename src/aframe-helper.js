@@ -1,5 +1,4 @@
 import * as attribute from "./attribute.js"
-import * as utils from "./utils.js"
 import * as domHelper from "./dom-helper.js"
 import * as jsonHelper from "./json-helper.js"
 

@@ -52,10 +52,6 @@ export const setOBBFromObject3D = (function() {
   let tempBox3 = new THREE.Box3()
 
   return /** @type {SetOBBFromObject3DFn} */function setOBBFromObject3D(ext, object3D) {
-    if (object3D.children.length === 0) {
-      return ext
-    }
-
     // HACK we force the worldmatrix to identity for the object and remmove the parent
     // so we can get a bounding box based around the origin
     tempPosition.copy(object3D.position)
@@ -102,9 +98,18 @@ export function generateOrientedBoundingBox(obj3D, debugColor) {
     obj3D.boundingBox.getBoundingSphere(obj3D.boundingSphere)
 
     if (debugColor) {
-      obj3D.boundingBoxDebug = new THREE.Box3Helper(obj3D.boundingBox, debugColor)
-      obj3D.boundingBoxDebug.name = "orientedBoundingDebug"
-      obj3D.add(obj3D.boundingBoxDebug)
+      const extents = new THREE.Vector3()
+      obj3D.boundingBox.getSize(extents)
+
+      const group = new THREE.Group()
+      const box = new THREE.Box3Helper(obj3D.boundingBox, debugColor)
+      const axes = new THREE.AxesHelper( Math.min(extents.x, extents.y, extents.z) )
+      group.add(axes)
+      group.add(box)
+      group.name = "orientedBoundingDebug"
+
+      obj3D.add(group)
+      obj3D.boundingBoxDebug = group
     }
   }
 }
