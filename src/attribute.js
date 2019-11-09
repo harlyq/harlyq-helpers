@@ -258,3 +258,94 @@ export function nestedSplit(str, separator = ",", nestedChars = ["''", '""', "{}
   split.push(str.substring(startI, str.length))
   return split
 }
+
+
+const DEFAULT = Symbol('default')
+const LAST = Symbol("last")
+const FIRST = Symbol("first")
+const APPEND = Symbol("append")
+
+export function modifierStack(defaultFn = (target, attribute) => undefined) {
+  const map = new Map()
+  
+  let indices = []
+
+  function set(source, target, attribute, value, mode = LAST) {
+    if (!map.has(target)) {
+      map.set(target, [])
+    }
+
+    const list = map.get(target)
+    if ( findAttributeIndices(indices, list, attribute).length === 0 ) {
+      list.push( { source: DEFAULT, mode, attribute, value: defaultFn(target, attribute) } ) // new attribute, set the default first
+    }
+
+    const sourceIndex = indices.find(i => list[i].source === source)
+    if (sourceIndex === undefined) {
+      list.push( {source, mode, attribute, value} ) // new source for existing attribute
+    } else {
+      list[sourceIndex].value = value // existing source and attribute
+    }
+
+    findAttributeIndices(indices, list, attribute)
+    console.assert(indices.length > 0)
+
+    const firstIndex = indices[0]
+    return indices.length === 1 ? list[firstIndex].value : indices.map( i => list[i].value )
+  }
+  
+  function unset(source, target, attribute) {
+    if (map.has(target)) {
+      const list = map.get(target)
+
+      const sourceIndex = list.findIndex(item => item.attribute === attribute && item.source === source)
+      if (sourceIndex !== -1) {
+        list.splice(sourceIndex, 1)
+      }
+
+      indices = findAttributeIndices(indices, list, attribute)
+      if (indices.length > 0) {
+        const firstIndex = indices[0]
+        const newValue = indices.length === 1 ? list[firstIndex].value : indices.map( i => list[i].value )
+  
+        if (indices.length === 1 && list[firstIndex].source === DEFAULT) {
+          list.splice(firstIndex, 1) // remove DEFAULT if it's the only source remaining
+        }
+  
+        return newValue
+      }
+    }
+  }
+  
+  function findAttributeIndices(outIndices, list, attribute) {
+    outIndices.length = 0
+
+    // FIRST returns the first non-default, or the default if there are no non-default entries
+    // LAST returns the last entry (which may be the default)
+    // APPEND returns a list of entries, which includes the default
+
+    for (let i = 0, k = 0; i < list.length; i++) {
+      const item = list[i]
+
+      if (item.attribute === attribute) {
+        outIndices[k] = i
+
+        if (item.mode === APPEND) {
+          k++
+        } else if (item.mode === FIRST && item.source !== DEFAULT) {
+          break
+        }
+      }
+    }    
+
+    return outIndices
+  }
+
+  return {
+    set,
+    unset,
+    APPEND,
+    FIRST,
+    LAST,
+  }
+}
