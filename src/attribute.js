@@ -2,6 +2,8 @@ import * as pseudorandom from "./pseudorandom.js"
 import * as rgbcolor from "./rgbcolor.js"
 
 export const IDENTITY_FN = x => x
+export const MODIFIER_NESTED = Symbol("nested")
+export const MODIFIER_OVERWRITE = Symbol("overwrite")
 
 /**
  * @typedef {{x: number, y: number}} VecXY
@@ -265,14 +267,17 @@ const LAST = Symbol("last")
 const FIRST = Symbol("first")
 const APPEND = Symbol("append")
 
-export function modifierStack(defaultFn = (target, attribute) => undefined) {
+// if the setStyle is MODIFIER_NESTED then each set() needs a corresponding unset(), for
+// MODIFIER_OVERWRITE multiple set()s to the same source,target,attribute combination will
+// overwrite previous sets
+export function modifierStack(defaultFn = (target, attribute) => undefined, setStyle = MODIFIER_NESTED) {
   const map = new Map()
   
   let indices = []
 
   function set(source, target, attribute, value, mode = LAST) {
     if (!map.has(target)) {
-      map.set(target, [])
+      map.set(target, new Array())
     }
 
     const list = map.get(target)
@@ -281,10 +286,16 @@ export function modifierStack(defaultFn = (target, attribute) => undefined) {
     }
 
     const sourceIndex = indices.find(i => list[i].source === source)
-    if (sourceIndex === undefined) {
-      list.push( {source, mode, attribute, value} ) // new source for existing attribute
+    if (setStyle === MODIFIER_NESTED) {
+
+      list.push( {source, mode, attribute, value} ) // add one entry per set()
     } else {
-      list[sourceIndex].value = value // existing source and attribute
+
+      if (sourceIndex === undefined) {
+        list.push( {source, mode, attribute, value} ) // new source for existing attribute
+      } else {
+        list[sourceIndex].value = value // existing source and attribute
+      }
     }
 
     findAttributeIndices(indices, list, attribute)
@@ -298,9 +309,13 @@ export function modifierStack(defaultFn = (target, attribute) => undefined) {
     if (map.has(target)) {
       const list = map.get(target)
 
-      const sourceIndex = list.findIndex(item => item.attribute === attribute && item.source === source)
-      if (sourceIndex !== -1) {
-        list.splice(sourceIndex, 1)
+      // remove the last matching item
+      for (let i = list.length - 1; i >= 0; i--) {
+        const item = list[i]
+        if (item.attribute === attribute && item.source === source) {
+          list.splice(i, 1)
+          break
+        }
       }
 
       indices = findAttributeIndices(indices, list, attribute)

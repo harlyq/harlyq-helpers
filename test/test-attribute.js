@@ -184,8 +184,8 @@ test("attribute.getAverage", (t) => {
   t.end()
 })
 
-test("modifier.modifierStack", (t) => {
-  const stacked = attribute.modifierStack(() => -1)
+test("modifier.modifierStack overwrite", (t) => {
+  const stacked = attribute.modifierStack(() => -1, attribute.MODIFIER_OVERWRITE)
   
   t.comment("mode = LAST")
   t.deepEquals(stacked.set(0, "test", "attr", 3), 3, "set the value")
@@ -211,6 +211,41 @@ test("modifier.modifierStack", (t) => {
   t.deepEquals(stacked.set(1, "test", "attr", 10, stacked.APPEND), [-1,4,10], "set by a second source")
   t.deepEquals(stacked.unset(0, "test", "attr"), [-1,10], "remove first source")
   t.deepEquals(stacked.unset(1, "test", "attr"), -1, "remove second source")
+  t.deepEquals(stacked.unset(0, "test", "attr"), undefined, "unset with no sources set")
+
+  t.end()
+})
+
+test("modifier.modifierStack nested", (t) => {
+  const stacked = attribute.modifierStack(() => -1, attribute.MODIFIER_NESTED)
+  
+  t.comment("mode = LAST")
+  t.deepEquals(stacked.set(0, "test", "attr", 3), 3, "set the value")
+  t.deepEquals(stacked.set(0, "test", "attr", 4), 4, "another set from the same source")
+  t.deepEquals(stacked.set(1, "test", "attr", 10), 10, "set by a second source")
+  t.deepEquals(stacked.unset(1, "test", "attr"), 4, "unset second source")
+  t.deepEquals(stacked.set(1, "test", "attr", 10), 10, "re-set second source")
+  t.deepEquals(stacked.unset(0, "test", "attr"), 10, "unset first source")
+  t.deepEquals(stacked.unset(1, "test", "attr"), 3, "unset second source")
+  t.deepEquals(stacked.unset(0, "test", "attr"), -1, "unset first source again")
+  t.deepEquals(stacked.unset(0, "test", "attr"), undefined, "unset with no sources set")
+
+  t.comment("mode = FIRST")
+  t.deepEquals(stacked.set(0, "test", "attr", 3, stacked.FIRST), 3, "set the value")
+  t.deepEquals(stacked.set(0, "test", "attr", 4, stacked.FIRST), 3, "another set from the same source")
+  t.deepEquals(stacked.set(1, "test", "attr", 10, stacked.FIRST), 3, "set by a second source")
+  t.deepEquals(stacked.unset(0, "test", "attr"), 3, "unset first source")
+  t.deepEquals(stacked.unset(1, "test", "attr"), 3, "unset second source")
+  t.deepEquals(stacked.unset(0, "test", "attr"), -1, "unset first source again")
+  t.deepEquals(stacked.unset(0, "test", "attr"), undefined, "unset with no sources set")
+
+  t.comment("mode = APPEND")
+  t.deepEquals(stacked.set(0, "test", "attr", 3, stacked.APPEND), [-1,3], "set the value")
+  t.deepEquals(stacked.set(0, "test", "attr", 4, stacked.APPEND), [-1,3,4], "another set from the same source")
+  t.deepEquals(stacked.set(1, "test", "attr", 10, stacked.APPEND), [-1,3,4,10], "set by a second source")
+  t.deepEquals(stacked.unset(0, "test", "attr"), [-1,3,10], "unset first source")
+  t.deepEquals(stacked.unset(1, "test", "attr"), [-1,3], "unset second source")
+  t.deepEquals(stacked.unset(0, "test", "attr"), -1, "unset the first source again")
   t.deepEquals(stacked.unset(0, "test", "attr"), undefined, "unset with no sources set")
 
   t.end()
