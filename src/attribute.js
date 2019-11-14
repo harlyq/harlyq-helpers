@@ -5,6 +5,9 @@ export const IDENTITY_FN = x => x
 export const MODIFIER_NESTED = Symbol("nested")
 export const MODIFIER_OVERWRITE = Symbol("overwrite")
 
+const OPTIONS_SEPARATOR = "|"
+const RANGE_SEPARATOR = "->"
+
 /**
  * @typedef {{x: number, y: number}} VecXY
  * @typedef {{x: number, y: number, z: number}} VecXYZ
@@ -171,12 +174,12 @@ export function getAverage(rule) {
 // Convert a string "1|2|3" into {options: ["1","2","3"]}
 /** @type {(str: string) => {options?: string[], range?: string[]}} */
 export function parseRangeOption(str) {
-  const options = str.split("|")
+  const options = str.split(OPTIONS_SEPARATOR)
   if (options.length > 1) {
     return { options }
   }
 
-  const range = str.split("..")
+  const range = str.split(RANGE_SEPARATOR)
   if (range.length > 1) {
     return { range: [ range[0], range[1] ] } 
   }
@@ -213,8 +216,8 @@ export function randomizeArray(attrArray, randFn = Math.random) {
 /** @type {(attr: any) => string} */
 export function stringify(attr) {
   if (typeof attr === "object") {
-    if (attr.range) { return stringify(attr.range[0]) + ".." + stringify(attr.range[1]) }
-    if (attr.options) { return attr.options.map(option => stringify(option)).join("|") }
+    if (attr.range) { return stringify(attr.range[0]) + RANGE_SEPARATOR + stringify(attr.range[1]) }
+    if (attr.options) { return attr.options.map(option => stringify(option)).join(OPTIONS_SEPARATOR) }
     if (rgbcolor.isColor(attr)) { return rgbcolor.toString(attr) }
     if ("x" in attr && "y" in attr) { return attr.x + " " + attr.y + ("z" in attr ? " " + attr.z : "") + ("w" in attr ? " " + attr.w : "") }
     if (attr.length && "0" in attr) { return attr.join(",") }
