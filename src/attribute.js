@@ -1,5 +1,6 @@
 import * as pseudorandom from "./pseudorandom.js"
 import * as rgbcolor from "./rgbcolor.js"
+import * as jsonHelper from "./json-helper.js"
 
 export const IDENTITY_FN = x => x
 export const MODIFIER_NESTED = Symbol("nested")
@@ -14,25 +15,31 @@ const RANGE_SEPARATOR = "->"
  * @typedef {{x: number, y: number, z: number, w: number}} VecXYZW
  * @typedef {{r: number, g: number, b: number}} RGBColor
  * @typedef {number | VecXY | VecXYZ | VecXYZW | RGBColor | string} AttributePart
- * @typedef {{range?: AttributePart[], options?: AttributePart[]}} Attribute
  */
 
-/** @type {(str: string, conversionFn?: (any) => any) => Attribute} */
-export function parse(str, conversionFn = IDENTITY_FN) {
-  const rangeOption = parseRangeOption(str)
-  if (rangeOption.range) {
-    return { range: rangeOption.range.map( part => conversionFn( parsePart(part) ) ) }
+ /**
+ * @template T
+ * @typedef {{range?: T[], options?: T[], variable?: string}} Attribute<T>
+ */
+
+/** @type {<T>(str: string, parsePartFn?: (str: string) => T, conversionFn?: (value: T) => T) => Attribute<T>} */
+export function parse(str, parsePartFn = parsePartAny, conversionFn = IDENTITY_FN) {
+  const result = parseRangeOptionVariable( str.trim() )
+  if (result.variable) {
+    return { variable: result.variable }
+  } else if (result.range) {
+    return { range: result.range.map( part => conversionFn( parsePartFn(part) ) ) }
   } else {
-    return { options: rangeOption.options.map( part => conversionFn( parsePart(part) ) ) }
+    return { options: result.options.map( part => conversionFn( parsePartFn(part) ) ) }
   }
 }
 
-/** @typedef {(str: string) => AttributePart} ParsePartFn */
-/** @type {ParsePartFn} */
-export const parsePart = (function() {
+/** @typedef {(str: string) => any} parsePartAnyFn */
+/** @type {parsePartAnyFn} */
+export const parsePartAny = (function() {
   const toNumber = str => Number(str.trim())
   
-  return /** @type {ParsePartFn} */function parsePart(str) {
+  return /** @type {parsePartAnyFn} */function parsePartAny(str) {
     if (str === "") {
       return ""
     }
@@ -56,89 +63,333 @@ export const parsePart = (function() {
   }
 })()
 
-function validateNumber(number) {
+function strToVector(str) {
+  return str.split(" ").filter(x => x !== "").map(x => Number( x.trim() ))
+}
+
+function parsePartString(str) {
+  return str.trim()
+}
+
+function parsePartNumber(str) {
+  const num = Number( str.trim() )
+  return num && !isNaN(num) ? num : undefined
+}
+
+function parsePartVec2(str) {
+  const vec = strToVector(str)
+  return vec.length < 2 || vec.some(isNaN) ? undefined : { x: Number(vec[0]), y: Number(vec[1]) }
+}
+
+function parsePartVec3(str) {
+  const vec = strToVector(str)
+  return vec.length < 3 || vec.some(isNaN) ? undefined : { x: Number(vec[0]), y: Number(vec[1]), z: Number(vec[2]) }
+}
+
+function parsePartVec4(str) {
+  const vec = strToVector(str)
+  return vec.length < 4 || vec.some(isNaN) ? undefined : { x: Number(vec[0]), y: Number(vec[1]), z: Number(vec[2]), w: Number(vec[3]) }
+}
+
+function parsePartColor(str) {
+  return rgbcolor.parse( str.trim() )
+}
+
+export function validateNumber(number) {
   return typeof number === "number"
 }
 
-function validateVec3(vec3) {
-  return typeof vec3 === "object" && "x" in vec3 && "y" in vec3 && "z" in vec3
+export function validateVec4(vec4) {
+  return typeof vec4 === "object" && "x" in vec4 && "y" in vec4 && "z" in vec4 && "w" in vec4 && typeof vec4.x === "number" && typeof vec4.y === "number" && typeof vec4.z === "number" && typeof vec4.w === "number"
 }
 
-function validateColor(color) {
-  return typeof color === "object" && "r" in color && "g" in color && "b" in color
+export function validateVec3(vec3) {
+  return typeof vec3 === "object" && "x" in vec3 && "y" in vec3 && "z" in vec3 && typeof vec3.x === "number" && typeof vec3.y === "number" && typeof vec3.z === "number"
 }
 
-function validateRangeOption(part, validateItemFn) {
+export function validateVec2(vec2) {
+  return typeof vec2 === "object" && "x" in vec2 && "y" in vec2 && typeof vec2.x === "number" && typeof vec2.y === "number"
+}
+
+export function validateColor(color) {
+  return typeof color === "object" && "r" in color && "g" in color && "b" in color && typeof color.r === "number" && typeof color.g === "number" && typeof color.b === "number"
+}
+
+export function validateString(str) {
+  return typeof str === "string"
+}
+
+function validateRangeOptionVariable(part, validateItemFn) {
   if (part.range) { return part.range.every(validateItemFn) }
   if (part.options) { return part.options.every(validateItemFn) }
+  if (part.variable) { return true } // can only assume that the variables will be the correct type
   return false
 }
 
-/** @type {<T>(str: string, validateFn: (value:T) => boolean, conversionFn: (value:T) => T) => Attribute} */
-function parseValue(str, validateFn, conversionFn = IDENTITY_FN) {
-  const rangeOption = parse(str, conversionFn)
-  return validateRangeOption(rangeOption, validateFn) ? rangeOption : undefined
+/** @type {<T>(str: string, parsePartFn: (str:string) => T, validateFn: (value:T) => boolean, conversionFn: (value:T) => T) => Attribute<T>} */
+function parseValue(str, parsePartFn, validateFn, conversionFn = IDENTITY_FN) {
+  const result = parse(str, parsePartFn, conversionFn)
+  return validateRangeOptionVariable(result, validateFn) ? result : undefined
 }
 
-/** @type {<T>(str: string, validateFn: (value:T) => boolean, permitEmpty: boolean, conversionFn: (value:T) => T) => Attribute[]} */
-function parseArray(str, validateFn, permitEmpty, conversionFn = IDENTITY_FN) {
+/** @type {<T>(str: string, parsePartFn: (str:string) => T, validateFn: (value:T) => boolean, isSparse: boolean, conversionFn: (value:T) => T) => Attribute<T>[]} */
+function parseArray(str, parsePartFn, validateFn, isSparse, conversionFn = IDENTITY_FN) {
   if (str.trim() === "") {
     return []
   }
   
   const rangeOptions = nestedSplit(str, ",").flatMap( partStr => {
     const str = partStr.trim()
-    return !permitEmpty || str ? parse(str, conversionFn) : undefined
+    return !isSparse || str ? parse(str, parsePartFn, conversionFn) : undefined
    } )
-  return rangeOptions.every( part => permitEmpty && part === undefined ? true : validateRangeOption(part, validateFn) ) ? rangeOptions : undefined
+  return rangeOptions.every( part => isSparse && part === undefined ? true : validateRangeOptionVariable(part, validateFn) ) ? rangeOptions : undefined
 }
 
-/** @type {(str: string, conversionFn: (RGBColor) => RGBColor) => Attribute} */
+/** @type {(str: string, conversionFn: (string) => string) => Attribute<string>} */
+export function parseString(str) {
+  return parseValue(str, parsePartColor, validateColor)
+}
+
+/** @type {(str: string, conversionFn: (string) => string) => Attribute<string>[]} */
+export function parseStringArray(str, conversionFn = IDENTITY_FN) {
+  return parseArray(str, parsePartColor, validateColor, false, conversionFn)
+}
+
+/** @type {(str: string, conversionFn: (string) => string) => Attribute<string>[]} */
+export function parseStringSparseArray(str, conversionFn = IDENTITY_FN) {
+  return parseArray(str, parsePartColor, validateColor, true, conversionFn)
+}
+
+/** @type {(str: string, conversionFn: (RGBColor) => RGBColor) => Attribute<RGBColor>} */
 export function parseColor(str) {
-  return parseValue(str, validateColor)
+  return parseValue(str, parsePartColor, validateColor)
 }
 
-/** @type {(str: string, conversionFn: (RGBColor) => RGBColor) => Attribute[]} */
+/** @type {(str: string, conversionFn: (RGBColor) => RGBColor) => Attribute<RGBColor>[]} */
 export function parseColorArray(str, conversionFn = IDENTITY_FN) {
-  return parseArray(str, validateColor, false, conversionFn)
+  return parseArray(str, parsePartColor, validateColor, false, conversionFn)
 }
 
-/** @type {(str: string, conversionFn: (RGBColor) => RGBColor) => Attribute[]} */
+/** @type {(str: string, conversionFn: (RGBColor) => RGBColor) => Attribute<RGBColor>[]} */
 export function parseColorSparseArray(str, conversionFn = IDENTITY_FN) {
-  return parseArray(str, validateColor, true, conversionFn)
+  return parseArray(str, parsePartColor, validateColor, true, conversionFn)
 }
 
-/** @type {(str: string, conversionFn: (number) => number) => Attribute} */
+/** @type {(str: string, conversionFn: (number) => number) => Attribute<number>} */
 export function parseNumber(str, conversionFn = IDENTITY_FN) {
-  return parseValue(str, validateNumber, conversionFn)
+  return parseValue(str, parsePartNumber, validateNumber, conversionFn)
 }
 
-/** @type {(str: string, conversionFn: (number) => number) => Attribute[]} */
+/** @type {(str: string, conversionFn: (number) => number) => Attribute<number>[]} */
 export function parseNumberArray(str, conversionFn = IDENTITY_FN) {
-  return parseArray(str, validateNumber, false, conversionFn)
+  return parseArray(str, parsePartNumber, validateNumber, false, conversionFn)
 }
 
-/** @type {(str: string, conversionFn: (number) => number) => Attribute[]} */
+/** @type {(str: string, conversionFn: (number) => number) => Attribute<number>[]} */
 export function parseNumberSparseArray(str, conversionFn = IDENTITY_FN) {
-  return parseArray(str, validateNumber, true, conversionFn)
+  return parseArray(str, parsePartNumber, validateNumber, true, conversionFn)
 }
 
-/** @type {(str: string, conversionFn: (value:VecXYZ) => VecXYZ) => Attribute} */
+/** @type {(str: string, conversionFn: (value:VecXYZ) => VecXYZ) => Attribute<VecXY>} */
+export function parseVec2(str, conversionFn = IDENTITY_FN) {
+  return parseValue(str, parsePartVec2, validateVec3, conversionFn)
+}
+
+/** @type {(str: string, conversionFn: (value: VecXYZ) => VecXYZ) => Attribute<VecXY>[]} */
+export function parseVec2Array(str, conversionFn = IDENTITY_FN) {
+  return parseArray(str, parsePartVec2, validateVec3, false, conversionFn)
+}
+
+/** @type {(str: string, conversionFn: (value: VecXYZ) => VecXYZ) => Attribute<VecXY>[]} */
+export function parseVec2SparseArray(str, conversionFn = IDENTITY_FN) {
+  return parseArray(str, parsePartVec2, validateVec3, true, conversionFn)
+}
+
+/** @type {(str: string, conversionFn: (value:VecXYZ) => VecXYZ) => Attribute<VecXYZ>} */
 export function parseVec3(str, conversionFn = IDENTITY_FN) {
-  return parseValue(str, validateVec3, conversionFn)
+  return parseValue(str, parsePartVec3, validateVec3, conversionFn)
 }
 
-/** @type {(str: string, conversionFn: (value: VecXYZ) => VecXYZ) => Attribute[]} */
+/** @type {(str: string, conversionFn: (value: VecXYZ) => VecXYZ) => Attribute<VecXYZ>[]} */
 export function parseVec3Array(str, conversionFn = IDENTITY_FN) {
-  return parseArray(str, validateVec3, false, conversionFn)
+  return parseArray(str, parsePartVec3, validateVec3, false, conversionFn)
 }
 
-/** @type {(str: string, conversionFn: (value: VecXYZ) => VecXYZ) => Attribute[]} */
+/** @type {(str: string, conversionFn: (value: VecXYZ) => VecXYZ) => Attribute<VecXYZ>[]} */
 export function parseVec3SparseArray(str, conversionFn = IDENTITY_FN) {
-  return parseArray(str, validateVec3, true, conversionFn)
+  return parseArray(str, parsePartVec3, validateVec3, true, conversionFn)
 }
 
-/** @type {(rule: Attribute) => number} */
+/** @type {(str: string, conversionFn: (value:VecXYZ) => VecXYZ) => Attribute<VecXYZW>} */
+export function parseVec4(str, conversionFn = IDENTITY_FN) {
+  return parseValue(str, parsePartVec4, validateVec3, conversionFn)
+}
+
+/** @type {(str: string, conversionFn: (value: VecXYZ) => VecXYZ) => Attribute<VecXYZW>[]} */
+export function parseVec4Array(str, conversionFn = IDENTITY_FN) {
+  return parseArray(str, parsePartVec4, validateVec3, false, conversionFn)
+}
+
+/** @type {(str: string, conversionFn: (value: VecXYZ) => VecXYZ) => Attribute<VecXYZW>[]} */
+export function parseVec4SparseArray(str, conversionFn = IDENTITY_FN) {
+  return parseArray(str, parsePartVec4, validateVec3, true, conversionFn)
+}
+
+/** 
+ * @template T
+ * @typedef {{randomFn?: () => number, conversionFn?: (x:T) => T, variables?: {[key:string]:any}, cache?: {[key:string]:any} }} EvalConfig<T> 
+ **/
+
+/** @type {(str: string, config?: EvalConfig<number>) => number} */
+export function evalNumber(str, config = EMPTY_CONFIG) {
+  return evalAttribute(str, parsePartNumber, validateNumber, config)
+}
+
+/** @type {(str: string, config?: EvalConfig<number>) => number[]} */
+export function evalNumberArray(str, config = EMPTY_CONFIG) {
+  return evalAttributeArray(str, parsePartNumber, validateNumber, false, config)
+}
+
+/** @type {(str: string, config?: EvalConfig<number>) => (number|undefined)[]} */
+export function evalSparseNumberArray(str, config = EMPTY_CONFIG) {
+  return evalAttributeArray(str, parsePartNumber, validateNumber, true, config)
+}
+
+/** @type {(str: string, config?: EvalConfig<VecXY>) => VecXY} */
+export function evalVec2(str, config = EMPTY_CONFIG) {
+  return evalAttribute(str, parsePartVec2, validateVec2, config)
+}
+
+/** @type {(str: string, config?: EvalConfig<VecXY>) => VecXY[]} */
+export function evalVec2Array(str, config = EMPTY_CONFIG) {
+  return evalAttributeArray(str, parsePartVec2, validateVec2, false, config)
+}
+
+/** @type {(str: string, config?: EvalConfig<VecXY>) => (VecXY|undefined)[]} */
+export function evalSparseVec2Array(str, config = EMPTY_CONFIG) {
+  return evalAttributeArray(str, parsePartVec2, validateVec2, true, config)
+}
+
+/** @type {(str: string, config?: EvalConfig<VecXYZ>) => VecXYZ} */
+export function evalVec3(str, config = EMPTY_CONFIG) {
+  return evalAttribute(str, parsePartVec3, validateVec3, config)
+}
+
+/** @type {(str: string, config?: EvalConfig<VecXYZ>) => VecXYZ[]} */
+export function evalVec3Array(str, config = EMPTY_CONFIG) {
+  return evalAttributeArray(str, parsePartVec3, validateVec3, false, config)
+}
+
+/** @type {(str: string, config?: EvalConfig<VecXYZ>) => (VecXYZ|undefined)[]} */
+export function evalSparseVec3Array(str, config = EMPTY_CONFIG) {
+  return evalAttributeArray(str, parsePartVec3, validateVec3, true, config)
+}
+
+/** @type {(str: string, config?: EvalConfig<VecXYZW>) => VecXYZW} */
+export function evalVec4(str, config = EMPTY_CONFIG) {
+  return evalAttribute(str, parsePartVec4, validateVec4, config)
+}
+
+/** @type {(str: string, config?: EvalConfig<VecXYZW>) => VecXYZW[]} */
+export function evalVec4Array(str, config = EMPTY_CONFIG) {
+  return evalAttributeArray(str, parsePartVec4, validateVec4, false, config)
+}
+
+/** @type {(str: string, config?: EvalConfig<VecXYZW>) => (VecXYZW|undefined)[]} */
+export function evalSparseVec4Array(str, config = EMPTY_CONFIG) {
+  return evalAttributeArray(str, parsePartVec4, validateVec4, true, config)
+}
+
+/** @type {(str: string, config?: EvalConfig<RGBColor>) => RGBColor} */
+export function evalColor(str, config = EMPTY_CONFIG) {
+  return evalAttribute(str, parsePartColor, validateColor, config)
+}
+
+/** @type {(str: string, config?: EvalConfig<RGBColor>) => RGBColor[]} */
+export function evalColorArray(str, config = EMPTY_CONFIG) {
+  return evalAttributeArray(str, parsePartColor, validateColor, false, config)
+}
+
+/** @type {<T>(str: string, config?: EvalConfig<RGBColor>) => (RGBColor|undefined)[]} */
+export function evalSparseColorArray(str, config = EMPTY_CONFIG) {
+  return evalAttributeArray(str, parsePartColor, validateColor, true, config)
+}
+
+/** @type {(str: string, config?: EvalConfig<string>) => string} */
+export function evalString(str, config = EMPTY_CONFIG) {
+  return evalAttribute(str, parsePartString, validateString, config)
+}
+
+/** @type {(str: string, config?: EvalConfig<string>) => string[]} */
+export function evalStringArray(str, config = EMPTY_CONFIG) {
+  return evalAttributeArray(str, parsePartString, validateString, false, config)
+}
+
+/** @type {<T>(str: string, config?: EvalConfig<string>) => (string|undefined)[]} */
+export function evalSparseStringArray(str, config = EMPTY_CONFIG) {
+  return evalAttributeArray(str, parsePartString, validateString, true, config)
+}
+
+const EMPTY_CONFIG = {}
+
+/** 
+ * @template T
+ * @type {(str: string, parsePartFn: (str:string) => T, validateFn: (x:T) => boolean, config?: EvalConfig<T>) => T} 
+ **/
+function evalAttribute(str, parsePartFn, validateFn, config = EMPTY_CONFIG) {
+  let info
+  if (config.cache && config.cache[str]) {
+    info = config.cache[str]
+  } else {
+    info = parseValue(str, parsePartFn, validateFn, config.conversionFn)
+  }
+
+  if (info && info.variable && config.variables) {
+    str = substitute$(info.variable, config.variables)
+    info = parseValue(str, parsePartFn, validateFn, config.conversionFn)
+  }
+
+  if (info) {
+    // @ts-ignore
+    return randomize(info, config.randomFn)
+  }
+}
+
+/** 
+ * @template T
+ * @type {(str: string, parsePartFn: (str:string) => T, validateFn: (x:T) => boolean, isSparse: boolean, config?: EvalConfig<T>) => (T|undefined)[]} 
+ **/
+function evalAttributeArray(str, parsePartFn, validateFn, isSparse = false, config = EMPTY_CONFIG) {
+  let info
+  if (config.cache && config.cache[str]) {
+    info = config.cache[str]
+  } else {
+    info = parseArray(str, parsePartFn, validateFn, isSparse, config.conversionFn)
+  }
+
+  if (info && info.variable && config.variables) {
+    str = substitute$(info.variable, config.variables)
+    info = parseValue(str, parsePartFn, validateFn, config.conversionFn)
+  }
+
+  if (info) {
+    // @ts-ignore
+    return randomizeArray(info, config.randomFn)
+  }
+}
+
+export function substitute$( str, variables ) {
+  const newStr = str.replace(/\$([\.\w]+)\$/g, (_, p1) => {
+    const parts = p1.split(".")
+    const subst = jsonHelper.getWithPath( variables, parts )
+    return typeof subst !== "undefined" ? stringify(subst) : ""
+  })
+
+  return newStr
+}
+
+
+/** @type {(rule: Attribute<number>) => number} */
 export function getMaximum(rule) {
   if (rule.options) {
     if (rule.options.length > 0 && typeof rule.options[0] === "number") {
@@ -154,7 +405,7 @@ export function getMaximum(rule) {
   return undefined
 } 
 
-/** @type {(rule: Attribute) => number} */
+/** @type {(rule: Attribute<number>) => number} */
 export function getAverage(rule) {
   const sum = list => list.reduce((total,x) => total + x, 0)
 
@@ -172,8 +423,13 @@ export function getAverage(rule) {
 
 // Convert a string "1..3" into {range: ["1","3"]}
 // Convert a string "1|2|3" into {options: ["1","2","3"]}
-/** @type {(str: string) => {options?: string[], range?: string[]}} */
-export function parseRangeOption(str) {
+// Convert a string "$ab.c.d" into {variable: "ab.c.d"}
+/** @type { (str: string) => {options?: string[], range?: string[], variable?: string} } */
+export function parseRangeOptionVariable(str) {
+  if (str[0] === '$') {
+    return { variable: str }
+  }
+
   const options = str.split(OPTIONS_SEPARATOR)
   if (options.length > 1) {
     return { options }
@@ -187,30 +443,30 @@ export function parseRangeOption(str) {
   return { options }
 }
 
-/** @type {(att: Attribute, randFn: () => number) => AttributePart} */
-export function randomize(attr, randFn = Math.random) {
+/** @type {(att: Attribute<any>, randomFn: () => number) => any} */
+export function randomize(attr, randomFn = Math.random) {
   if (attr && attr.range) {
     const min = attr.range[0]
     const max = attr.range[1]
 
     if (rgbcolor.isColor(min)) {
-      return pseudorandom.color({r:0, g:0, b:0}, /** @type {RGBColor} */ (min), /** @type {RGBColor} */ (max), randFn)
+      return pseudorandom.color({r:0, g:0, b:0}, /** @type {RGBColor} */ (min), /** @type {RGBColor} */ (max), randomFn)
     } else if (typeof min === "object" && "x" in min && typeof max === "object" && "x" in max) {
-      return pseudorandom.vector({x:0, y: 0}, (min), (max), randFn)
+      return pseudorandom.vector({x:0, y: 0}, (min), (max), randomFn)
     } else if (typeof min === "number" && typeof max === "number") {
-      return pseudorandom.float(min, max)
+      return pseudorandom.float(min, max, randomFn)
     } else {
       return min
     }
     
   } else if (attr && attr.options) {
-    return pseudorandom.entry(attr.options, randFn)
+    return pseudorandom.entry(attr.options, randomFn)
   }
 }
 
-/** @type {(att: Attribute[], randFn: () => number) => AttributePart[]} */
-export function randomizeArray(attrArray, randFn = Math.random) {
-  return attrArray && attrArray.map(part => randomize(part, randFn))
+/** @type {<T extends AttributePart>(att: Attribute<T>[], randomFn: () => number) => T[]} */
+export function randomizeArray(attrArray, randomFn = Math.random) {
+  return attrArray && attrArray.map(part => randomize(part, randomFn))
 }
 
 /** @type {(attr: any) => string} */

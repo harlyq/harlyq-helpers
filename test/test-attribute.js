@@ -6,28 +6,28 @@ import * as rgbcolor from "../src/rgbcolor.js"
  * @typedef {{r: number, g: number, b: number}} RGBColor
  */
 
-test("attribute.parsePart", (t) => {
-  t.deepEquals(attribute.parsePart(""), "", "empty")
-  t.deepEquals(attribute.parsePart("1"), 1, "single number")
-  t.deepEquals(attribute.parsePart(" 2  3  4"), {x:2, y:3, z:4}, "vector")
-  t.deepEquals(attribute.parsePart(" 2.5 "), 2.5, "decimal number")
-  t.deepEquals(attribute.parsePart(" lesser   "), "lesser", "string")
-  t.deepEquals(attribute.parsePart(" 2,3 ,4 "), "2,3 ,4", "string with numbers")
-  t.equals(rgbcolor.toString(/** @type {RGBColor} */(attribute.parsePart("red"))), "#ff0000", "named color")
-  t.equals(rgbcolor.toString(/** @type {RGBColor} */(attribute.parsePart("#123"))), "#112233", "hex color")
+test("attribute.parsePartAny", (t) => {
+  t.deepEquals(attribute.parsePartAny(""), "", "empty")
+  t.deepEquals(attribute.parsePartAny("1"), 1, "single number")
+  t.deepEquals(attribute.parsePartAny(" 2  3  4"), {x:2, y:3, z:4}, "vector")
+  t.deepEquals(attribute.parsePartAny(" 2.5 "), 2.5, "decimal number")
+  t.deepEquals(attribute.parsePartAny(" lesser   "), "lesser", "string")
+  t.deepEquals(attribute.parsePartAny(" 2,3 ,4 "), "2,3 ,4", "string with numbers")
+  t.equals(rgbcolor.toString(/** @type {RGBColor} */(attribute.parsePartAny("red"))), "#ff0000", "named color")
+  t.equals(rgbcolor.toString(/** @type {RGBColor} */(attribute.parsePartAny("#123"))), "#112233", "hex color")
 
   t.end()
 })
 
 
-test("attribute.parseRangeOption", (t) => {
-  t.deepEquals(attribute.parseRangeOption("1 2 3"), { options: ["1 2 3"]}, "no range or options")
-  t.deepEquals(attribute.parseRangeOption("1 2->3 4 5"), { range: ["1 2","3 4 5"]}, "range")
-  t.deepEquals(attribute.parseRangeOption("a|b|c"), { options: ["a","b","c"]}, "options")
-  t.deepEquals(attribute.parseRangeOption("1 2||3"), { options: ["1 2","","3"]}, "empty option")
-  t.deepEquals(attribute.parseRangeOption("->3"), { range: ["","3"]}, "empty range")
-  t.deepEquals(attribute.parseRangeOption("1->3 | 2.5->6"), { options: ["1->3 "," 2.5->6"]}, "both range and options")
-  t.deepEquals(attribute.parseRangeOption("1->3->-2"), { range: ["1","3"]}, "multiple ranges")
+test("attribute.parseRangeOptionVariable", (t) => {
+  t.deepEquals(attribute.parseRangeOptionVariable("1 2 3"), { options: ["1 2 3"]}, "no range or options")
+  t.deepEquals(attribute.parseRangeOptionVariable("1 2->3 4 5"), { range: ["1 2","3 4 5"]}, "range")
+  t.deepEquals(attribute.parseRangeOptionVariable("a|b|c"), { options: ["a","b","c"]}, "options")
+  t.deepEquals(attribute.parseRangeOptionVariable("1 2||3"), { options: ["1 2","","3"]}, "empty option")
+  t.deepEquals(attribute.parseRangeOptionVariable("->3"), { range: ["","3"]}, "empty range")
+  t.deepEquals(attribute.parseRangeOptionVariable("1->3 | 2.5->6"), { options: ["1->3 "," 2.5->6"]}, "both range and options")
+  t.deepEquals(attribute.parseRangeOptionVariable("1->3->-2"), { range: ["1","3"]}, "multiple ranges")
 
   t.end()
 })
@@ -181,6 +181,43 @@ test("attribute.getAverage", (t) => {
   t.deepEquals(attribute.getAverage(attribute.parse("3")), 3, "single number")
   t.deepEquals(attribute.getAverage(attribute.parse("-1->4")), 1.5, "range")
   t.deepEquals(attribute.getAverage(attribute.parse("-2|.5|6.75")), 1.75, "options")
+  t.end()
+})
+
+test("attribute.substitute", (t) => {
+  t.equals(attribute.substitute$("$a.b$", {}), "", "missing variable")
+  t.equals(attribute.substitute$("$a$", {a:1}), "1", "simmple number variable")
+  t.equals(attribute.substitute$("$a.b$", {a: {b:2}}), "2", "complex number variable")
+  t.equals(attribute.substitute$("$a.b$", {a: {b:{x:1,y:2,z:3}}}), "1 2 3", "complex vec3 variable")
+  t.equals(attribute.substitute$("$a.b$", {a: {b:"cat"}}), "cat", "complex string variable")
+  t.end()
+})
+
+test("attribute.eval", (t) => {
+  t.deepEquals(attribute.evalVec3("1 2 3"), {x:1, y:2, z:3}, "valid vec3")
+  t.deepEquals(attribute.evalVec3("1 2"), undefined, "invalid vec3")
+  t.deepEquals(attribute.evalColor("blue"), {r:0, g:0, b:1}, "valid color")
+  t.deepEquals(attribute.evalColor("badcolor"), undefined, "invalid color")
+  t.deepEquals(attribute.evalNumber("1"), 1, "valid number")
+  t.deepEquals(attribute.evalNumber("notANumber"), undefined, "invalid number")
+  t.deepEquals(attribute.evalNumberArray(""), [], "empty array")
+  t.deepEquals(attribute.evalNumberArray("1,2,3"), [1,2,3], "number array")
+  t.deepEquals(attribute.evalSparseNumberArray("1,,3"), [1,undefined,3], "sparse number array")
+  t.deepEquals(attribute.evalVec2Array("1 2,2 4,3 6"), [{x:1,y:2}, {x:2,y:4}, {x:3,y:6}], "vec2 array")
+  t.deepEquals(attribute.evalSparseVec2Array("1 2,2 4,"), [{x:1,y:2}, {x:2,y:4}, undefined], "sparse vec2 array")
+  t.deepEquals(attribute.evalVec2Array("1,2 4,3 6"), undefined, "invalid vec2 array")
+  t.deepEquals(attribute.evalNumber("1->2", { randomFn: () => .5 }), 1.5, "number range, return middle")
+  t.deepEquals(attribute.evalNumberArray("1->2, 2->3, 3->4", { randomFn: () => .5 }), [1.5, 2.5, 3.5], "number array range, return middle")
+  t.deepEquals(attribute.evalColor("black->white", { randomFn: () => 1 }), {r:1, g:1, b:1}, "color range, return end")
+  t.deepEquals(attribute.evalString("alpha|bravo|cat", { randomFn: () => 1 }), "cat", "string options, return end")
+  t.deepEquals(attribute.evalNumber("1.75", { conversionFn: (x) => x*2 }), 3.5, "number conversion")
+  t.deepEquals(attribute.evalNumber("$a$", { variables: {a: 1} }), 1, "simple variable")
+  t.deepEquals(attribute.evalNumber("$a$", { variables: {} }), undefined, "missing variable")
+  t.deepEquals(attribute.evalNumber("$a.b.c$", { variables: {a: {b: {c: 2}}} }), 2, "complex variable as a number")
+  t.deepEquals(attribute.evalString("$a.b.c$", { variables: {a: {b: {c: 2}}} }), "2", "complex variable as a string")
+  t.deepEquals(attribute.evalVec2("$a.b.c$", { variables: {a: {b: {c: 2}}} }), undefined, "complex variable as an invalid vec2")
+  t.deepEquals(attribute.evalVec2("$a.b.c$", { variables: {a: {b: {c: {x:2, y:3}}}} }), {x:2, y:3}, "complex variable as an valid vec2")
+  t.deepEquals(attribute.evalVec2("$a.b.c$", { variables: {a: {b: {c: "3 4"}}} }), {x:3, y:4}, "complex variable as an valid vec2 string")
   t.end()
 })
 

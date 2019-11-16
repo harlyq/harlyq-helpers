@@ -9,7 +9,7 @@ export function entry(list, randFn = Math.random) {
 
 /** @type {(length: number, randFn: () => number) => number} */
 export function index(length, randFn = Math.random) {
-  return ~~(randFn()*length)
+  return ~~( Math.min( length - 1, randFn()*length ) ) // must never exceed length-1
 }
 
 // range is (min,max)
