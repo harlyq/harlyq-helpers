@@ -218,6 +218,8 @@ test("attribute.eval", (t) => {
   t.deepEquals(attribute.evalVec2("$a.b.c$", { variables: {a: {b: {c: 2}}} }), undefined, "complex variable as an invalid vec2")
   t.deepEquals(attribute.evalVec2("$a.b.c$", { variables: {a: {b: {c: {x:2, y:3}}}} }), {x:2, y:3}, "complex variable as an valid vec2")
   t.deepEquals(attribute.evalVec2("$a.b.c$", { variables: {a: {b: {c: "3 4"}}} }), {x:3, y:4}, "complex variable as an valid vec2 string")
+  t.deepEquals(attribute.evalString("I see $b$ and $a$", { variables: {a: "mouse", b: "cat"} }), "I see cat and mouse", "composite variables")
+  t.deepEquals(attribute.evalString("$10 or $20?"), "$10 or $20?", "non-variable $ signs")
   t.end()
 })
 

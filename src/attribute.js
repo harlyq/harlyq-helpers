@@ -379,7 +379,7 @@ function evalAttributeArray(str, parsePartFn, validateFn, isSparse = false, conf
 }
 
 export function substitute$( str, variables ) {
-  const newStr = str.replace(/\$([\.\w]+)\$/g, (_, p1) => {
+  const newStr = str.replace(varRegEx, (_, p1) => {
     const parts = p1.split(".")
     const subst = jsonHelper.getWithPath( variables, parts )
     return typeof subst !== "undefined" ? stringify(subst) : ""
@@ -421,12 +421,14 @@ export function getAverage(rule) {
   return undefined
 } 
 
+const varRegEx = /\$([\.\w]+)\$/g
+
 // Convert a string "1..3" into {range: ["1","3"]}
 // Convert a string "1|2|3" into {options: ["1","2","3"]}
-// Convert a string "$ab.c.d" into {variable: "ab.c.d"}
+// Convert a string "$ab.c.d$" into {variable: "ab.c.d"}
 /** @type { (str: string) => {options?: string[], range?: string[], variable?: string} } */
 export function parseRangeOptionVariable(str) {
-  if (str[0] === '$') {
+  if (varRegEx.test(str)) {
     return { variable: str }
   }
 
