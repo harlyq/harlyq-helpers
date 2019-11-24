@@ -130,6 +130,7 @@ test("attribute.parseColorArray", (t) => {
 
 test("attribute.parseNumber", (t) => {
   t.deepEquals(attribute.parseNumber(""), undefined, "empty")
+  t.deepEquals(attribute.parseNumber("0"), { options: [0] }, "zero")
   t.deepEquals(attribute.parseNumber("10"), { options: [10] }, "one number")
   t.deepEquals(attribute.parseNumber("-5->23"), { range: [-5, 23] }, "number range")
   t.deepEquals(attribute.parseNumber(".1|-.2|.3"), { options: [.1, -.2, .3] }, "number options")
@@ -139,6 +140,7 @@ test("attribute.parseNumber", (t) => {
 
 test("attribute.parseNumberArray", (t) => {
   t.deepEquals(attribute.parseNumberArray(""), [], "empty")
+  t.deepEquals(attribute.parseNumberArray("0"), [ { options: [0] } ], "zero")
   t.deepEquals(attribute.parseNumberArray("10"), [ { options: [10] } ], "one number")
   t.deepEquals(attribute.parseNumberArray("-5->23"), [ { range: [-5, 23] } ], "one number range")
   t.deepEquals(attribute.parseNumberArray(".1|-.2|.3"), [ { options: [.1, -.2, .3] } ], "one number options")

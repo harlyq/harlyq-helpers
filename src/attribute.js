@@ -73,7 +73,7 @@ function parsePartString(str) {
 
 function parsePartNumber(str) {
   const num = Number( str.trim() )
-  return num && !isNaN(num) ? num : undefined
+  return !str || isNaN(num) ? undefined : num
 }
 
 function parsePartVec2(str) {
