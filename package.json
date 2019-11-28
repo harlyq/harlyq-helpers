@@ -2,7 +2,9 @@
   "name": "harlyq-helpers",
   "version": "0.6.0",
   "description": "helpful functions",
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "main": "src/index.js",
   "module": "src/index.js",
   "scripts": {
@@ -14,7 +16,7 @@
   "author": "harlyq",
   "license": "MIT",
   "devDependencies": {
-    "tape": "^4.10.1"
+    "tape": "^4.11.0"
   },
   "peerDependencies": {
     "three": "^0.101.0",

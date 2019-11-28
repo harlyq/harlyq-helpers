@@ -413,3 +413,20 @@ export function randomVertex(vertices, pos) {
   pos.fromArray(vertices, index)
 }
 
+export function calcOffsetMatrix(base3D, offset3D, outOffsetMatrix = new THREE.Matrix4()) {
+  outOffsetMatrix.getInverse(base3D.matrixWorld).multiply(offset3D.matrixWorld)
+  return outOffsetMatrix
+}
+
+export const applyOffsetMatrix = (function() {
+  const invParentMatrix = new THREE.Matrix4()
+  const newMatrix = new THREE.Matrix4() 
+  
+  return function applyOffsetMatrix(base3D, offset3D, offsetMatrix) {
+    invParentMatrix.getInverse(offset3D.parent.matrixWorld)  
+    newMatrix.multiplyMatrices(base3D.matrixWorld, offsetMatrix) // determine new world matrix
+    newMatrix.premultiply(invParentMatrix) // convert to a local matrix
+    newMatrix.decompose(offset3D.position, offset3D.quaternion, offset3D.scale)
+  }
+})()
+
