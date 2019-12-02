@@ -180,8 +180,8 @@ export function createFromIndices(vertices, indices) {
 /** @type {<T extends Vertices, TV extends Vertices>(out: T, vertices: TV, oi?: number, stride?: number) => Vertices} */
 export function average(out, vertices, oi = 0, stride = 3) {
   let x = 0, y = 0, z = 0
-  const n = vertices.length
-  for (let i = 0; i < n; i += stride) {
+  const n = vertices.length/3
+  for (let i = 0; i < vertices.length; i += stride) {
     x += vertices[i]
     y += vertices[i+1]
     z += vertices[i+2]
