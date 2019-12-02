@@ -1,3 +1,4 @@
+const FEN_CODES = "prnbqkPRNBQK"
 const SAN_REGEX_STR = /([RNBKQ]?[a-h]?[1-8]?)(x?)([a-h][1-8])(=[RNBQ])?([\#|\+]?)/
 const SAN_REGEX = new RegExp(SAN_REGEX_STR)
 
@@ -17,6 +18,55 @@ export function coordToFileRank(coord) {
 // rank 1->8 => "a"->"h", file 1->8 -> "1"->"8"
 export function fileRankToCoord(rank, file) {
   return String.fromCharCode(rank + 96, file + 48)
+}
+
+export function parseFEN(fen) {
+  const syntax = { moves: [], player: "white", whiteKingCastle: false, whiteQueenCastle: false, blackKingCastle: false, blackQueenCastle: false, enPassant: undefined, halfMove: 0, fullMove: 1 }
+  const chunks = fen.split(" ")
+
+  if (chunks.length < 5) {
+    throw Error(`malformed fen`)
+  }
+
+  const rankChunks = chunks[0].split("/")
+
+  function appendRank(layout, rank, rankChunk) {
+    let file = 1
+    for (let i = 0; i < rankChunk.length; i++) {
+      const c = rankChunk[i]
+      if (FEN_CODES.includes(c)) {
+        layout.push( { code: c, file, rank } )
+        file++
+      } else if (Number(c) == c) {
+        file += Number(c)
+      } else {
+        throw Error(`unknown letter "${c}" in fen rank chunk "${rankChunk}"`)
+      }
+    }
+  }
+
+  const numRanks = rankChunks.length
+  for (let i = 0; i < numRanks; i++) {
+    const rankChunk = rankChunks[i]
+    appendRank(syntax.moves, numRanks - i, rankChunk) // chunks start with the highest rank, all ranks numbered from 1 up
+  }
+
+  syntax.player = chunks[1] === "b" ? "black" : "white"
+
+  syntax.whiteKingCastle = chunks[2].includes("K")
+  syntax.whiteQueenCastle = chunks[2].includes("Q")
+  syntax.blackKingCastle = chunks[2].includes("k")
+  syntax.blackQueenCastle = chunks[2].includes("q")
+
+  if (chunks[3] && chunks[3] !== "-") {
+    const [file, rank] = coordToFileRank(chunks[3])
+    syntax.enPassant = {file, rank}
+  }
+
+  syntax.halfMove = chunks[4] ? Number(chunks[4]) : 0
+  syntax.fullMove = chunks[5] ? Number(chunks[5]) : 1
+
+  return syntax
 }
 
 export function decodeSAN(player, san) {

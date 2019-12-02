@@ -125,3 +125,150 @@ test("chessHelper.isMovePossible", (t) => {
 
   t.end()
 })
+
+test("chessHelper.parseFEN", (t) => {
+  try {
+    t.deepEquals(chessHelper.parseFEN(""), [], "empty string")
+  } catch {
+    t.pass("empty string")
+  }
+
+  try {
+    t.deepEquals(chessHelper.parseFEN("blah"), [], "invalid")
+  } catch {
+    t.pass("invalid")
+  }
+
+  t.deepEquals(chessHelper.parseFEN("8/8/8/8/8/8/8/8 w - - 0 1"), {
+    moves: [],
+    player: "white",
+    whiteKingCastle: false,
+    whiteQueenCastle: false,
+    blackKingCastle: false,
+    blackQueenCastle: false,
+    enPassant: undefined,
+    halfMove: 0,
+    fullMove: 1
+  }, "empty board")
+
+  t.deepEquals(chessHelper.parseFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"), {
+    moves: [
+      {code:"r",file:1,rank:8},
+      {code:"n",file:2,rank:8},
+      {code:"b",file:3,rank:8},
+      {code:"q",file:4,rank:8},
+      {code:"k",file:5,rank:8},
+      {code:"b",file:6,rank:8},
+      {code:"n",file:7,rank:8},
+      {code:"r",file:8,rank:8},
+      {code:"p",file:1,rank:7},
+      {code:"p",file:2,rank:7},
+      {code:"p",file:3,rank:7},
+      {code:"p",file:4,rank:7},
+      {code:"p",file:5,rank:7},
+      {code:"p",file:6,rank:7},
+      {code:"p",file:7,rank:7},
+      {code:"p",file:8,rank:7},
+      {code:"P",file:1,rank:2},
+      {code:"P",file:2,rank:2},
+      {code:"P",file:3,rank:2},
+      {code:"P",file:4,rank:2},
+      {code:"P",file:5,rank:2},
+      {code:"P",file:6,rank:2},
+      {code:"P",file:7,rank:2},
+      {code:"P",file:8,rank:2},
+      {code:"R",file:1,rank:1},
+      {code:"N",file:2,rank:1},
+      {code:"B",file:3,rank:1},
+      {code:"Q",file:4,rank:1},
+      {code:"K",file:5,rank:1},
+      {code:"B",file:6,rank:1},
+      {code:"N",file:7,rank:1},
+      {code:"R",file:8,rank:1},
+    ],
+    player: "white",
+    whiteKingCastle: true,
+    whiteQueenCastle: true,
+    blackKingCastle: true,
+    blackQueenCastle: true,
+    enPassant: undefined,
+    halfMove: 0,
+    fullMove: 1
+  }, "standard")
+
+  t.deepEquals(chessHelper.parseFEN("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"), {
+    moves: [
+      {code:"r",file:1,rank:8},
+      {code:"n",file:2,rank:8},
+      {code:"b",file:3,rank:8},
+      {code:"q",file:4,rank:8},
+      {code:"k",file:5,rank:8},
+      {code:"b",file:6,rank:8},
+      {code:"n",file:7,rank:8},
+      {code:"r",file:8,rank:8},
+      {code:"p",file:1,rank:7},
+      {code:"p",file:2,rank:7},
+      {code:"p",file:3,rank:7},
+      {code:"p",file:4,rank:7},
+      {code:"p",file:5,rank:7},
+      {code:"p",file:6,rank:7},
+      {code:"p",file:7,rank:7},
+      {code:"p",file:8,rank:7},
+      {code:"P",file:5,rank:4},
+      {code:"P",file:1,rank:2},
+      {code:"P",file:2,rank:2},
+      {code:"P",file:3,rank:2},
+      {code:"P",file:4,rank:2},
+      {code:"P",file:6,rank:2},
+      {code:"P",file:7,rank:2},
+      {code:"P",file:8,rank:2},
+      {code:"R",file:1,rank:1},
+      {code:"N",file:2,rank:1},
+      {code:"B",file:3,rank:1},
+      {code:"Q",file:4,rank:1},
+      {code:"K",file:5,rank:1},
+      {code:"B",file:6,rank:1},
+      {code:"N",file:7,rank:1},
+      {code:"R",file:8,rank:1},
+    ],
+    player: "black",
+    whiteKingCastle: true,
+    whiteQueenCastle: true,
+    blackKingCastle: true,
+    blackQueenCastle: true,
+    enPassant: {file: 5, rank: 3},
+    halfMove: 0,
+    fullMove: 1
+  }, "e4 opening")
+
+  t.deepEquals(chessHelper.parseFEN("5k2/pp4pp/3bpp2/8/1P6/P2KP3/5PPP/2B5 w - - 0 29"), {
+    moves: [
+      {code:"k",file:6,rank:8},
+      {code:"p",file:1,rank:7},
+      {code:"p",file:2,rank:7},
+      {code:"p",file:7,rank:7},
+      {code:"p",file:8,rank:7},
+      {code:"b",file:4,rank:6},
+      {code:"p",file:5,rank:6},
+      {code:"p",file:6,rank:6},
+      {code:"P",file:2,rank:4},
+      {code:"P",file:1,rank:3},
+      {code:"K",file:4,rank:3},
+      {code:"P",file:5,rank:3},
+      {code:"P",file:6,rank:2},
+      {code:"P",file:7,rank:2},
+      {code:"P",file:8,rank:2},
+      {code:"B",file:3,rank:1},
+    ],
+    player: "white",
+    whiteKingCastle: false,
+    whiteQueenCastle: false,
+    blackKingCastle: false,
+    blackQueenCastle: false,
+    enPassant: undefined,
+    halfMove: 0,
+    fullMove: 29
+  }, "partial")
+
+  t.end()
+})
