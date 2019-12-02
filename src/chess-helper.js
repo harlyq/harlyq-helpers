@@ -1,11 +1,11 @@
 const SAN_REGEX_STR = /([RNBKQ]?[a-h]?[1-8]?)(x?)([a-h][1-8])(=[RNBQ])?([\#|\+]?)/
 const SAN_REGEX = new RegExp(SAN_REGEX_STR)
 
-export function decodeFile(fileStr) {
+function decodeFile(fileStr) {
   return fileStr.charCodeAt(0) - 96
 }
 
-export function decodeRank(rankStr) {
+function decodeRank(rankStr) {
   return rankStr.charCodeAt(0) - 48
 }
 
@@ -19,14 +19,46 @@ export function fileRankToCoord(rank, file) {
   return String.fromCharCode(rank + 96, file + 48)
 }
 
-export function decodeSAN(san) {
+export function decodeSAN(player, san) {
   const parts = san.match(SAN_REGEX)
+  if (!parts) {
+    return undefined
+  }
+
+  const pieceStr = parts[1]
+  const c0 = pieceStr[0]
+
+  let code = undefined
+  let fromRank = undefined
+  let fromFile = undefined
+  let fileRankOffset = 0
+
+  if ("PRNBKQ".includes(c0)) {
+    code = player === "white" ? c0.toUpperCase() : c0.toLowerCase()
+    fileRankOffset = 1
+  } else {
+    code = player === "white" ? "P" : "p"
+  }
+
+  if (fileRankOffset < pieceStr.length) {
+    fromFile = decodeFile(pieceStr[fileRankOffset])
+    fromRank = decodeRank(pieceStr[pieceStr.length - 1]) // rank is always last, if used
+    fromFile = fromFile >= 1 && fromFile <= 8 ? fromFile : undefined
+    fromRank = fromRank >= 1 && fromRank <= 8 ? fromRank : undefined
+  }
+
+  const [toFile, toRank] = coordToFileRank(parts[3])
+  const promotion = !parts[4] ? "" : player === "white" ? parts[4][1].toUpperCase() : parts[4][1].toLowerCase()
+  
   return parts ? {
-    piece: parts[1],
-    capture: parts[2] === "x",
-    to: parts[3],
-    promotion: parts[4] ? parts[4][1] : "",
-    check: parts[5],
+    code: code, // one of prnbqkPRNBQK (upper case for white)
+    fromFile, // may be undefined or in the range (1,8)
+    fromRank, // may be undefined or in the range (1,8)
+    capture: parts[2] === "x", // true or false
+    toFile, // in the range (1,8)
+    toRank, // in the range (1,8)
+    promotion, // one of rnbqRNBQ (upper case for white)
+    check: parts[5], // + # or empty
   } : undefined
 }
 
