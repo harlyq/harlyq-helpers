@@ -45,6 +45,17 @@ test("chessHelper.decodeSAN", (t) => {
   t.end()
 })
 
+test("chessHelper.sanToString", (t) => {
+  t.equals(chessHelper.sanToString( chessHelper.decodeSAN("white", "e3") ), "e3", "e3")
+  t.equals(chessHelper.sanToString( chessHelper.decodeSAN("black", "Re2") ), "Re2", "Re2")
+  t.equals(chessHelper.sanToString( chessHelper.decodeSAN("black", "fxe8=Q+") ), "fxe8=Q+", "fxe8=Q+")
+  t.equals(chessHelper.sanToString( chessHelper.decodeSAN("white", "O-O-O#") ), "O-O-O#", "O-O-O#")
+  t.equals(chessHelper.sanToString( chessHelper.decodeSAN("black", "O-O") ), "O-O", "O-O")
+  t.equals(chessHelper.sanToString( chessHelper.decodeSAN("white", "cxb5") ), "cxb5", "cxb5")
+
+  t.end()
+})
+
 test("chessHelper.isMovePossible", (t) => {
   t.equals(chessHelper.isMovePossible("P", 2, 2, 2, 2, false), false, "pawn no move")
   t.equals(chessHelper.isMovePossible("k", 2, 2, 2, 2, false), false, "king no move")
@@ -109,6 +120,12 @@ test("chessHelper.isMovePossible", (t) => {
   t.equals(chessHelper.isMovePossible("k", 5, 3, 5, 8, false), false, "king long n")
   t.equals(chessHelper.isMovePossible("K", 5, 6, 1, 6, false), false, "king long w")
   t.equals(chessHelper.isMovePossible("k", 5, 1, 5, 8, false), false, "king long e")
+  t.equals(chessHelper.isMovePossible("k", 5, 8, 3, 8, false, true), true, "black kingside castle")
+  t.equals(chessHelper.isMovePossible("k", 5, 8, 7, 8, false, true), true, "black queenside castle")
+  t.equals(chessHelper.isMovePossible("k", 5, 8, 7, 7, false, true), false, "black invalid castle")
+  t.equals(chessHelper.isMovePossible("K", 5, 1, 3, 1, false, true), true, "white kingside castle")
+  t.equals(chessHelper.isMovePossible("K", 5, 1, 7, 1, false, true), true, "white queenside castle")
+  t.equals(chessHelper.isMovePossible("K", 5, 1, 5, 2, false, true), false, "white invalid castle")
   t.equals(chessHelper.isMovePossible("N", 3, 4, 4, 6, false), true, "knight L ne")
   t.equals(chessHelper.isMovePossible("N", 3, 4, 2, 6, false), true, "knight L nw")
   t.equals(chessHelper.isMovePossible("n", 3, 4, 5, 5, false), true, "knight L en")
@@ -274,6 +291,13 @@ test("chessHelper.parseFEN", (t) => {
     fullMove: 29
   }, "partial")
 
+  const FEN1 = "5k2/pp4pp/3bpp2/8/1P6/P2KP3/5PPP/2B5 w - - 0 29"
+  const FEN2 = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"
+  const FEN3 = "8/pppppppp/8/8/8/8/8/8 b - - 0 1"
+  t.equals(chessHelper.fenToString( chessHelper.parseFEN(FEN1) ), FEN1, "fen1 parseFEN => fenToString")
+  t.equals(chessHelper.fenToString( chessHelper.parseFEN(FEN2) ), FEN2, "fen2 parseFEN => fenToString")
+  t.equals(chessHelper.fenToString( chessHelper.parseFEN(FEN3) ), FEN3, "fen3 parseFEN => fenToString")
+
   t.end()
 })
 
@@ -281,7 +305,7 @@ test("chessHelper.parseFEN", (t) => {
 test("chessHelper.parsePGN", (t) => {
   t.deepEquals(chessHelper.parsePGN(""), {moves: []}, "empty")
 
-  const example = chessHelper.parsePGN(`
+  const PGN1 = `
   [Event "F/S Return Match"]
   [Site "Belgrade, Serbia JUG"]
   [Date "1992.11.04"]
@@ -298,12 +322,44 @@ test("chessHelper.parsePGN", (t) => {
   hxg5 29. b3 Ke6 30. a3 Kd6 31. axb4 cxb4 32. Ra5 Nd5 33. f3 Bc8 34. Kf2 Bf5
   35. Ra7 g6 36. Ra6+ Kc5 37. Ke1 Nf4 38. g3 Nxh3 39. Kd2 Kb5 40. Rd6 Kc5 41. Ra6
   Nf2 42. g4 Bd3 43. Re6 1/2-1/2  
-  `)
-  t.deepEquals(example.moves.length, 85, "example move count")
-  t.deepEquals(example.moves[(43-1)*2], {code:"R", fromFile: undefined, fromRank: undefined, capture: false, toFile: 5, toRank: 6, promotion: "", castle: "", check: ""}, "example 43. white")
-  t.deepEquals(example.moves[(19-1)*2], {code:"P", fromFile: 5, fromRank: undefined, capture: true, toFile: 4, toRank: 6, promotion: "", castle: "", check: ""}, "example 19. white")
-  t.deepEquals(example.moves[(25-1)*2+1], {code:"r", fromFile: undefined, fromRank: undefined, capture: true, toFile: 5, toRank: 1, promotion: "", castle: "", check: "+"}, "example 25. black")
-  t.deepEquals(example.moves[(24-1)*2], {code:"B", fromFile: undefined, fromRank: undefined, capture: true, toFile: 6, toRank: 7, promotion: "", castle: "", check: "+"}, "example 24. white")
-  t.deepEquals(example.moves[(20-1)*2], {code:"N", fromFile: 2, fromRank: undefined, capture: false, toFile: 4, toRank: 2, promotion: "", castle: "", check: ""}, "example 20. white")
+  `
+  const pgn1 = chessHelper.parsePGN(PGN1)
+  t.equals(pgn1.moves.length, 85, "pgn1 move count")
+  t.equals(pgn1.moveOffset, 0, "pgn1 moveOffset")
+  t.deepEquals(pgn1.moves[(43-1)*2], {code:"R", fromFile: undefined, fromRank: undefined, capture: false, toFile: 5, toRank: 6, promotion: "", castle: "", check: ""}, "pgn1 43. white")
+  t.deepEquals(pgn1.moves[(19-1)*2], {code:"P", fromFile: 5, fromRank: undefined, capture: true, toFile: 4, toRank: 6, promotion: "", castle: "", check: ""}, "pgn1 19. white")
+  t.deepEquals(pgn1.moves[(25-1)*2+1], {code:"r", fromFile: undefined, fromRank: undefined, capture: true, toFile: 5, toRank: 1, promotion: "", castle: "", check: "+"}, "pgn1 25. black")
+  t.deepEquals(pgn1.moves[(24-1)*2], {code:"B", fromFile: undefined, fromRank: undefined, capture: true, toFile: 6, toRank: 7, promotion: "", castle: "", check: "+"}, "pgn1 24. white")
+  t.deepEquals(pgn1.moves[(20-1)*2], {code:"N", fromFile: 2, fromRank: undefined, capture: false, toFile: 4, toRank: 2, promotion: "", castle: "", check: ""}, "pgn1 20. white")
+  t.equals(chessHelper.pgnToString(pgn1).replace(/\s/g, ""), PGN1.replace(/\s/g, "").replace(/\{[^\}]*\}/g, ""), "pgn1 parsePGN => pgnToSTring")
+
+  const PGN2 = `
+  [Event "TCh-CHN 2012"]
+  [Site "Taizhou CHN"]
+  [Date "2012.06.29"]
+  [Round "7"]
+  [White "Zhai Mo"]
+  [Black "Guo Qi"]
+  [Result "1-0"]
+  [WhiteElo "2262"]
+  [BlackElo "2351"]
+  [WhiteTitle "WFM"]
+  [BlackTitle "WGM"]
+  [ECO "B19"]
+  [Opening "Caro-Kann"]
+  [Variation "classical, Spassky variation"]
+  [WhiteTeam "Hebei"]
+  [BlackTeam "Jiangsu"]
+  [WhiteFideId "8600201"]
+  [BlackFideId "8604002"]
+  [EventDate "2012.04.28"]
+  [FEN "2r2rk1/pp1n1pp1/1q3b1p/2pp2PP/2P5/Q4N2/PP1B1P2/1K1R3R b - - 0 20 "]
+
+  20...hxg5 21. h6 g4 22. hxg7 Bxg7 23. cxd5 Qa6 24. Qxa6 bxa6 25. Nh4 Rb8 26. Bc1 f5 27. Rde1 c4 28. Ng6 Rf6 29. Ne7+ Kf8 30. Ng6+ Kg8 31. Ne7+ Kf8 32. Nc6 Rb5 33. Bg5 c3 34. b3 Rxd5 35. Bxf6 Nxf6 36. Ne7 Rc5 37. Ng6+ Kf7 38. Ne5+ Kg8 39. Nd3 Rd5 40. Ne5 Rc5 41. Nd3 Rd5 42. Kc2 Ne4 43. Re2 Ng5 44. Nf4 Ra5 45. a4 Nf3 46. Re8+ Kf7 47. Ra8 Nd4+ 48. Kxc3 Nc6+ 49. Kd2 Kf6 50. Nh5+ Kg6 51. Rg8 Rd5+ 52. Ke3 Re5+ 53. Kf4 Re4+ 54. Kg3 Re7 55. Rxg7+ Rxg7 56. Nxg7 Kxg7 57. Rc1 Nd4 58. Rc7+ Kg6 59. Rxa7 Kg5 60. Rxa6 f4+ 61. Kg2 f3+ 62. Kf1 Nxb3 63. Ra8 Nd2+ 64. Kg1 Ne4 65. a5 g3 66. fxg3 Kg4 67. a6 Kxg3 68. Rg8+  1-0
+  `
+  const pgn2 = chessHelper.parsePGN(PGN2)
+  t.equals(pgn2.moveOffset, 39, "partial game starting on 20")
+  t.equals(chessHelper.pgnToString(pgn2).replace(/\s/g, ""), PGN2.replace(/\s/g, ""), "pgn2 parsePGN => pgnToSTring")
+
   t.end()
 })
