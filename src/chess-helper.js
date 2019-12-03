@@ -1,6 +1,11 @@
 const FEN_CODES = "prnbqkPRNBQK"
-const SAN_REGEX_STR = /([RNBKQ]?[a-h]?[1-8]?)(x?)([a-h][1-8])(=[RNBQ])?([\#|\+]?)/
-const SAN_REGEX = new RegExp(SAN_REGEX_STR)
+const CASTLE_REGEX = /(O\-O)(\-O)?([\#|\+]?)/
+const SAN_REGEX = /([RNBKQ]?[a-h]?[1-8]?)(x?)([a-h][1-8])(=[RNBQ])?([\#|\+]?)/
+const PGN_RESULT_REGEX = /1\-0|0\-1|1\/2\-1\/2|\*/
+const PGN_TAG_REGEX = /\[\s*(\w+)\s*\"([^\"]*)\"\s*\]/
+const PGN_MOVETEXT_REGEX = /([\d\.]+)\s+([\w\=\#\+\-\/\*]+)\s+([\w\=\#\+\-\/\*]+)?\s*(\d\-\/\*)?\s*/
+
+parsePGN(`[a "hello"] [b "goodbye"] 1. e4 e5 2. Nf3 Nc6 3. e8 *`)
 
 function decodeFile(fileStr) {
   return fileStr.charCodeAt(0) - 96
@@ -70,6 +75,28 @@ export function parseFEN(fen) {
 }
 
 export function decodeSAN(player, san) {
+  const isWhite = player === "white"
+  const castleParts = san.match(CASTLE_REGEX)
+  
+  if (castleParts) {
+    const code = isWhite ? "K" : "k"
+    const castle = castleParts[2] ? (isWhite ? "Q" : "q") : (isWhite ? "K" : "k")
+    const toFile = castleParts[2] ? 3 : 7
+    const toRank = isWhite ? 1 : 8
+
+    return {
+      code, // k for black king, K for white king
+      fromFile: undefined,
+      fromRank: undefined,
+      capture: false,
+      toFile,
+      toRank,
+      promotion: "",
+      castle, // one of kqKQ, uppercase for white, k for king side, q for queen side
+      check: castleParts[3], // + # or empty
+    }
+  }
+
   const parts = san.match(SAN_REGEX)
   if (!parts) {
     return undefined
@@ -84,10 +111,10 @@ export function decodeSAN(player, san) {
   let fileRankOffset = 0
 
   if ("PRNBKQ".includes(c0)) {
-    code = player === "white" ? c0.toUpperCase() : c0.toLowerCase()
+    code = isWhite ? c0.toUpperCase() : c0.toLowerCase()
     fileRankOffset = 1
   } else {
-    code = player === "white" ? "P" : "p"
+    code = isWhite ? "P" : "p"
   }
 
   if (fileRankOffset < pieceStr.length) {
@@ -98,7 +125,7 @@ export function decodeSAN(player, san) {
   }
 
   const [toFile, toRank] = coordToFileRank(parts[3])
-  const promotion = !parts[4] ? "" : player === "white" ? parts[4][1].toUpperCase() : parts[4][1].toLowerCase()
+  const promotion = !parts[4] ? "" : isWhite ? parts[4][1].toUpperCase() : parts[4][1].toLowerCase()
   
   return parts ? {
     code: code, // one of prnbqkPRNBQK (upper case for white)
@@ -107,7 +134,8 @@ export function decodeSAN(player, san) {
     capture: parts[2] === "x", // true or false
     toFile, // in the range (1,8)
     toRank, // in the range (1,8)
-    promotion, // one of rnbqRNBQ (upper case for white)
+    promotion, // one of rnbqRNBQ or empty (upper case for white)
+    castle: "",
     check: parts[5], // + # or empty
   } : undefined
 }
@@ -161,4 +189,37 @@ export function isMovePossible(code, pieceFile, pieceRank, toFile, toRank, isCap
     case "K":
       return Math.abs(pieceFile - toFile) <= 1 && Math.abs(pieceRank - toRank) <= 1
   }
+}
+
+export function parsePGN(pgn) {
+  let game = {moves: []}
+  const text = pgn.replace(/\r\n|\n/, " ")
+
+  let i = 0
+  while (i < text.length) {
+    const nextText = text.slice(i)
+    const tagMatch = nextText.match(PGN_TAG_REGEX)
+    if (tagMatch) {
+      game[tagMatch[1]] = tagMatch[2]
+      i += tagMatch[0].length + tagMatch.index
+      continue
+    }
+
+    const moveMatch = nextText.match(PGN_MOVETEXT_REGEX)
+    if (moveMatch) {
+      let player = moveMatch[1].includes("...") ? "black" : "white"
+      game.moves.push( decodeSAN(player, moveMatch[2]) )
+  
+      if ( moveMatch[3] && player === "white" && !PGN_RESULT_REGEX.test(moveMatch[3]) ) {
+        game.moves.push( decodeSAN("black", moveMatch[3]) )
+      }
+  
+      i += moveMatch[0].length + moveMatch.index
+      continue
+    }
+
+    break
+  }
+
+  return game
 }
