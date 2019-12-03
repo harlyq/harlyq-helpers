@@ -26,7 +26,7 @@ export function fileRankToCoord(rank, file) {
 }
 
 export function parseFEN(fen) {
-  const syntax = { moves: [], player: "white", whiteKingCastle: false, whiteQueenCastle: false, blackKingCastle: false, blackQueenCastle: false, enPassant: undefined, halfMove: 0, fullMove: 1 }
+  const syntax = { layout: [], player: "white", whiteKingCastle: false, whiteQueenCastle: false, blackKingCastle: false, blackQueenCastle: false, enPassant: undefined, halfMove: 0, fullMove: 1 }
   const chunks = fen.split(" ")
 
   if (chunks.length < 5) {
@@ -53,7 +53,7 @@ export function parseFEN(fen) {
   const numRanks = rankChunks.length
   for (let i = 0; i < numRanks; i++) {
     const rankChunk = rankChunks[i]
-    appendRank(syntax.moves, numRanks - i, rankChunk) // chunks start with the highest rank, all ranks numbered from 1 up
+    appendRank(syntax.layout, numRanks - i, rankChunk) // chunks start with the highest rank, all ranks numbered from 1 up
   }
 
   syntax.player = chunks[1] === "b" ? "black" : "white"

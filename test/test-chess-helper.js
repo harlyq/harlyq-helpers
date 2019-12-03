@@ -144,7 +144,7 @@ test("chessHelper.parseFEN", (t) => {
   }
 
   t.deepEquals(chessHelper.parseFEN("8/8/8/8/8/8/8/8 w - - 0 1"), {
-    moves: [],
+    layout: [],
     player: "white",
     whiteKingCastle: false,
     whiteQueenCastle: false,
@@ -156,7 +156,7 @@ test("chessHelper.parseFEN", (t) => {
   }, "empty board")
 
   t.deepEquals(chessHelper.parseFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"), {
-    moves: [
+    layout: [
       {code:"r",file:1,rank:8},
       {code:"n",file:2,rank:8},
       {code:"b",file:3,rank:8},
@@ -201,7 +201,7 @@ test("chessHelper.parseFEN", (t) => {
   }, "standard")
 
   t.deepEquals(chessHelper.parseFEN("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"), {
-    moves: [
+    layout: [
       {code:"r",file:1,rank:8},
       {code:"n",file:2,rank:8},
       {code:"b",file:3,rank:8},
@@ -246,7 +246,7 @@ test("chessHelper.parseFEN", (t) => {
   }, "e4 opening")
 
   t.deepEquals(chessHelper.parseFEN("5k2/pp4pp/3bpp2/8/1P6/P2KP3/5PPP/2B5 w - - 0 29"), {
-    moves: [
+    layout: [
       {code:"k",file:6,rank:8},
       {code:"p",file:1,rank:7},
       {code:"p",file:2,rank:7},
