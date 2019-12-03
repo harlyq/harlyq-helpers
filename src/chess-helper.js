@@ -214,15 +214,16 @@ export function sanToString(san) {
 // Note, it may include illegal moves e.g. en passant without another pawn,
 // moving through other pieces, moving through check for castling
 // Bote, both rank and file are numbers between 1 and 8 inclusive
-export function isMovePossible(code, pieceFile, pieceRank, toFile, toRank, isCapture = false, isCastle = false) {
+export function isMovePossible(code, pieceFile, pieceRank, toFile, toRank, isCapture = false) {
   if (pieceFile === toFile && pieceRank === toRank) {
     return false
   }
 
+  const isBlack = code === code.toLowerCase()
+
   switch(code) {
     case "p":
     case "P":
-      const isBlack = code === code.toLowerCase()
       if (pieceFile === toFile && !isCapture) {
         if (isBlack && pieceRank === 7) {
           return toRank === 6 || toRank === 5
@@ -257,12 +258,8 @@ export function isMovePossible(code, pieceFile, pieceRank, toFile, toRank, isCap
 
     case "k":
     case "K":
-      if (isCastle) {
-        const isBlack = code === code.toLowerCase()
-        return pieceFile === 5 && (pieceRank === (isBlack ? 8 : 1)) && (toFile === 3 || toFile === 7) && (pieceRank === toRank)
-      } else {
-        return Math.abs(pieceFile - toFile) <= 1 && Math.abs(pieceRank - toRank) <= 1
-      }
+      return (Math.abs(pieceFile - toFile) <= 1 && Math.abs(pieceRank - toRank) <= 1) || // king move
+        ( !isCapture && pieceFile === 5 && (pieceRank === (isBlack ? 8 : 1)) && (toFile === 3 || toFile === 7) && (pieceRank === toRank) ) // castle
   }
 }
 
