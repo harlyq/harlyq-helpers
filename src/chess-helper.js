@@ -210,59 +210,6 @@ export function sanToString(san) {
   }
 }
 
-// is a move feasible for this piece, given it's current location? 
-// Note, it may include illegal moves e.g. en passant without another pawn,
-// moving through other pieces, moving through check for castling
-// Bote, both rank and file are numbers between 1 and 8 inclusive
-export function isMovePossible(code, pieceFile, pieceRank, toFile, toRank, isCapture = false) {
-  if (pieceFile === toFile && pieceRank === toRank) {
-    return false
-  }
-
-  const isBlack = code === code.toLowerCase()
-
-  switch(code) {
-    case "p":
-    case "P":
-      if (pieceFile === toFile && !isCapture) {
-        if (isBlack && pieceRank === 7) {
-          return toRank === 6 || toRank === 5
-        } else if (!isBlack && pieceRank === 2) {
-          return toRank === 3 || toRank === 4
-        } else {
-          return toRank === pieceRank + (isBlack ? -1 : 1)
-        }
-      } else if ( isCapture && (pieceFile - 1 === toFile || pieceFile + 1 === toFile) ) {
-        return toRank === pieceRank + (isBlack ? -1 : 1)
-      }
-      return false
-
-    case "r":
-    case "R":
-      return pieceFile === toFile || pieceRank === toRank
-
-    case "n":
-    case "N": {
-      const colDelta = Math.abs(pieceFile - toFile)
-      const rowDelta = Math.abs(pieceRank - toRank)
-      return (colDelta === 2 && rowDelta === 1) || (colDelta === 1 && rowDelta === 2)
-    }
-
-    case "b":
-    case "B":
-      return Math.abs(pieceFile - toFile) === Math.abs(pieceRank - toRank)
-
-    case "q":
-    case "Q":
-      return Math.abs(pieceFile - toFile) === Math.abs(pieceRank - toRank) || pieceFile === toFile || pieceRank === toRank
-
-    case "k":
-    case "K":
-      return (Math.abs(pieceFile - toFile) <= 1 && Math.abs(pieceRank - toRank) <= 1) || // king move
-        ( !isCapture && pieceFile === 5 && (pieceRank === (isBlack ? 8 : 1)) && (toFile === 3 || toFile === 7) && (pieceRank === toRank) ) // castle
-  }
-}
-
 export function parsePGN(pgn) {
   let game = {moves: []}
   const text = pgn.replace(/\r\n|\n/, " ")
@@ -351,4 +298,151 @@ export function pgnToString(pgn) {
   }
 
   return str
+}
+
+// is a move feasible for this piece, given it's current location? 
+// Note, it may include illegal moves e.g. en passant without another pawn,
+// moving through other pieces, moving through check for castling
+// Bote, both rank and file are numbers between 1 and 8 inclusive
+export function isMovePossible(piece, move) {
+  const fromFile = piece.file
+  const fromRank = piece.rank
+  const toFile = move.toFile
+  const toRank = move.toRank
+
+  if (fromFile === toFile && fromRank === toRank) {
+    return false
+  }
+
+  const isBlack = piece.code === piece.code.toLowerCase()
+
+  switch(piece.code) {
+    case "p":
+    case "P":
+      if (fromFile === toFile && !move.capture) {
+        if (isBlack && fromRank === 7) {
+          return toRank === 6 || toRank === 5
+        } else if (!isBlack && fromRank === 2) {
+          return toRank === 3 || toRank === 4
+        } else {
+          return toRank === fromRank + (isBlack ? -1 : 1)
+        }
+      } else if ( move.capture && (fromFile - 1 === toFile || fromFile + 1 === toFile) ) {
+        return toRank === fromRank + (isBlack ? -1 : 1)
+      }
+      return false
+
+    case "r":
+    case "R":
+      return fromFile === toFile || fromRank === toRank
+
+    case "n":
+    case "N": {
+      const colDelta = Math.abs(fromFile - toFile)
+      const rowDelta = Math.abs(fromRank - toRank)
+      return (colDelta === 2 && rowDelta === 1) || (colDelta === 1 && rowDelta === 2)
+    }
+
+    case "b":
+    case "B":
+      return Math.abs(fromFile - toFile) === Math.abs(fromRank - toRank)
+
+    case "q":
+    case "Q":
+      return Math.abs(fromFile - toFile) === Math.abs(fromRank - toRank) || fromFile === toFile || fromRank === toRank
+
+    case "k":
+    case "K":
+      return (Math.abs(fromFile - toFile) <= 1 && Math.abs(fromRank - toRank) <= 1) || // king move
+        ( !move.capture && fromFile === 5 && (fromRank === (isBlack ? 8 : 1)) && (toFile === 3 || toFile === 7) && (fromRank === toRank) ) // castle
+  }
+}
+
+export function isMoveBlocked(layout, piece, move) {
+  if (piece.code.toUpperCase() !== "N") {
+    const fileDelta = Math.sign(move.toFile - piece.file)
+    const rankDelta = Math.sign(move.toRank - piece.rank)
+    let file = piece.file + fileDelta // don't check (piece.file,piece.rank)
+    let rank = piece.rank + rankDelta
+
+    while (file !== move.toFile || rank !== move.toRank) {
+      if (findPieceByFileRank(layout, file, rank)) {
+        return true
+      }
+      file += fileDelta
+      rank += rankDelta
+    }  
+  }
+
+  return move.capture ? false : !!findPieceByFileRank(layout, move.toFile, move.toRank) // only check (move.toFile,move.toRank) for captures
+}
+
+export function findPieceByFileRank(layout, file, rank) {
+  return layout.find(piece => {
+    return piece.file === file && piece.rank === rank
+  })
+}
+
+export function findPieceByMove(layout, move) {
+  return layout.find(piece => {
+    if (piece.code === move.code) {
+      if (isMovePossible(piece, move)) {
+        if (!move.fromFile && !move.fromRank) {
+          return !isMoveBlocked(layout, piece, move)
+        } else {
+          return (!move.fromFile || piece.file === move.fromFile) && (!move.fromRank || piece.rank === move.fromRank)
+        }
+      }
+    }
+  })
+}
+
+export function applyMove(fen, move) {
+  const piece = findPieceByMove(fen.layout, move)
+  if (!piece) {
+    throw Error(`unable to find piece for move`)
+  }
+
+  const isBlack = piece.code === piece.code.toLowerCase()
+
+  if (move.capture) {
+    const capturedPiece = findPieceByFileRank(fen.layout, move.toFile, move.toRank)
+    if (!capturedPiece) {
+      throw Error(`unable to find piece to capture`)
+    }
+
+    if (!fen.capturedPieces) {
+      fen.capturedPieces = []
+    }
+
+    fen.capturedPieces.push(capturedPiece)
+    const i = fen.layout.indexOf(capturedPiece)
+    fen.layout.splice(i, 1)
+
+  } else if (move.castle) {
+    const kingSide = move.castle.toUpperCase() === 'K'
+    const rook = findPieceByFileRank(fen.layout, kingSide ? 8 : 1, isBlack ? 8 : 1)
+    if (!rook) {
+      throw Error(`unable to find rook to castle`)
+    }
+    rook.file = kingSide ? 6 : 4
+  }
+
+  piece.file = move.toFile
+  piece.rank = move.toRank
+
+  if (piece.code !== "P" && piece.code !== "p" && !move.capture) {
+    fen.halfMove++
+  } else {
+    fen.halfMove = 0
+  }
+
+  if (isBlack) {
+    fen.blackKingCastle = fen.blackKingCastle && piece.code !== "k" && (piece.code !== "r" || piece.file !== 8)
+    fen.blackQueenCastle = fen.blackKingCastle && piece.code !== "k" && (piece.code !== "r" || piece.file !== 1)
+    fen.fullMove++
+  } else {
+    fen.whiteKingCastle = fen.whiteKingCastle && piece.code !== "K" && (piece.code !== "R" || piece.file !== 8)
+    fen.whiteQueenCastle = fen.whiteKingCastle && piece.code !== "K" && (piece.code !== "R" || piece.file !== 1)
+  }
 }
