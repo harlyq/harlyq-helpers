@@ -1,8 +1,6 @@
 import test from "tape"
 import * as chessHelper from "../src/chess-helper.js"
 
-const FEN_DEFAULT = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-
 const PGN1 = `
 [Event "F/S Return Match"]
 [Site "Belgrade, Serbia JUG"]
@@ -220,7 +218,7 @@ test("chessHelper.parseFEN", (t) => {
     fullMove: 1
   }, "empty board")
 
-  t.deepEquals(chessHelper.parseFEN(FEN_DEFAULT), {
+  t.deepEquals(chessHelper.parseFEN(chessHelper.FEN_DEFAULT), {
     layout: [
       {code:"r",file:1,rank:8},
       {code:"n",file:2,rank:8},
@@ -370,9 +368,42 @@ test("chessHelper.parsePGN", (t) => {
   t.end()
 })
 
+test("chessHelper.findPieceByFileRank", (t) => {
+  const fenDefault = chessHelper.parseFEN(chessHelper.FEN_DEFAULT)
+  t.deepEquals(chessHelper.findPieceByFileRank(fenDefault.layout, -1, -1), undefined, "off board")
+  t.deepEquals(chessHelper.findPieceByFileRank(fenDefault.layout, 9, 2), undefined, "off board 2")
+  t.deepEquals(chessHelper.findPieceByFileRank(fenDefault.layout, 3, -1), undefined, "off board 3")
+  t.deepEquals(chessHelper.findPieceByFileRank(fenDefault.layout, 1, 1), {code: "R", file: 1, rank: 1}, "bottom left")
+  t.deepEquals(chessHelper.findPieceByFileRank(fenDefault.layout, 8, 8), {code: "r", file: 8, rank: 8}, "top right")
+  t.deepEquals(chessHelper.findPieceByFileRank(fenDefault.layout, 3, 1), {code: "B", file: 3, rank: 1}, "white bishop")
+  t.deepEquals(chessHelper.findPieceByFileRank(fenDefault.layout, 5, 5), undefined, "no piece")
+  t.end()
+})
+
+test("chessHelper.findPieceByMove", (t) => {
+  t.deepEquals( chessHelper.findPieceByMove(chessHelper.parseFEN("8/pppppppp/8/8/8/8/8/8 b - - 0 1").layout, chessHelper.decodeSAN("black", "e6")), {code: "p", file: 5, rank: 7}, "pawn advance")
+  t.deepEquals( chessHelper.findPieceByMove(chessHelper.parseFEN("r3b2r/8/8/8/8/8/8/8 b - - 0 1").layout, chessHelper.decodeSAN("black", "Rb8")), {code: "r", file: 1, rank: 8}, "queen rook")
+  t.deepEquals( chessHelper.findPieceByMove(chessHelper.parseFEN("r3b2r/8/8/8/8/8/8/8 b - - 0 1").layout, chessHelper.decodeSAN("black", "Rf8")), {code: "r", file: 8, rank: 8}, "king rook")
+  t.end()
+})
+
 test("chessHelper.applyMove", (t) => {
+  const fenA = chessHelper.parseFEN("r3kbnr/ppppppp1/8/8/8/8/7p/6R1 b - - 0 1")
+  t.deepEquals( chessHelper.applyMove(fenA, chessHelper.decodeSAN("black", "e6")), [{type: "move", piece: {code: "p", file: 5, rank: 6}, fromFile: 5, fromRank: 7}], "pawn advance" )
+  t.deepEquals( chessHelper.applyMove(fenA, chessHelper.decodeSAN("black", "e5")), [{type: "move", piece: {code: "p", file: 5, rank: 5}, fromFile: 5, fromRank: 6}], "same pawn again" )
+  t.deepEquals( chessHelper.applyMove(fenA, chessHelper.decodeSAN("black", "Nh6")), [{type: "move", piece: {code: "n", file: 8, rank: 6}, fromFile: 7, fromRank: 8}], "knight advance" )
+  t.deepEquals( chessHelper.applyMove(fenA, chessHelper.decodeSAN("black", "xg1=Q")), [
+    {type: "move", piece: {code: "p", file: 7, rank: 1}, fromFile: 8, fromRank: 2},
+    {type: "capture", capturedPiece: {code: "R", file: 7, rank: 1}, capturedIndex: 0},
+    {type: "promote", piece: {code: "p", file: 7, rank: 1}, newPiece: {code: "q", file: 7, rank: 1}},
+  ], "pawn capture and promotion" )
+  t.deepEquals( chessHelper.applyMove(fenA, chessHelper.decodeSAN("black", "O-O-O")), [
+    {type: "move", piece: {code: "k", file: 3, rank: 8}, fromFile: 5, fromRank: 8},
+    {type: "move", piece: {code: "r", file: 4, rank: 8}, fromFile: 1, fromRank: 8},
+  ], "queenside castle" )
+
   const pgn1 = chessHelper.parsePGN(PGN1)
-  const fen1 = chessHelper.parseFEN(FEN_DEFAULT)
+  const fen1 = chessHelper.parseFEN(chessHelper.FEN_DEFAULT)
 
   for (let move of pgn1.moves) {
     chessHelper.applyMove(fen1, move)

@@ -1,3 +1,5 @@
+export const FEN_DEFAULT = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
 const FEN_CODES = "prnbqkPRNBQK"
 const CASTLE_REGEX = /(O\-O)(\-O)?([\#|\+]?)/
 const SAN_REGEX = /([RNBKQ]?[a-h]?[1-8]?)(x?)([a-h][1-8])(=[RNBQ])?([\#|\+]?)/
@@ -398,10 +400,14 @@ export function findPieceByMove(layout, move) {
 }
 
 export function applyMove(fen, move) {
+  const actions = []
+  
   const piece = findPieceByMove(fen.layout, move)
   if (!piece) {
     throw Error(`unable to find piece for move`)
   }
+
+  actions.push({ type: "move", piece, fromFile: piece.file, fromRank: piece.rank })
 
   const isBlack = piece.code === piece.code.toLowerCase()
 
@@ -415,17 +421,34 @@ export function applyMove(fen, move) {
       fen.capturedPieces = []
     }
 
-    fen.capturedPieces.push(capturedPiece)
-    const i = fen.layout.indexOf(capturedPiece)
-    fen.layout.splice(i, 1)
+    actions.push({ type: "capture", capturedPiece, capturedIndex: fen.capturedPieces.length })
 
-  } else if (move.castle) {
+    fen.capturedPieces.push(capturedPiece)
+
+    fen.layout.splice( fen.layout.indexOf(capturedPiece), 1 )
+
+  }
+  
+  if (move.castle) {
     const kingSide = move.castle.toUpperCase() === 'K'
     const rook = findPieceByFileRank(fen.layout, kingSide ? 8 : 1, isBlack ? 8 : 1)
     if (!rook) {
       throw Error(`unable to find rook to castle`)
     }
+
+    actions.push({ type: "move", piece: rook, fromFile: rook.file, fromRank: rook.rank })
+
     rook.file = kingSide ? 6 : 4
+
+  }
+  
+  if (move.promotion) {
+    const newPiece = {code: move.promotion, file: move.toFile, rank: move.toRank}
+
+    fen.layout.splice( fen.layout.indexOf(piece), 1 )
+
+    actions.push({ type: "promote", piece, newPiece })
+
   }
 
   piece.file = move.toFile
@@ -445,4 +468,6 @@ export function applyMove(fen, move) {
     fen.whiteKingCastle = fen.whiteKingCastle && piece.code !== "K" && (piece.code !== "R" || piece.file !== 8)
     fen.whiteQueenCastle = fen.whiteKingCastle && piece.code !== "K" && (piece.code !== "R" || piece.file !== 1)
   }
+
+  return actions
 }
