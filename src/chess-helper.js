@@ -150,7 +150,7 @@ export function decodeSAN(player, sanStr) {
       capture: false,
       toFile,
       toRank,
-      promotion: "",
+      promote: "",
       castle, // one of kqKQ, uppercase for white, k for king side, q for queen side
       check: castleParts[3], // + # or empty
     }
@@ -184,7 +184,7 @@ export function decodeSAN(player, sanStr) {
   }
 
   const [toFile, toRank] = coordToFileRank(parts[3])
-  const promotion = !parts[4] ? "" : isWhite ? parts[4][1].toUpperCase() : parts[4][1].toLowerCase()
+  const promote = !parts[4] ? "" : isWhite ? parts[4][1].toUpperCase() : parts[4][1].toLowerCase()
   
   return parts ? {
     code: code, // one of prnbqkPRNBQK (upper case for white)
@@ -193,7 +193,7 @@ export function decodeSAN(player, sanStr) {
     capture: parts[2] === "x", // true or false
     toFile, // in the range (1,8)
     toRank, // in the range (1,8)
-    promotion, // one of rnbqRNBQ or empty (upper case for white)
+    promote, // one of rnbqRNBQ or empty (upper case for white)
     castle: "",
     check: parts[5], // + # or empty
   } : undefined
@@ -205,10 +205,10 @@ export function sanToString(san) {
     const fromFile = san.fromFile ? fileToString(san.fromFile) : ""
     const fromRank = san.fromRank ? rankToString(san.fromRank) : ""
     const to = !san.castle ? fileRankToCoord(san.toFile, san.toRank) : ""
-    const promotion = san.promotion ? "=" + san.promotion.toUpperCase() : ""
+    const promote = san.promote ? "=" + san.promote.toUpperCase() : ""
     const capture = san.capture ? "x" : ""
     const castle = !san.castle ? "" : san.castle.toUpperCase() === "K" ? "O-O" : "O-O-O"
-    return code + fromFile + fromRank + capture + to + promotion + castle + san.check
+    return code + fromFile + fromRank + capture + to + promote + castle + san.check
   }
 }
 
@@ -401,58 +401,59 @@ export function findPieceByMove(layout, move) {
 
 export function applyMove(fen, move) {
   const actions = []
-  
+
   const piece = findPieceByMove(fen.layout, move)
   if (!piece) {
     throw Error(`unable to find piece for move`)
   }
 
-  actions.push({ type: "move", piece, fromFile: piece.file, fromRank: piece.rank })
-
   const isBlack = piece.code === piece.code.toLowerCase()
 
-  if (move.capture) {
-    const capturedPiece = findPieceByFileRank(fen.layout, move.toFile, move.toRank)
-    if (!capturedPiece) {
-      throw Error(`unable to find piece to capture`)
-    }
-
-    if (!fen.capturedPieces) {
-      fen.capturedPieces = []
-    }
-
-    actions.push({ type: "capture", capturedPiece, capturedIndex: fen.capturedPieces.length })
-
-    fen.capturedPieces.push(capturedPiece)
-
-    fen.layout.splice( fen.layout.indexOf(capturedPiece), 1 )
-
-  }
-  
   if (move.castle) {
-    const kingSide = move.castle.toUpperCase() === 'K'
-    const rook = findPieceByFileRank(fen.layout, kingSide ? 8 : 1, isBlack ? 8 : 1)
+    const kingside = move.castle.toUpperCase() === 'K'
+    const rook = findPieceByFileRank(fen.layout, kingside ? 8 : 1, isBlack ? 8 : 1)
     if (!rook) {
       throw Error(`unable to find rook to castle`)
     }
 
-    actions.push({ type: "move", piece: rook, fromFile: rook.file, fromRank: rook.rank })
+    actions.push({ type: 'castle', king: piece, rook, kingside })
 
-    rook.file = kingSide ? 6 : 4
+    piece.file = kingside ? 7 : 3
+    rook.file = kingside ? 6 : 4
 
-  }
+  } else {
+
+    actions.push({ type: 'move', piece, fromFile: piece.file, fromRank: piece.rank, toFile: move.toFile, toRank: move.toRank } )
+
+    if (move.capture) {
+      const capturedPiece = findPieceByFileRank(fen.layout, move.toFile, move.toRank)
+      if (!capturedPiece) {
+        throw Error(`unable to find piece to capture`)
+      }
   
-  if (move.promotion) {
-    const newPiece = {code: move.promotion, file: move.toFile, rank: move.toRank}
+      if (!fen.capturedPieces) { fen.capturedPieces = [] }
+  
+      actions.push({ type: "capture", capturedPiece, capturedIndex: fen.capturedPieces.length })
+  
+      fen.capturedPieces.push(capturedPiece)  
+      fen.layout.splice( fen.layout.indexOf(capturedPiece), 1 )
+  
+    }
 
-    fen.layout.splice( fen.layout.indexOf(piece), 1 )
+    // must be after the capturedPiece check
+    piece.file = move.toFile
+    piece.rank = move.toRank
 
-    actions.push({ type: "promote", piece, newPiece })
-
+    if (move.promote) {
+      const newPiece = {code: move.promote, file: move.toFile, rank: move.toRank}
+  
+      fen.layout.splice( fen.layout.indexOf(piece), 1 )
+      fen.layout.push(newPiece)
+  
+      actions.push({ type: "promote", piece, newPiece, file: move.toFile, rank: move.toRank })  
+    }
+  
   }
-
-  piece.file = move.toFile
-  piece.rank = move.toRank
 
   if (piece.code !== "P" && piece.code !== "p" && !move.capture) {
     fen.halfMove++

@@ -69,21 +69,21 @@ test("chessHelper.fileRankToCoord", (t) => {
 
 test("chessHelper.decodeSAN", (t) => {
   t.deepEquals(chessHelper.decodeSAN("white", ""), undefined, "empty")
-  t.deepEquals(chessHelper.decodeSAN("white", "e4"), {code:"P", fromFile: undefined, fromRank: undefined, capture: false, toFile: 5, toRank: 4, promotion: "", castle: "", check: ""}, "e4")
-  t.deepEquals(chessHelper.decodeSAN("black", "Nf3"), {code:"n", fromFile: undefined, fromRank: undefined, capture: false, toFile: 6, toRank: 3, promotion: "", castle: "", check: ""}, "Nf3")
-  t.deepEquals(chessHelper.decodeSAN("black", "Re1"), {code:"r", fromFile: undefined, fromRank: undefined, capture: false, toFile: 5, toRank: 1, promotion: "", castle: "", check: ""}, "Re1")
-  t.deepEquals(chessHelper.decodeSAN("white", "cxb5"), {code:"P", fromFile: 3, fromRank: undefined, capture: true, toFile: 2, toRank: 5, promotion: "", castle: "", check: ""}, "cxb5")
-  t.deepEquals(chessHelper.decodeSAN("white", "Bxe7"), {code:"B", fromFile: undefined, fromRank: undefined, capture: true, toFile: 5, toRank: 7, promotion: "", castle: "", check: ""}, "Bxe7")
-  t.deepEquals(chessHelper.decodeSAN("black", "Rxe1+"), {code:"r", fromFile: undefined, fromRank: undefined, capture: true, toFile: 5, toRank: 1, promotion: "", castle: "", check: "+"}, "Rxe1+")
-  t.deepEquals(chessHelper.decodeSAN("white", "Qxg5"), {code:"Q", fromFile: undefined, fromRank: undefined, capture: true, toFile: 7, toRank: 5, promotion: "", castle: "", check: ""}, "Qxg5")
-  t.deepEquals(chessHelper.decodeSAN("black", "Ra6+"), {code:"r", fromFile: undefined, fromRank: undefined, capture: false, toFile: 1, toRank: 6, promotion: "", castle: "", check: "+"}, "Ra6+")
-  t.deepEquals(chessHelper.decodeSAN("black", "Rda6+"), {code:"r", fromFile: 4, fromRank: undefined, capture: false, toFile: 1, toRank: 6, promotion: "", castle: "", check: "+"}, "Rda6+")
-  t.deepEquals(chessHelper.decodeSAN("white", "fxe8=Q+"), {code:"P", fromFile: 6, fromRank: undefined, capture: true, toFile: 5, toRank: 8, promotion: "Q", castle: "", check: "+"}, "fxe8=Q+")
-  t.deepEquals(chessHelper.decodeSAN("black", "axb1=Q+"), {code:"p", fromFile: 1, fromRank: undefined, capture: true, toFile: 2, toRank: 1, promotion: "q", castle: "", check: "+"}, "axb1=Q+")
-  t.deepEquals(chessHelper.decodeSAN("black", "O-O"), {code:"k", fromFile: undefined, fromRank: undefined, capture: false, toFile: 7, toRank: 8, promotion: "", castle: "k", check: ""}, "O-O")
-  t.deepEquals(chessHelper.decodeSAN("black", "O-O-O#"), {code:"k", fromFile: undefined, fromRank: undefined, capture: false, toFile: 3, toRank: 8, promotion: "", castle: "q", check: "#"}, "O-O-O#")
-  t.deepEquals(chessHelper.decodeSAN("white", "O-O+"), {code:"K", fromFile: undefined, fromRank: undefined, capture: false, toFile: 7, toRank: 1, promotion: "", castle: "K", check: "+"}, "O-O+")
-  t.deepEquals(chessHelper.decodeSAN("white", "O-O-O"), {code:"K", fromFile: undefined, fromRank: undefined, capture: false, toFile: 3, toRank: 1, promotion: "", castle: "Q", check: ""}, "O-O-O")
+  t.deepEquals(chessHelper.decodeSAN("white", "e4"), {code:"P", fromFile: undefined, fromRank: undefined, capture: false, toFile: 5, toRank: 4, promote: "", castle: "", check: ""}, "e4")
+  t.deepEquals(chessHelper.decodeSAN("black", "Nf3"), {code:"n", fromFile: undefined, fromRank: undefined, capture: false, toFile: 6, toRank: 3, promote: "", castle: "", check: ""}, "Nf3")
+  t.deepEquals(chessHelper.decodeSAN("black", "Re1"), {code:"r", fromFile: undefined, fromRank: undefined, capture: false, toFile: 5, toRank: 1, promote: "", castle: "", check: ""}, "Re1")
+  t.deepEquals(chessHelper.decodeSAN("white", "cxb5"), {code:"P", fromFile: 3, fromRank: undefined, capture: true, toFile: 2, toRank: 5, promote: "", castle: "", check: ""}, "cxb5")
+  t.deepEquals(chessHelper.decodeSAN("white", "Bxe7"), {code:"B", fromFile: undefined, fromRank: undefined, capture: true, toFile: 5, toRank: 7, promote: "", castle: "", check: ""}, "Bxe7")
+  t.deepEquals(chessHelper.decodeSAN("black", "Rxe1+"), {code:"r", fromFile: undefined, fromRank: undefined, capture: true, toFile: 5, toRank: 1, promote: "", castle: "", check: "+"}, "Rxe1+")
+  t.deepEquals(chessHelper.decodeSAN("white", "Qxg5"), {code:"Q", fromFile: undefined, fromRank: undefined, capture: true, toFile: 7, toRank: 5, promote: "", castle: "", check: ""}, "Qxg5")
+  t.deepEquals(chessHelper.decodeSAN("black", "Ra6+"), {code:"r", fromFile: undefined, fromRank: undefined, capture: false, toFile: 1, toRank: 6, promote: "", castle: "", check: "+"}, "Ra6+")
+  t.deepEquals(chessHelper.decodeSAN("black", "Rda6+"), {code:"r", fromFile: 4, fromRank: undefined, capture: false, toFile: 1, toRank: 6, promote: "", castle: "", check: "+"}, "Rda6+")
+  t.deepEquals(chessHelper.decodeSAN("white", "fxe8=Q+"), {code:"P", fromFile: 6, fromRank: undefined, capture: true, toFile: 5, toRank: 8, promote: "Q", castle: "", check: "+"}, "fxe8=Q+")
+  t.deepEquals(chessHelper.decodeSAN("black", "axb1=Q+"), {code:"p", fromFile: 1, fromRank: undefined, capture: true, toFile: 2, toRank: 1, promote: "q", castle: "", check: "+"}, "axb1=Q+")
+  t.deepEquals(chessHelper.decodeSAN("black", "O-O"), {code:"k", fromFile: undefined, fromRank: undefined, capture: false, toFile: 7, toRank: 8, promote: "", castle: "k", check: ""}, "O-O")
+  t.deepEquals(chessHelper.decodeSAN("black", "O-O-O#"), {code:"k", fromFile: undefined, fromRank: undefined, capture: false, toFile: 3, toRank: 8, promote: "", castle: "q", check: "#"}, "O-O-O#")
+  t.deepEquals(chessHelper.decodeSAN("white", "O-O+"), {code:"K", fromFile: undefined, fromRank: undefined, capture: false, toFile: 7, toRank: 1, promote: "", castle: "K", check: "+"}, "O-O+")
+  t.deepEquals(chessHelper.decodeSAN("white", "O-O-O"), {code:"K", fromFile: undefined, fromRank: undefined, capture: false, toFile: 3, toRank: 1, promote: "", castle: "Q", check: ""}, "O-O-O")
 
   t.end()
 })
@@ -102,7 +102,7 @@ test("chessHelper.sanToString", (t) => {
 
 test("chessHelper.isMovePossible", (t) => {
   const simplePiece = (code, file, rank) => ( {code, file, rank} )
-  const simpleMove = (toFile, toRank, capture) => ( {code: "", fromFile: undefined, fromRank: undefined, capture, toFile, toRank, promotion: "", castle: "", check: ""} )
+  const simpleMove = (toFile, toRank, capture) => ( {code: "", fromFile: undefined, fromRank: undefined, capture, toFile, toRank, promote: "", castle: "", check: ""} )
 
   t.equals(chessHelper.isMovePossible( simplePiece("P", 2, 2), simpleMove(2, 2, false) ), false, "pawn no move")
   t.equals(chessHelper.isMovePossible( simplePiece("k", 2, 2), simpleMove(2, 2, false) ), false, "king no move")
@@ -354,11 +354,11 @@ test("chessHelper.parsePGN", (t) => {
   const pgn1 = chessHelper.parsePGN(PGN1)
   t.equals(pgn1.moves.length, 85, "pgn1 move count")
   t.equals(pgn1.moveOffset, 0, "pgn1 moveOffset")
-  t.deepEquals(pgn1.moves[(43-1)*2], {code:"R", fromFile: undefined, fromRank: undefined, capture: false, toFile: 5, toRank: 6, promotion: "", castle: "", check: ""}, "pgn1 43. white")
-  t.deepEquals(pgn1.moves[(19-1)*2], {code:"P", fromFile: 5, fromRank: undefined, capture: true, toFile: 4, toRank: 6, promotion: "", castle: "", check: ""}, "pgn1 19. white")
-  t.deepEquals(pgn1.moves[(25-1)*2+1], {code:"r", fromFile: undefined, fromRank: undefined, capture: true, toFile: 5, toRank: 1, promotion: "", castle: "", check: "+"}, "pgn1 25. black")
-  t.deepEquals(pgn1.moves[(24-1)*2], {code:"B", fromFile: undefined, fromRank: undefined, capture: true, toFile: 6, toRank: 7, promotion: "", castle: "", check: "+"}, "pgn1 24. white")
-  t.deepEquals(pgn1.moves[(20-1)*2], {code:"N", fromFile: 2, fromRank: undefined, capture: false, toFile: 4, toRank: 2, promotion: "", castle: "", check: ""}, "pgn1 20. white")
+  t.deepEquals(pgn1.moves[(43-1)*2], {code:"R", fromFile: undefined, fromRank: undefined, capture: false, toFile: 5, toRank: 6, promote: "", castle: "", check: ""}, "pgn1 43. white")
+  t.deepEquals(pgn1.moves[(19-1)*2], {code:"P", fromFile: 5, fromRank: undefined, capture: true, toFile: 4, toRank: 6, promote: "", castle: "", check: ""}, "pgn1 19. white")
+  t.deepEquals(pgn1.moves[(25-1)*2+1], {code:"r", fromFile: undefined, fromRank: undefined, capture: true, toFile: 5, toRank: 1, promote: "", castle: "", check: "+"}, "pgn1 25. black")
+  t.deepEquals(pgn1.moves[(24-1)*2], {code:"B", fromFile: undefined, fromRank: undefined, capture: true, toFile: 6, toRank: 7, promote: "", castle: "", check: "+"}, "pgn1 24. white")
+  t.deepEquals(pgn1.moves[(20-1)*2], {code:"N", fromFile: 2, fromRank: undefined, capture: false, toFile: 4, toRank: 2, promote: "", castle: "", check: ""}, "pgn1 20. white")
   t.equals(chessHelper.pgnToString(pgn1).replace(/\s/g, ""), PGN1.replace(/\s/g, "").replace(/\{[^\}]*\}/g, ""), "pgn1 parsePGN => pgnToSTring")
 
   const pgn_partial = chessHelper.parsePGN(PGN_PARTIAL)
@@ -389,17 +389,16 @@ test("chessHelper.findPieceByMove", (t) => {
 
 test("chessHelper.applyMove", (t) => {
   const fenA = chessHelper.parseFEN("r3kbnr/ppppppp1/8/8/8/8/7p/6R1 b - - 0 1")
-  t.deepEquals( chessHelper.applyMove(fenA, chessHelper.decodeSAN("black", "e6")), [{type: "move", piece: {code: "p", file: 5, rank: 6}, fromFile: 5, fromRank: 7}], "pawn advance" )
-  t.deepEquals( chessHelper.applyMove(fenA, chessHelper.decodeSAN("black", "e5")), [{type: "move", piece: {code: "p", file: 5, rank: 5}, fromFile: 5, fromRank: 6}], "same pawn again" )
-  t.deepEquals( chessHelper.applyMove(fenA, chessHelper.decodeSAN("black", "Nh6")), [{type: "move", piece: {code: "n", file: 8, rank: 6}, fromFile: 7, fromRank: 8}], "knight advance" )
+  t.deepEquals( chessHelper.applyMove(fenA, chessHelper.decodeSAN("black", "e6")), [{type: "move", piece: {code: "p", file: 5, rank: 6}, fromFile: 5, fromRank: 7, toFile: 5, toRank: 6}], "pawn advance" )
+  t.deepEquals( chessHelper.applyMove(fenA, chessHelper.decodeSAN("black", "e5")), [{type: "move", piece: {code: "p", file: 5, rank: 5}, fromFile: 5, fromRank: 6, toFile: 5, toRank: 5}], "same pawn again" )
+  t.deepEquals( chessHelper.applyMove(fenA, chessHelper.decodeSAN("black", "Nh6")), [{type: "move", piece: {code: "n", file: 8, rank: 6}, fromFile: 7, fromRank: 8, toFile: 8, toRank: 6}], "knight advance" )
   t.deepEquals( chessHelper.applyMove(fenA, chessHelper.decodeSAN("black", "xg1=Q")), [
-    {type: "move", piece: {code: "p", file: 7, rank: 1}, fromFile: 8, fromRank: 2},
+    {type: "move", piece: {code: "p", file: 7, rank: 1}, fromFile: 8, fromRank: 2, toFile: 7, toRank: 1},
     {type: "capture", capturedPiece: {code: "R", file: 7, rank: 1}, capturedIndex: 0},
-    {type: "promote", piece: {code: "p", file: 7, rank: 1}, newPiece: {code: "q", file: 7, rank: 1}},
+    {type: "promote", piece: {code: "p", file: 7, rank: 1}, newPiece: {code: "q", file: 7, rank: 1}, file: 7, rank: 1},
   ], "pawn capture and promotion" )
   t.deepEquals( chessHelper.applyMove(fenA, chessHelper.decodeSAN("black", "O-O-O")), [
-    {type: "move", piece: {code: "k", file: 3, rank: 8}, fromFile: 5, fromRank: 8},
-    {type: "move", piece: {code: "r", file: 4, rank: 8}, fromFile: 1, fromRank: 8},
+    {type: "castle", king: {code: "k", file: 3, rank: 8}, rook: {code: "r", file: 4, rank: 8}, kingside: false},
   ], "queenside castle" )
 
   const pgn1 = chessHelper.parsePGN(PGN1)
