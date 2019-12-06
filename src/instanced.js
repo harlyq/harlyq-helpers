@@ -10,6 +10,7 @@ export const calcMatrixWorld = (function() {
   
     outMatrixWorld.compose(position, quaternion, scale)
     outMatrixWorld.premultiply(instancedMesh.matrixWorld)
+    return outMatrixWorld
   }
 })()
 
