@@ -119,14 +119,14 @@ export function createMesh(obj3D, count) {
   const scales = new Float32Array(count*FLOATS_PER_SCALE)
   const colors = new Float32Array(count*FLOATS_PER_COLOR).fill(1)
 
+  for (let i = 0; i < count; i++) {
+    quaternions[i*FLOATS_PER_QUATERNION + 3] = 1
+  }
+
   const instancePosition = new THREE.InstancedBufferAttribute(positions, FLOATS_PER_POSITION)
   const instanceQuaternion = new THREE.InstancedBufferAttribute(quaternions, FLOATS_PER_QUATERNION)
   const instanceScale = new THREE.InstancedBufferAttribute(scales, FLOATS_PER_SCALE)
   const instanceColor = new THREE.InstancedBufferAttribute(colors, FLOATS_PER_COLOR)
-
-  for (let i = 0; i < count; i++) {
-    instanceQuaternion[i*4 + 3] = 1
-  }
 
   const instancedGeometry = new THREE.InstancedBufferGeometry().copy(mesh.geometry)
   instancedGeometry.maxInstancedCount = count
