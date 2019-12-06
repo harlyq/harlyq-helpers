@@ -6,6 +6,7 @@ import * as closestPoint from "./closest-point.js"
 import * as domHelper from "./dom-helper.js"
 import * as extent from "./extent.js"
 import * as hull from "./hull.js"
+import * as instanced from "./instanced.js"
 import * as interpolation from "./interpolation.js"
 import * as intersection from "./intersection.js"
 import * as jsonHelper from "./json-helper.js"
@@ -29,6 +30,7 @@ export { chessHelper }
 export { closestPoint }
 export { domHelper }
 export { extent }
+export { instanced }
 export { interpolation }
 export { intersection }
 export { jsonHelper }
