@@ -42,7 +42,18 @@ export function fileRankToCoord(file, rank) {
 }
 
 export function parseFEN(fenStr) {
-  const syntax = { layout: [], player: "white", whiteKingCastle: false, whiteQueenCastle: false, blackKingCastle: false, blackQueenCastle: false, enPassant: undefined, halfMove: 0, fullMove: 1 }
+  const syntax = { 
+    layout: [],
+    player: "white",
+    whiteKingCastle: false,
+    whiteQueenCastle: false,
+    blackKingCastle: false,
+    blackQueenCastle: false,
+    enPassant: undefined,
+    halfMove: 0,
+    fullMove: 1,
+    capturedPieces: []
+  }
   const chunks = fenStr.split(" ")
 
   if (chunks.length < 5) {
@@ -133,6 +144,38 @@ export function fenToString(fen) {
   return `${rankChunks.join("/")} ${starting} ${castle} ${enPassant} ${fen.halfMove} ${fen.fullMove}`
 }
 
+export function decodeCoordMove(layout, moveStr) {
+  const fromFile = moveStr.charCodeAt(0) - 96
+  const fromRank = moveStr.charCodeAt(1) - 48
+  const toFile = moveStr.charCodeAt(2) - 96
+  const toRank = moveStr.charCodeAt(3) - 48
+  const promotion = moveStr[4]
+
+  const movePiece = findPieceByFileRank(layout, fromFile, fromRank)
+  if (!movePiece) {
+    throw Error(`unable to find piece for move ${moveStr}`)
+  }
+  const capturedPiece = findPieceByFileRank(layout, toFile, toRank)
+
+  const isBlack = movePiece.code === movePiece.code.toLowerCase()
+  const isCastle = (movePiece.code === "k" || movePiece.code === "K") && Math.abs(fromFile - toFile) === 2
+  const kingside = toFile > fromFile
+  const castle = !isCastle ? "" : ( isBlack ? (kingside ? "k" : "q") : (kingside ? "K" : "Q") )
+  const promote = !promotion ? "" : ( isBlack ? promotion.toLowerCase() : promotion.toUpperCase() )
+
+  return {
+    code: movePiece.code, // k for black king, K for white king
+    fromFile,
+    fromRank,
+    capture: !!capturedPiece,
+    toFile,
+    toRank,
+    promote,
+    castle,
+    check: "", // unknown
+  }
+}
+
 export function decodeSAN(player, sanStr) {
   const isWhite = player === "white"
   const castleParts = sanStr.match(CASTLE_REGEX)
@@ -207,8 +250,11 @@ export function sanToString(san) {
     const to = !san.castle ? fileRankToCoord(san.toFile, san.toRank) : ""
     const promote = san.promote ? "=" + san.promote.toUpperCase() : ""
     const capture = san.capture ? "x" : ""
-    const castle = !san.castle ? "" : san.castle.toUpperCase() === "K" ? "O-O" : "O-O-O"
-    return code + fromFile + fromRank + capture + to + promote + castle + san.check
+    if (san.castle) {
+      return (san.castle.toUpperCase() === "K" ? "O-O" : "O-O-O") + san.check
+    } else {
+      return code + fromFile + fromRank + capture + to + promote + san.check
+    }
   }
 }
 
@@ -431,8 +477,6 @@ export function applyMove(fen, move) {
         throw Error(`unable to find piece to capture`)
       }
   
-      if (!fen.capturedPieces) { fen.capturedPieces = [] }
-  
       actions.push({ type: "capture", capturedPiece, capturedIndex: fen.capturedPieces.length })
   
       fen.capturedPieces.push(capturedPiece)  
@@ -448,6 +492,7 @@ export function applyMove(fen, move) {
       const newPiece = {code: move.promote, file: move.toFile, rank: move.toRank}
   
       fen.layout.splice( fen.layout.indexOf(piece), 1 )
+      fen.capturedPieces.push(piece)
       fen.layout.push(newPiece)
   
       actions.push({ type: "promote", piece, newPiece, file: move.toFile, rank: move.toRank })  

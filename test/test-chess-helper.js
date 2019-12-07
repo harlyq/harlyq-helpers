@@ -215,7 +215,8 @@ test("chessHelper.parseFEN", (t) => {
     blackQueenCastle: false,
     enPassant: undefined,
     halfMove: 0,
-    fullMove: 1
+    fullMove: 1,
+    capturedPieces: [],
   }, "empty board")
 
   t.deepEquals(chessHelper.parseFEN(chessHelper.FEN_DEFAULT), {
@@ -260,7 +261,8 @@ test("chessHelper.parseFEN", (t) => {
     blackQueenCastle: true,
     enPassant: undefined,
     halfMove: 0,
-    fullMove: 1
+    fullMove: 1,
+    capturedPieces: [],
   }, "standard")
 
   t.deepEquals(chessHelper.parseFEN("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"), {
@@ -305,7 +307,8 @@ test("chessHelper.parseFEN", (t) => {
     blackQueenCastle: true,
     enPassant: {file: 5, rank: 3},
     halfMove: 0,
-    fullMove: 1
+    fullMove: 1,
+    capturedPieces: [],
   }, "e4 opening")
 
   t.deepEquals(chessHelper.parseFEN("5k2/pp4pp/3bpp2/8/1P6/P2KP3/5PPP/2B5 w - - 0 29"), {
@@ -334,7 +337,8 @@ test("chessHelper.parseFEN", (t) => {
     blackQueenCastle: false,
     enPassant: undefined,
     halfMove: 0,
-    fullMove: 29
+    fullMove: 29,
+    capturedPieces: [],
   }, "partial")
 
   const FEN1 = "5k2/pp4pp/3bpp2/8/1P6/P2KP3/5PPP/2B5 w - - 0 29"
