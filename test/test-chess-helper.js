@@ -405,6 +405,9 @@ test("chessHelper.applyMove", (t) => {
     {type: "castle", king: {code: "k", file: 3, rank: 8}, rook: {code: "r", file: 4, rank: 8}, kingside: false},
   ], "queenside castle" )
 
+  chessHelper.applyMove(fenA, chessHelper.decodeSAN("black", "d5"))
+  t.deepEquals(fenA.enPassant , {file: 4, rank: 6}, "en passant" )
+
   const pgn1 = chessHelper.parsePGN(PGN1)
   const fen1 = chessHelper.parseFEN(chessHelper.FEN_DEFAULT)
 

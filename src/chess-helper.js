@@ -453,6 +453,7 @@ export function applyMove(fen, move) {
     throw Error(`unable to find piece for move`)
   }
 
+  const isPawn = piece.code === "P" || piece.code === "p"
   const isBlack = piece.code === piece.code.toLowerCase()
 
   if (move.castle) {
@@ -470,6 +471,13 @@ export function applyMove(fen, move) {
   } else {
 
     actions.push({ type: 'move', piece, fromFile: piece.file, fromRank: piece.rank, toFile: move.toFile, toRank: move.toRank } )
+
+    if (isPawn && Math.abs(piece.rank - move.toRank) == 2) {
+      fen.enPassant = { file: piece.file, rank: (piece.rank + move.toRank)/2 }
+    } else {
+      fen.enPassant = undefined
+    }
+  
 
     if (move.capture) {
       const capturedPiece = findPieceByFileRank(fen.layout, move.toFile, move.toRank)
@@ -497,10 +505,10 @@ export function applyMove(fen, move) {
       fen.capturedPieces.push(piece)
       fen.layout.push(newPiece)
     }
-  
+
   }
 
-  if (piece.code !== "P" && piece.code !== "p" && !move.capture) {
+  if (!isPawn && !move.capture) {
     fen.halfMove++
   } else {
     fen.halfMove = 0
