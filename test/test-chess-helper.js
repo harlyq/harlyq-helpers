@@ -399,7 +399,7 @@ test("chessHelper.applyMove", (t) => {
   t.deepEquals( chessHelper.applyMove(fenA, chessHelper.decodeSAN("black", "xg1=Q")), [
     {type: "move", piece: {code: "p", file: 7, rank: 1}, fromFile: 8, fromRank: 2, toFile: 7, toRank: 1},
     {type: "capture", capturedPiece: {code: "R", file: 7, rank: 1}, capturedIndex: 0},
-    {type: "promote", piece: {code: "p", file: 7, rank: 1}, newPiece: {code: "q", file: 7, rank: 1}, file: 7, rank: 1},
+    {type: "promote", piece: {code: "p", file: 7, rank: 1}, newPiece: {code: "q", file: 7, rank: 1}, file: 7, rank: 1, capturedIndex: 1},
   ], "pawn capture and promotion" )
   t.deepEquals( chessHelper.applyMove(fenA, chessHelper.decodeSAN("black", "O-O-O")), [
     {type: "castle", king: {code: "k", file: 3, rank: 8}, rook: {code: "r", file: 4, rank: 8}, kingside: false},

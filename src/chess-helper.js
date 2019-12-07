@@ -491,11 +491,11 @@ export function applyMove(fen, move) {
     if (move.promote) {
       const newPiece = {code: move.promote, file: move.toFile, rank: move.toRank}
   
+      actions.push({ type: "promote", piece, newPiece, file: move.toFile, rank: move.toRank, capturedIndex: fen.capturedPieces.length })
+
       fen.layout.splice( fen.layout.indexOf(piece), 1 )
       fen.capturedPieces.push(piece)
       fen.layout.push(newPiece)
-  
-      actions.push({ type: "promote", piece, newPiece, file: move.toFile, rank: move.toRank })  
     }
   
   }
