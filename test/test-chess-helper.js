@@ -423,7 +423,13 @@ test("chessHelper.applyMove", (t) => {
   ], "queenside castle" )
 
   chessHelper.applyMove(fenA, chessHelper.decodeSAN("black", "d5"))
-  t.deepEquals(fenA.enPassant , {file: 4, rank: 6}, "en passant" )
+  t.deepEquals(fenA.enPassant , {file: 4, rank: 6}, "enable en passant" )
+
+  const fenEnPassant = chessHelper.parseFEN("8/8/8/pP6/8/8/8/8 w - a6 0 1")
+  t.deepEquals(chessHelper.applyMove(fenEnPassant, chessHelper.decodeCoordMove(fenEnPassant, "b5a6")), [
+    {type: "move", piece: {code: "P", file: 1, rank: 6}, fromFile: 2, fromRank: 5, toFile: 1, toRank: 6},
+    {type: "capture", capturedPiece: {code: "p", file: 1, rank: 5}, capturedIndex: 0},
+  ], "perform en passant")
 
   const pgn1 = chessHelper.parsePGN(PGN1)
   const fen1 = chessHelper.parseFEN(chessHelper.FEN_DEFAULT)

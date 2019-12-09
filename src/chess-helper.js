@@ -475,20 +475,14 @@ export function applyMove(fen, move) {
 
     piece.file = kingside ? 7 : 3
     rook.file = kingside ? 6 : 4
+    fen.enPassant = undefined
 
   } else {
 
     actions.push({ type: 'move', piece, fromFile: piece.file, fromRank: piece.rank, toFile: move.toFile, toRank: move.toRank } )
 
-    if (isPawn && Math.abs(piece.rank - move.toRank) == 2) {
-      fen.enPassant = { file: piece.file, rank: (piece.rank + move.toRank)/2 }
-    } else {
-      fen.enPassant = undefined
-    }
-  
-
     if (move.capture) {
-      const capturedPiece = findPieceByFileRank(fen.layout, move.toFile, move.toRank)
+      const capturedPiece = findPieceByFileRank(fen.layout, move.toFile, move.toRank) || (isPawn && findEnPassantPiece(fen))
       if (!capturedPiece) {
         throw Error(`unable to find piece to capture`)
       }
@@ -500,6 +494,12 @@ export function applyMove(fen, move) {
   
     }
 
+    if (isPawn && Math.abs(piece.rank - move.toRank) == 2) {
+      fen.enPassant = { file: piece.file, rank: (piece.rank + move.toRank)/2 }
+    } else {
+      fen.enPassant = undefined
+    }
+  
     // must be after the capturedPiece check
     piece.file = move.toFile
     piece.rank = move.toRank
