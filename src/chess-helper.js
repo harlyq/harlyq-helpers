@@ -144,18 +144,26 @@ export function fenToString(fen) {
   return `${rankChunks.join("/")} ${starting} ${castle} ${enPassant} ${fen.halfMove} ${fen.fullMove}`
 }
 
-export function decodeCoordMove(layout, moveStr) {
+function findEnPassantPiece(fen) {
+  if (fen.enPassant) {
+    const piece = findPieceByFileRank(fen.layout, fen.enPassant.file, fen.enPassant.rank === 6 ? 5 : 4)
+    return piece && piece.code.toLowerCase() === "p" ? piece : undefined
+  }
+}
+
+export function decodeCoordMove(fen, moveStr) {
   const fromFile = moveStr.charCodeAt(0) - 96
   const fromRank = moveStr.charCodeAt(1) - 48
   const toFile = moveStr.charCodeAt(2) - 96
   const toRank = moveStr.charCodeAt(3) - 48
   const promotion = moveStr[4]
 
-  const movePiece = findPieceByFileRank(layout, fromFile, fromRank)
+  const movePiece = findPieceByFileRank(fen.layout, fromFile, fromRank)
   if (!movePiece) {
     throw Error(`unable to find piece for move ${moveStr}`)
   }
-  const capturedPiece = findPieceByFileRank(layout, toFile, toRank)
+  const enPassantPiece = (fen.enPassant && movePiece.code.toLowerCase() === "p" && toFile === fen.enPassant.file && toRank === fen.enPassant.rank) ? findEnPassantPiece(fen) : undefined
+  const capturedPiece = findPieceByFileRank(fen.layout, toFile, toRank) || enPassantPiece
 
   const isBlack = movePiece.code === movePiece.code.toLowerCase()
   const isCastle = (movePiece.code === "k" || movePiece.code === "K") && Math.abs(fromFile - toFile) === 2

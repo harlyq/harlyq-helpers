@@ -372,6 +372,23 @@ test("chessHelper.parsePGN", (t) => {
   t.end()
 })
 
+test("chessHelper.decodeCoordMove", (t) => {
+  const fenDefault = chessHelper.parseFEN(chessHelper.FEN_DEFAULT)
+  t.deepEquals(chessHelper.decodeCoordMove(fenDefault, "a2a4"), {code: "P", fromFile: 1, fromRank: 2, capture: false, toFile: 1, toRank: 4, promote: "", castle: "", check: ""}, "a2a4")
+  t.deepEquals(chessHelper.decodeCoordMove(fenDefault, "b1c3"), {code: "N", fromFile: 2, fromRank: 1, capture: false, toFile: 3, toRank: 3, promote: "", castle: "", check: ""}, "b1c3")
+  t.deepEquals(chessHelper.decodeCoordMove(fenDefault, "c7c6"), {code: "p", fromFile: 3, fromRank: 7, capture: false, toFile: 3, toRank: 6, promote: "", castle: "", check: ""}, "c7c6")
+  t.deepEquals(chessHelper.decodeCoordMove(fenDefault, "d8d1"), {code: "q", fromFile: 4, fromRank: 8, capture: true, toFile: 4, toRank: 1, promote: "", castle: "", check: ""}, "d8d1")
+  t.deepEquals(chessHelper.decodeCoordMove(fenDefault, "e1g1"), {code: "K", fromFile: 5, fromRank: 1, capture: true, toFile: 7, toRank: 1, promote: "", castle: "K", check: ""}, "e1g1") // can never capture on a castle
+  t.deepEquals(chessHelper.decodeCoordMove(fenDefault, "e1c1"), {code: "K", fromFile: 5, fromRank: 1, capture: true, toFile: 3, toRank: 1, promote: "", castle: "Q", check: ""}, "e1c1")
+  t.deepEquals(chessHelper.decodeCoordMove(fenDefault, "e8c8"), {code: "k", fromFile: 5, fromRank: 8, capture: true, toFile: 3, toRank: 8, promote: "", castle: "q", check: ""}, "e8c8")
+
+  const fenEnPassant = chessHelper.parseFEN("8/8/8/pP6/8/8/8/8 w - a6 0 1")
+  t.deepEquals(chessHelper.decodeCoordMove(fenEnPassant, "b5a6"), {code: "P", fromFile: 2, fromRank: 5, capture: true, toFile: 1, toRank: 6, promote: "", castle: "", check: ""}, "en passant")
+
+  t.end()
+})
+
+
 test("chessHelper.findPieceByFileRank", (t) => {
   const fenDefault = chessHelper.parseFEN(chessHelper.FEN_DEFAULT)
   t.deepEquals(chessHelper.findPieceByFileRank(fenDefault.layout, -1, -1), undefined, "off board")
