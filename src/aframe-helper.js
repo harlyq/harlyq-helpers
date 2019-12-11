@@ -259,3 +259,158 @@ export function getComponentDebugName(component) {
   return domHelper.getDebugName(component.el) + '[' + component.attrName + ']'
 }
 
+// creates a data channel with the same name as the component
+// usage:
+// AFRAME.registerSystem(<componentName>, {
+//  ...simpleNetworkSystem(<componentName>),
+//  init() {
+//    this.setupNetwork()
+//  },
+//  remove() {
+//    this.shutdownNetwork()
+//  },
+// })
+//
+// AFRAME.registerComponent(<componentName>), {
+//   init() {
+//     this.system.registerNetworkedComponent(this)
+//   }
+//   remove() {
+//     this.system.unregisterNetworkComponent(this)
+//   }
+//   receiveNetworkData(key, data, senderId) {
+//     if (key === "newreplica") {
+//       // send any setup data to the replica
+//     }
+//     // process other names
+//   }
+// })
+
+/** @type {(componentName: string) => {
+ *  isConnectedTo: (clientId: string) => boolean,
+ *  isEntityNetworked: (el: Element) => boolean,
+ *  isOwner: (component: any) => boolean,
+ *  onInstantiated: (event: Event) => void,
+ *  ownerSendNetworkData: (component: any, key: string, data: any, targetId?: string) => void
+ *  sendNetworkData: (component: any, key: string, data: any, targetId?: string) => void,
+ *  setupNetwork: () => void,
+ *  shutdownNetwork: () => void,
+ *  takeOwnership: (component: any) => void,
+ *  registerNetworkedComponent: (component: any) => void,
+ *  unregisterNetworkedComponent: (component: any) => void,
+ * }} */
+export function simpleNetworkSystem(componentName) {
+
+  return {
+    isConnectedTo(clientId) {
+      return typeof NAF === "object" ? NAF.connection.isConnectedTo(clientId) : false
+    },
+  
+    isEntityNetworked(el) {
+      /** @type {any} */
+      let curEntity = el
+    
+      if (typeof NAF === "object") {
+        while (curEntity && curEntity.components && !curEntity.components.networked) {
+          curEntity = curEntity.parentNode
+        }
+      
+        if (curEntity && curEntity.components && curEntity.components.networked) {
+          return true
+        }
+      }
+    
+      return false
+    },
+
+    isOwner(component) {
+      return typeof NAF === "object" ? NAF.utils.isMine(component.el) : true
+    },
+
+    onInstantiated(event) {
+      const el = event.detail.el
+      const networkId = NAF.utils.getNetworkId(el)
+      const component = el.components[componentName]
+      this.networkComponents[networkId] = component
+  
+      if (!NAF.utils.isMine(el)) {
+        this.sendNetworkData(component, "newreplica", undefined)
+      }
+    },
+
+    ownerSendNetworkData(component, key, data, targetId = undefined) {
+      if (this.isOwner(component)) {
+        this.sendNetworkData(component, key, data, targetId)
+      }
+    },
+  
+    sendNetworkData(component, key, data, targetId = undefined) {
+      if (this.isEntityNetworked(component.el)) {
+        const packet = {
+          key,
+          networkId: NAF.utils.getNetworkId(component.el),
+          data
+        }
+        
+        if (targetId) {
+          NAF.connection.sendDataGuaranteed(targetId, componentName, packet)
+        } else {
+          NAF.connection.broadcastData(componentName, packet)
+        }
+      }
+    },
+
+    setupNetwork() {
+      this.networkComponents = new Map() // map by networkId
+      this.onInstantiated = this.onInstantiated.bind(this)
+  
+      if (typeof NAF !== "object") {
+        return
+      }
+  
+      NAF.connection.subscribeToDataChannel(componentName, (senderId, type, packet, targetId) => {
+        const component = this.networkComponents[packet.networkId]
+        if (component) {
+          component.receiveNetworkData(packet.key, packet.data, senderId)
+        }
+      })
+    },
+  
+    shutdownNetwork() {
+      if (typeof NAF !== "object") {
+        return
+      }
+  
+      NAF.connection.unsubscribeToDataChannel(componentName)
+    },
+  
+    takeOwnership(component) {
+      if (!this.isOwner(component)) {
+        NAF.utils.takeOwnership(component.el)
+      }
+    },
+  
+    registerNetworkedComponent(component) {
+      if (typeof component.receiveNetworkData !== "function") {
+        throw Error(`missing receiveNetworkData(key, packet, senderId)`)
+      }   
+
+      if (typeof NAF === "object" && this.isEntityNetworked(component.el)) {
+        component.el.addEventListener("instantiated", this.onInstantiated) // from "networked" component, once it is setup
+      }
+    },
+  
+    unregisterNetworkedComponent(component) {
+      component.el.removeEventListener("instantiated", this.onInstantiated) // does nothing if it was never added
+  
+      for (let networkId in this.networkComponents) {
+        if (this.networkComponents[networkId] === component) {
+          delete this.networkComponents[networkId]
+          break
+        }
+      }
+    },
+
+  }
+}
+

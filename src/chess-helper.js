@@ -184,6 +184,14 @@ export function decodeCoordMove(fen, moveStr) {
   }
 }
 
+export function coordToString(move) {
+  return fileRankToCoord(move.fromFile, move.fromRank) + fileRankToCoord(move.toFile, move.toRank) + move.promote
+}
+
+export function getPlayerFromMove(move) {
+  return move.code === move.code.toLowerCase() ? "black" : "white"  
+}
+
 export function decodeSAN(player, sanStr) {
   const isWhite = player === "white"
   const castleParts = sanStr.match(CASTLE_REGEX)
