@@ -10,6 +10,7 @@ import * as instanced from "./instanced.js"
 import * as interpolation from "./interpolation.js"
 import * as intersection from "./intersection.js"
 import * as jsonHelper from "./json-helper.js"
+import * as nafHelper from "./naf-helper.js"
 // import * as nodeHelper from "./node-helper.js"
 import * as overlap from "./overlap.js"
 import * as proximity from "./proximity.js"
@@ -35,6 +36,7 @@ export { interpolation }
 export { intersection }
 export { jsonHelper }
 export { hull }
+export { nafHelper }
 // export { nodeHelper }
 export { overlap }
 export { proximity }
