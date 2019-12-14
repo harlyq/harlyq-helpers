@@ -154,9 +154,9 @@ export function networkSystem(componentName) {
           this.networkPacket.networkId = networkId
           this.networkPacket.data = data
           if (targetId) {
-            NAF.connection.sendDataGuaranteed(targetId, componentName, packet)
+            NAF.connection.sendDataGuaranteed(targetId, componentName, this.networkPacket)
           } else {
-            NAF.connection.broadcastData(componentName, packet)
+            NAF.connection.broadcastData(componentName, this.networkPacket)
           }
         }
       }
