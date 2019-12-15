@@ -10,6 +10,7 @@ export function lerpObject(a, b, t) {
   if (t === 0) return out
 
   for (let k in b) {
+    // @ts-ignore
     out[k] = typeof a[k] !== "undefined" ? lerp(a[k], b[k], t) : b[k];
   }
   return out

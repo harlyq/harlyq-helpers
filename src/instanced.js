@@ -131,10 +131,10 @@ export function createMesh(obj3D, count) {
   const instancedGeometry = new THREE.InstancedBufferGeometry().copy(mesh.geometry)
   instancedGeometry.maxInstancedCount = count
 
-  instancedGeometry.addAttribute("instancePosition", instancePosition)
-  instancedGeometry.addAttribute("instanceQuaternion", instanceQuaternion)
-  instancedGeometry.addAttribute("instanceScale", instanceScale)
-  instancedGeometry.addAttribute("instanceColor", instanceColor)
+  instancedGeometry.setAttribute("instancePosition", instancePosition)
+  instancedGeometry.setAttribute("instanceQuaternion", instanceQuaternion)
+  instancedGeometry.setAttribute("instanceScale", instanceScale)
+  instancedGeometry.setAttribute("instanceColor", instanceColor)
 
   let instancedMaterial = mesh.material
 
