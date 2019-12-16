@@ -1,6 +1,7 @@
 import * as vecxyz from "./vecxyz.js"
 
 /**
+ * @typedef {Float32Array | number[]} Affine4
  * @typedef {{x: number, y: number, z: number}} VecXYZ
  * @typedef {{x: number, y: number, z: number, w: number}} QuatXYZW
  * @typedef {number[] | Float32Array} Vertices
@@ -244,5 +245,16 @@ export function multiplyScalar(out, a, s, ai=0, oi=0) {
   out[oi] = a[ai]*s
   out[oi+1] = a[ai+1]*s
   out[oi+2] = a[ai+2]*s
+  return out
+}
+
+/** @type {<T extends Vertices, TV extends Vertices, TA extends Affine4>(out: T, vertices: TV, aff: TA, vi?: number, oi?: number) => T} */
+export function applyAffine4(out, vertices, aff, vi=0, oi=0) {
+  const vx = vertices[vi], vy = vertices[vi+1], vz = vertices[vi+2]
+
+  out[oi] = aff[0]*vx + aff[4]*vy + aff[8]*vz + aff[12]
+  out[oi+1] = aff[1]*vx + aff[5]*vy + aff[9]*vz + aff[13]
+  out[oi+2] = aff[2]*vx + aff[6]*vy + aff[10]*vz + aff[14]
+
   return out
 }

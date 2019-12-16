@@ -24,3 +24,11 @@ test("vertex3.add", (t) => {
   t.deepEquals(vertex3.add(out, [-1,-2,-3, 3,2,1], [4,5,6, 7,8,9], 3, 3), [10,10,10], "offset in both")
   t.end()
 })
+
+test("vertex3.applyAffine4", (t) => {
+  let out = new Float32Array(3)
+  t.deepEquals(vertex3.applyAffine4(out, [0,0,0], [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]), [0,0,0], "(0,0,0)*identity")
+  t.deepEquals(vertex3.applyAffine4(out, [-1,2,.5], [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]), [-1,2,.5], "(-1,2,.5)*identity")
+  t.deepEquals(vertex3.applyAffine4(out, [-1,2,.5], [1,0,0,0, 0,0,-1,0, 0,1,0,0, 0,0,0,1]), [-1,.5,-2], "(-1,2,.5)*rotate 90' on x")
+  t.end()
+})
