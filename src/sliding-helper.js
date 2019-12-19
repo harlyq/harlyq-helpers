@@ -27,7 +27,7 @@ export function shuffle(puzzle) {
   return puzzle
 }
 
-export function fileTile(puzzle, id) {
+export function findTile(puzzle, id) {
   return puzzle.tiles.find(tile => tile.id === id)
 }
 
