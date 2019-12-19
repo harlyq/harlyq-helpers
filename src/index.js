@@ -18,6 +18,7 @@ import * as pseudorandom from "./pseudorandom.js"
 import * as quatxyzw from "./quatxyzw.js"
 import * as rgbcolor from "./rgbcolor.js"
 import * as selector from "./selector.js"
+import * as slidingHelper from "./sliding-helper.js"
 import * as utils from "./utils.js"
 import * as threeHelper from "./three-helper.js"
 import * as vecxyz from "./vecxyz.js"
@@ -44,6 +45,7 @@ export { pseudorandom }
 export { quatxyzw }
 export { rgbcolor }
 export { selector }
+export { slidingHelper }
 export { utils }
 export { threeHelper }
 export { vecxyz }
