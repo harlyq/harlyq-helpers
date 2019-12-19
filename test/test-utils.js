@@ -116,3 +116,19 @@ test("utils.blocks", (t) => {
   t.equals(tenBlocks.maxUsed(), 0, "ten blocks, all released non-sequentially")
 
 })
+
+test("utils.shuffle", (t) => {
+  const numerics = [1,2,3,4,5]
+  const words = ["cat","sat","on","the","mat"]
+  const shuffled1 = utils.shuffle(numerics)
+  const shuffled2 = utils.shuffle(numerics)
+
+  t.deepEquals(utils.shuffle([]), [], "empty")
+  t.notDeepEqual(utils.shuffle(numerics), numerics, "shuffled numbers")
+  t.notDeepEqual(utils.shuffle(words), words, "shuffled words")
+  t.ok(shuffled1.every(v => numerics.indexOf(v) !== -1), "all elements present")
+  t.ok(shuffled1.length == numerics.length, "same number of elements")
+  t.ok(shuffled1.length === shuffled2.length, "consecutive shuffles are same size")
+  t.ok(shuffled2.some((v,i) => shuffled1[i] !== v), "consecutive shuffles are different")
+  t.end()
+})

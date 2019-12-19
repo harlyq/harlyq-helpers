@@ -139,3 +139,16 @@ export function blocks(maxBlocks) {
     maxUsed,
   }
 }
+
+export function shuffle(xs) {
+  let ys = xs.slice()
+
+  for (let i = ys.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * i)
+      const temp = ys[i]
+      ys[i] = ys[j]
+      ys[j] = temp
+  }
+
+  return ys
+}

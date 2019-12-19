@@ -60,9 +60,10 @@ export const setOBBFromObject3D = (function() {
     const tempParent = object3D.parent
 
     object3D.parent = null
-    object3D.position.set(0,0,0)
+    object3D.position.set(0,0,0) // TODO - we should get rid of these???!!!
     object3D.quaternion.set(0,0,0,1)
     object3D.scale.set(1,1,1)
+    object3D.updateMatrixWorld(true)
 
     tempBox3.setFromObject(object3D) // expensive for models
 
