@@ -25,6 +25,7 @@ export function shuffle(puzzle) {
   puzzle.tiles.forEach( (tile,i) => tile.id = i ) // assign id to the shuffled index
   puzzle.slidingInfos.length = 0
   puzzle.sliding = undefined
+  puzzle.missingTile = puzzle.tiles[puzzle.tiles.length - 1]
   return puzzle
 }
 
@@ -51,8 +52,7 @@ export function slideTiles(puzzle, tile, axis, delta) {
   }
 
   const altAxis = axis === "row" ? "col" : "row"
-  const gap = missingTile[altAxis] - tile[altAxis]
-  const gapDirection = Math.sign(gap)
+  const gapDirection = Math.sign(missingTile[altAxis] - tile[altAxis])
   const clampDelta = gapDirection > 0 ? utils.clamp(delta, 0, 1) : utils.clamp(delta, -1, 0)
 
   if (clampDelta === 0 && delta !== 0) {
@@ -66,10 +66,12 @@ export function slideTiles(puzzle, tile, axis, delta) {
   }
 
   const slideDirection = Math.sign(clampDelta - tileInfo[altAxis])
+  const gap = Math.abs(missingTile[altAxis] - tile[altAxis])
+
   tileInfo[altAxis] = clampDelta
 
   for (let i = 1; i < gap; i++) {
-    const slidingTile = axis === "row" ? findTileByRowCol(puzzle, missingTile.row, tile.col + i) : findTileByRowCol(puzzle, tile.row + i, missingTile.col)
+    const slidingTile = axis === "row" ? findTileByRowCol(puzzle, missingTile.row, tile.col + i*gapDirection) : findTileByRowCol(puzzle, tile.row + i*gapDirection, missingTile.col)
     const info = puzzle.slidingInfos.find(info => info.tile === slidingTile)
     if (!info) {
       puzzle.slidingInfos.push( {tile: slidingTile, row: 0, col: 0} )
