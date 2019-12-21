@@ -37,6 +37,15 @@ export function findTileByRowCol(puzzle, row, col) {
   return puzzle.tiles.find(tile => tile.row === row && tile.col === col)
 }
 
+export function findTileBySlidingRowCol(puzzle, row, col) {
+  return puzzle.tiles.find(tile => {
+    const slidingInfo = puzzle.slidingInfos.find(slidingInfo => slidingInfo.tile === tile)
+    const rowStart = tile.row + (slidingInfo ? slidingInfo.row : 0)
+    const colStart = tile.col + (slidingInfo ? slidingInfo.col : 0)
+    return rowStart <= row && row < rowStart + 1 && colStart <= col && col < colStart + 1
+  })
+}
+
 export function slideTiles(puzzle, tile, axis, delta) {
   const missingTile = puzzle.missingTile
   if (tile[axis] !== puzzle.missingTile[axis]) {

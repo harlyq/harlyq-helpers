@@ -20,7 +20,6 @@ test("slidingHelper.create", (t) => {
   t.end()
 })
 
-
 test("slidingHelper.shuffle", (t) => {
   const puzzleOrigin = slidingHelper.create(3,3)
   const puzzleA = slidingHelper.create(3,3)
@@ -219,3 +218,22 @@ test("slidingHelper.slideTiles", (t) => {
 
   t.end()
 })
+
+test("slidingHelper.findTileBySlidingRowCol", (t) => {
+  const puzzleA = slidingHelper.create(2,2)
+
+  t.deepEqual(slidingHelper.findTileBySlidingRowCol(puzzleA, -1, 0), undefined, "outside")
+  t.deepEqual(slidingHelper.findTileBySlidingRowCol(puzzleA, 10, 10), undefined, "outside ii")
+  t.deepEqual(slidingHelper.findTileBySlidingRowCol(puzzleA, 0, 0).id, 0, "inside")
+  t.deepEqual(slidingHelper.findTileBySlidingRowCol(puzzleA, 1, 1).id, 3, "inside, missing tile")
+  t.deepEqual(slidingHelper.findTileBySlidingRowCol(puzzleA, 1.5, .5).id, 2, "fractional")
+
+  slidingHelper.slideTiles(puzzleA, puzzleA.tiles[1], "col", .5)
+  t.deepEqual(slidingHelper.findTileBySlidingRowCol(puzzleA, 0.1, 1), undefined, "fractional, but not on slide tile")
+  t.deepEqual(slidingHelper.findTileByRowCol(puzzleA, 0, 1).id, 1, "ignoring sliding")
+  t.deepEqual(slidingHelper.findTileBySlidingRowCol(puzzleA, 0.6, 1).id, 1, "fractional, on slide tile in original non-slide")
+  t.deepEqual(slidingHelper.findTileBySlidingRowCol(puzzleA, 1.2, 1).id, 1, "fractional, on slide tile in next non-slide")
+
+  t.end()
+})
+
