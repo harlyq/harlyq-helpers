@@ -1,4 +1,5 @@
 import * as utils from "./utils.js"
+import { info } from "./aframe-helper.js"
 
 export function create(numRows, numCols) {
   if (numRows <= 0 || numCols <= 0) {
@@ -75,41 +76,64 @@ export function slideTiles(puzzle, tile, axis, delta) {
     }
   }
 
-  const COMPLETE_DELTAS = [0,1,-1]
-  let isComplete = COMPLETE_DELTAS.includes(clampDelta)
-
   for (let info of puzzle.slidingInfos) {
     if (info === tileInfo) {
       continue
     }
 
     if ( slideDirection > 0 ? (info.tile[altAxis] < tile[altAxis]) : (info.tile[altAxis] > tile[altAxis]) ) {
-      isComplete = isComplete && COMPLETE_DELTAS.includes(info[altAxis])
       continue // tile not in the path of the moving tiles
     }
 
     if ( slideDirection > 0 ? (info[altAxis] > clampDelta) : (info[altAxis] < clampDelta) ) {
-      isComplete = isComplete && COMPLETE_DELTAS.includes(info[altAxis])
       continue // tile will not be bumped by the moving tile
     }
 
     info[altAxis] = clampDelta
   }
 
-  if (isComplete) {
-    missingTile[altAxis] = tile[altAxis]
+  puzzle.sliding = axis
 
-    // lock everything into it's new position and move the missingTile to the starting tile's location
+  return puzzle
+}
+
+export function recalculateMissingTile(puzzle) {
+  if (puzzle.slidingInfos.length === 0) {
+    return false
+  }
+
+  const altAxis = puzzle.sliding === "col" ? "row" : "col"
+  const COMPLETE_DELTAS = [0,1,-1]
+  const isComplete = puzzle.slidingInfos.every( info => COMPLETE_DELTAS.includes( info[altAxis] ) ) // true if empty
+
+  if (isComplete) {
+    const missingTile = puzzle.missingTile
+
+    // lock everything into it's new position
     for (let info of puzzle.slidingInfos) {
       info.tile[altAxis] += info[altAxis]
     }
 
+    // determine the missing tile's new location (it may not have moved)
+    if (altAxis === "row") {
+      for (let i = 0; i < puzzle.numRows; i++) {
+        if (!findTileByRowCol(puzzle, i, missingTile.col)) {
+          missingTile.row = i
+          break
+        }
+      }
+    } else {
+      for (let i = 0; i < puzzle.numCols; i++) {
+        if (!findTileByRowCol(puzzle, missingTile.row, i)) {
+          missingTile.col = i
+          break
+        }
+      }
+    }
+
     puzzle.sliding = undefined
     puzzle.slidingInfos.length = 0
-
-  } else {
-    puzzle.sliding = axis
   }
 
-  return puzzle
+  return isComplete
 }
