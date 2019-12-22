@@ -20,32 +20,29 @@ test("slidingHelper.create", (t) => {
   t.end()
 })
 
-test("slidingHelper.createFromSingleRow", (t) => {
+test("slidingHelper.set", (t) => {
+  const puzzleA = slidingHelper.create(2,2)
+
   try {
-    t.notok(slidingHelper.createFromSingleRow([], 4), "empty")
+    t.notok(slidingHelper.set(puzzleA,[]), "empty")
   } catch {
     t.pass("empty")
   }
 
   try {
-    t.notok(slidingHelper.createFromSingleRow([0,1,2,3,4], 4), "invalid size")
+    t.notok(slidingHelper.set(puzzleA, [0,1,2,3,4]), "invalid size")
   } catch {
     t.pass("invalid size")
   }
 
   try {
-    t.notok(slidingHelper.createFromSingleRow([1,1,1,1], 2), "repeated entries")
+    t.notok(slidingHelper.set(puzzleA, [0,1,1,1]), "missing entries")
   } catch {
-    t.pass("repeated entries")
+    t.pass("missing entries")
   }
 
-  try {
-    t.notok(slidingHelper.createFromSingleRow([1,,2,3], 2), "empty entries")
-  } catch {
-    t.pass("empty entries")
-  }
 
-  t.deepEqual(slidingHelper.createFromSingleRow([0,1,2,undefined],2), {
+  t.deepEqual(slidingHelper.set(slidingHelper.create(2,2), [0,1,2,3]), {
     tiles: [{id: 0, row: 0, col: 0}, {id: 1, row: 0, col: 1}, {id: 2, row: 1, col: 0}, {id: 3, row: 1, col: 1}],
     slidingInfos: [],
     sliding: undefined,
@@ -58,9 +55,9 @@ test("slidingHelper.createFromSingleRow", (t) => {
 })
 
 test("slidingHelper.isSolveable", (t) => {
-  const puzzleA = slidingHelper.createFromSingleRow([5,0,9,1,6,10,3,13,4,undefined,8,14,7,11,12,2],4)
-  const puzzleB = slidingHelper.createFromSingleRow([0,1,2,3,4,5,6,7,8,9,10,11,12,14,13,undefined],4)
-  const puzzleC = slidingHelper.createFromSingleRow([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,undefined],4)
+  const puzzleA = slidingHelper.set(slidingHelper.create(4,4), [5,0,9,1,6,10,3,13,4,15,8,14,7,11,12,2])
+  const puzzleB = slidingHelper.set(slidingHelper.create(4,4), [0,1,2,3,4,5,6,7,8,9,10,11,12,14,13,15])
+  const puzzleC = slidingHelper.set(slidingHelper.create(4,4), [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])
 
   t.equal(slidingHelper.isSolveable(puzzleA), true, "solveable")
   t.equal(slidingHelper.isSolveable(puzzleB), false, "unsolveable")

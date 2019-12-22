@@ -18,35 +18,39 @@ export function create(numRows, numCols) {
   }
 }
 
-export function createFromSingleRow(singleRow, numCols) {
-  const numRows = numCols > 0 ? singleRow.length/numCols : 0
-  if (numRows !== Math.floor(numRows) || (numRows === 0 && numCols !== 0) || (numRows === 0 && singleRow.length > 0)) {
-    throw Error(`missing data, expecting ${Math.ceil(numRows)*numCols} entries, but found ${singleRow.length}`)
+export function set(puzzle, rowMajor) {
+  const numTiles = puzzle.numRows*puzzle.numCols
+  const missingTileId = numTiles - 1
+
+  if (numTiles !== rowMajor.length) {
+    throw Error(`data size ${rowMajor.length} does not match puzzle size ${numTiles}`)
   }
 
-  const repeatedNumbers = singleRow.filter((x,i) => singleRow.lastIndexOf(x) !== i)
-  if (repeatedNumbers.length > 0) {
-    throw Error(`repeated entries: ${repeatedNumbers.join(",")}`)
+  for (let id = 0; id < numTiles; id++) {
+    if (!rowMajor.includes(id)) {
+      throw Error(`${id} missing from set`)
+    }
   }
 
-  if (Object.values(singleRow).length !== singleRow.length) {
-    throw Error(`contains empty entries, use keyword undefined instead`)
+  let tileIndex = 0
+  for (let row = 0; row < puzzle.numRows; row++) {
+    for (let col = 0; col < puzzle.numCols; col++) {
+      const tile = puzzle.tiles[tileIndex]
+      tile.id = rowMajor[tileIndex]
+      tile.row = row
+      tile.col = col
+      tileIndex++
+
+      if (tile.id === missingTileId) {
+        puzzle.missingTile = tile
+      }
+    }
   }
 
-  const missingTileId = numRows*numCols - 1
-  const tiles = singleRow.map((value,i) => {
-    const id = (typeof value === "undefined" ? missingTileId : value)
-    return { id, row: Math.floor(i/numCols), col: i % numCols }
-  })
+  puzzle.sliding = undefined
+  puzzle.slidingInfos = []
 
-  return {
-    tiles,
-    slidingInfos: [],
-    sliding: undefined,
-    numRows,
-    numCols,
-    missingTile: tiles.find(tile => tile.id === missingTileId)
-  }
+  return puzzle
 }
 
 export function shuffle(puzzle) {
