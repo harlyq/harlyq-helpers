@@ -51,6 +51,9 @@ test("slidingHelper.set", (t) => {
     missingTile: {id: 3, row: 1, col: 1},
   }, "valid 2x2")
 
+  const layout = [6,3,2,0,9,8,1,7,5,10,4,11]
+  t.deepEqual(slidingHelper.get(slidingHelper.set(slidingHelper.create(3,4), layout)), layout, "3x4")
+
   t.end()
 })
 
@@ -271,10 +274,12 @@ test("slidingHelper.slideTiles", (t) => {
   slidingHelper.slideTiles(puzzleD, puzzleD.tiles[14], "row", -20)
   slidingHelper.recalculateMissingTile(puzzleD)
   t.deepEqual({
+    tileIds: slidingHelper.get(puzzleD),
     slidingInfos: puzzleD.slidingInfos,
     sliding: puzzleD.sliding,
     missingTile: puzzleD.missingTile
   }, {
+    tileIds: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
     slidingInfos: [],
     sliding: undefined,
     missingTile: {id: 15, row: 3, col: 3}

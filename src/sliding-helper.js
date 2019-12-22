@@ -18,6 +18,14 @@ export function create(numRows, numCols) {
   }
 }
 
+export function get(puzzle) {
+  return puzzle.tiles.reduce((oneRow, tile) => {
+    const i = tile.row*puzzle.numCols + tile.col
+    oneRow[i] = tile.id
+    return oneRow
+  }, [])
+}
+
 export function set(puzzle, rowMajor) {
   const numTiles = puzzle.numRows*puzzle.numCols
   const missingTileId = numTiles - 1
@@ -185,13 +193,8 @@ export function recalculateMissingTile(puzzle) {
 export function isSolveable(puzzle) {
   const numCols = puzzle.numCols
   const missingTile = puzzle.missingTile
-  const asOneRow = puzzle.tiles.reduce((oneRow, tile) => {
-    if (tile !== missingTile) {
-      const i = tile.row*numCols + tile.col
-      oneRow[i] = tile.id
-    }
-    return oneRow
-  }, [])
+  const asOneRow = get(puzzle)
+  asOneRow.splice(missingTile.row*numCols + missingTile.col, 1)
 
   const gridWidthIsOdd = !!(numCols % 2)
   const missingTileInOddRow = !!((puzzle.numRows - missingTile.row) % 2)
