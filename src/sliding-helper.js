@@ -35,8 +35,8 @@ export function createFromSingleRow(singleRow, numCols) {
 
   const missingTileId = numRows*numCols - 1
   const tiles = singleRow.map((value,i) => {
-    const id = (typeof value === "undefined" ? missingTileId : i)
-    return { value, id, row: Math.floor(i/numCols), col: i % numCols }
+    const id = (typeof value === "undefined" ? missingTileId : value)
+    return { id, row: Math.floor(i/numCols), col: i % numCols }
   })
 
   return {
@@ -190,7 +190,7 @@ export function isSolveable(puzzle) {
   }, [])
 
   const gridWidthIsOdd = !!(numCols % 2)
-  const missingTileInOddRow = !!((puzzle.numRows - 1 - missingTile.row) % 2)
+  const missingTileInOddRow = !!((puzzle.numRows - missingTile.row) % 2)
   const numInversions = asOneRow.reduce((sum, x, i) => sum + asOneRow.slice(i+1).filter(y => y < x).length)
   const numInversionsIsOdd = !!(numInversions % 2)
 

@@ -28,7 +28,7 @@ test("slidingHelper.createFromSingleRow", (t) => {
   }
 
   try {
-    t.notok(slidingHelper.createFromSingleRow([1,2,3,4,5], 4), "invalid size")
+    t.notok(slidingHelper.createFromSingleRow([0,1,2,3,4], 4), "invalid size")
   } catch {
     t.pass("invalid size")
   }
@@ -45,24 +45,26 @@ test("slidingHelper.createFromSingleRow", (t) => {
     t.pass("empty entries")
   }
 
-  t.deepEqual(slidingHelper.createFromSingleRow([1,2,3,undefined],2), {
-    tiles: [{id: 0, row: 0, col: 0, value: 1}, {id: 1, row: 0, col: 1, value: 2}, {id: 2, row: 1, col: 0, value: 3}, {id: 3, row: 1, col: 1, value: undefined}],
+  t.deepEqual(slidingHelper.createFromSingleRow([0,1,2,undefined],2), {
+    tiles: [{id: 0, row: 0, col: 0}, {id: 1, row: 0, col: 1}, {id: 2, row: 1, col: 0}, {id: 3, row: 1, col: 1}],
     slidingInfos: [],
     sliding: undefined,
     numRows: 2,
     numCols: 2,
-    missingTile: {id: 3, row: 1, col: 1, value: undefined},
+    missingTile: {id: 3, row: 1, col: 1},
   }, "valid 2x2")
 
   t.end()
 })
 
 test("slidingHelper.isSolveable", (t) => {
-  const puzzleA = slidingHelper.createFromSingleRow([6,1,10,2,7,11,4,14,5,undefined,9,15,8,12,13,3],4)
-  const puzzleB = slidingHelper.createFromSingleRow([1,2,3,4,5,6,7,8,9,10,11,12,13,15,14,undefined],4)
+  const puzzleA = slidingHelper.createFromSingleRow([5,0,9,1,6,10,3,13,4,undefined,8,14,7,11,12,2],4)
+  const puzzleB = slidingHelper.createFromSingleRow([0,1,2,3,4,5,6,7,8,9,10,11,12,14,13,undefined],4)
+  const puzzleC = slidingHelper.createFromSingleRow([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,undefined],4)
 
   t.equal(slidingHelper.isSolveable(puzzleA), true, "solveable")
   t.equal(slidingHelper.isSolveable(puzzleB), false, "unsolveable")
+  t.equal(slidingHelper.isSolveable(puzzleC), true, "solveable ii")
   t.end()
 })
 
