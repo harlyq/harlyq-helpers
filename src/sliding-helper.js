@@ -8,7 +8,7 @@ export function create(numRows, numCols) {
   const numTiles = numRows*numCols
   const tiles = Array.from( { length: numTiles }, (_,i) => ({ id: i, row: Math.floor(i/numCols), col: i % numCols }) )
 
-  const puzzle = {
+  return {
     tiles,
     slidingInfos: [],
     sliding: undefined,
@@ -16,16 +16,48 @@ export function create(numRows, numCols) {
     numCols,
     missingTile: tiles[numTiles - 1],
   }
+}
 
-  return puzzle
+export function createFromSingleRow(singleRow, numCols) {
+  const numRows = numCols > 0 ? singleRow.length/numCols : 0
+  if (numRows !== Math.floor(numRows) || (numRows === 0 && numCols !== 0) || (numRows === 0 && singleRow.length > 0)) {
+    throw Error(`missing data, expecting ${Math.ceil(numRows)*numCols} entries, but found ${singleRow.length}`)
+  }
+
+  const repeatedNumbers = singleRow.filter((x,i) => singleRow.lastIndexOf(x) !== i)
+  if (repeatedNumbers.length > 0) {
+    throw Error(`repeated entries: ${repeatedNumbers.join(",")}`)
+  }
+
+  if (Object.values(singleRow).length !== singleRow.length) {
+    throw Error(`contains empty entries, use keyword undefined instead`)
+  }
+
+  const missingTileId = numRows*numCols - 1
+  const tiles = singleRow.map((value,i) => {
+    const id = (typeof value === "undefined" ? missingTileId : i)
+    return { value, id, row: Math.floor(i/numCols), col: i % numCols }
+  })
+
+  return {
+    tiles,
+    slidingInfos: [],
+    sliding: undefined,
+    numRows,
+    numCols,
+    missingTile: tiles.find(tile => tile.id === missingTileId)
+  }
 }
 
 export function shuffle(puzzle) {
-  puzzle.tiles = utils.shuffle( puzzle.tiles )
-  puzzle.tiles.forEach( (tile,i) => tile.id = i ) // assign id to the shuffled index
+  do {
+    puzzle.tiles = utils.shuffle( puzzle.tiles )
+    puzzle.tiles.forEach( (tile,i) => tile.id = i ) // assign id to the shuffled index
+    puzzle.missingTile = puzzle.tiles[puzzle.tiles.length - 1]
+  } while (!isSolveable(puzzle))
+
   puzzle.slidingInfos.length = 0
   puzzle.sliding = undefined
-  puzzle.missingTile = puzzle.tiles[puzzle.tiles.length - 1]
   return puzzle
 }
 
@@ -63,10 +95,6 @@ export function slideTiles(puzzle, tile, axis, delta) {
   const altAxis = axis === "row" ? "col" : "row"
   const gapDirection = Math.sign(missingTile[altAxis] - tile[altAxis])
   const clampDelta = gapDirection > 0 ? utils.clamp(delta, 0, 1) : utils.clamp(delta, -1, 0)
-
-  if (clampDelta === 0 && delta !== 0) {
-    return puzzle // moving in the wrong direction
-  }
 
   let tileInfo = puzzle.slidingInfos.find(info => info.tile === tile)
   if (!tileInfo) {
@@ -147,4 +175,25 @@ export function recalculateMissingTile(puzzle) {
   }
 
   return isComplete
+}
+
+// using rules from https://www.cs.bham.ac.uk/~mdr/teaching/modules04/java2/TilesSolvability.html
+export function isSolveable(puzzle) {
+  const numCols = puzzle.numCols
+  const missingTile = puzzle.missingTile
+  const asOneRow = puzzle.tiles.reduce((oneRow, tile) => {
+    if (tile !== missingTile) {
+      const i = tile.row*numCols + tile.col
+      oneRow[i] = tile.id
+    }
+    return oneRow
+  }, [])
+
+  const gridWidthIsOdd = !!(numCols % 2)
+  const missingTileInOddRow = !!((puzzle.numRows - 1 - missingTile.row) % 2)
+  const numInversions = asOneRow.reduce((sum, x, i) => sum + asOneRow.slice(i+1).filter(y => y < x).length)
+  const numInversionsIsOdd = !!(numInversions % 2)
+
+  return (gridWidthIsOdd && !numInversionsIsOdd) ||
+    (!gridWidthIsOdd && missingTileInOddRow !== numInversionsIsOdd)
 }

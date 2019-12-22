@@ -20,6 +20,52 @@ test("slidingHelper.create", (t) => {
   t.end()
 })
 
+test("slidingHelper.createFromSingleRow", (t) => {
+  try {
+    t.notok(slidingHelper.createFromSingleRow([], 4), "empty")
+  } catch {
+    t.pass("empty")
+  }
+
+  try {
+    t.notok(slidingHelper.createFromSingleRow([1,2,3,4,5], 4), "invalid size")
+  } catch {
+    t.pass("invalid size")
+  }
+
+  try {
+    t.notok(slidingHelper.createFromSingleRow([1,1,1,1], 2), "repeated entries")
+  } catch {
+    t.pass("repeated entries")
+  }
+
+  try {
+    t.notok(slidingHelper.createFromSingleRow([1,,2,3], 2), "empty entries")
+  } catch {
+    t.pass("empty entries")
+  }
+
+  t.deepEqual(slidingHelper.createFromSingleRow([1,2,3,undefined],2), {
+    tiles: [{id: 0, row: 0, col: 0, value: 1}, {id: 1, row: 0, col: 1, value: 2}, {id: 2, row: 1, col: 0, value: 3}, {id: 3, row: 1, col: 1, value: undefined}],
+    slidingInfos: [],
+    sliding: undefined,
+    numRows: 2,
+    numCols: 2,
+    missingTile: {id: 3, row: 1, col: 1, value: undefined},
+  }, "valid 2x2")
+
+  t.end()
+})
+
+test("slidingHelper.isSolveable", (t) => {
+  const puzzleA = slidingHelper.createFromSingleRow([6,1,10,2,7,11,4,14,5,undefined,9,15,8,12,13,3],4)
+  const puzzleB = slidingHelper.createFromSingleRow([1,2,3,4,5,6,7,8,9,10,11,12,13,15,14,undefined],4)
+
+  t.equal(slidingHelper.isSolveable(puzzleA), true, "solveable")
+  t.equal(slidingHelper.isSolveable(puzzleB), false, "unsolveable")
+  t.end()
+})
+
 test("slidingHelper.shuffle", (t) => {
   const puzzleOrigin = slidingHelper.create(3,3)
   const puzzleA = slidingHelper.create(3,3)
@@ -29,8 +75,14 @@ test("slidingHelper.shuffle", (t) => {
 
   t.notDeepEqual(puzzleA, puzzleOrigin, "shuffle")
   t.notDeepEqual(puzzleA, puzzleB, "two different shuffles")
-  t.deepEqual(puzzleA.missingTile.id, puzzleA.numCols*puzzleA.numRows - 1, "missing tile is last")
-  t.deepEqual(puzzleB.missingTile.id, puzzleB.numCols*puzzleA.numRows - 1, "missing tile is last (ii)")
+  t.equal(puzzleA.missingTile.id, puzzleA.numCols*puzzleA.numRows - 1, "missing tile is last")
+  t.equal(puzzleB.missingTile.id, puzzleB.numCols*puzzleA.numRows - 1, "missing tile is last (ii)")
+
+  for (let i = 0; i < 20; i++) {
+    slidingHelper.shuffle(puzzleA)
+    t.equal(slidingHelper.isSolveable(puzzleA), true, `shuffle is solveable - ${i}`)
+  }
+  
   t.end()
 })
 
@@ -215,6 +267,19 @@ test("slidingHelper.slideTiles", (t) => {
   t.deepEqual(puzzleD.slidingInfos.slice().sort((a,b) => a.tile.id - b.tile.id), [{tile: {id: 3, row: 1, col: 3}, row: -1, col: 0}, {tile: {id: 7, row: 2, col: 3}, row: -1, col: 0}, {tile: {id: 11, row: 3, col: 3}, row: -1, col: 0}], "4x4 last column up")
   slidingHelper.recalculateMissingTile(puzzleD)
   t.deepEqual(puzzleD.missingTile, {id: 15, row: 3, col: 3}, "4x4 last up down - missing tile")
+
+  slidingHelper.slideTiles(puzzleD, puzzleD.tiles[14], "row", .2)
+  slidingHelper.slideTiles(puzzleD, puzzleD.tiles[14], "row", -20)
+  slidingHelper.recalculateMissingTile(puzzleD)
+  t.deepEqual({
+    slidingInfos: puzzleD.slidingInfos,
+    sliding: puzzleD.sliding,
+    missingTile: puzzleD.missingTile
+  }, {
+    slidingInfos: [],
+    sliding: undefined,
+    missingTile: {id: 15, row: 3, col: 3}
+  }, "partial slide then large reverse slide")
 
   t.end()
 })
