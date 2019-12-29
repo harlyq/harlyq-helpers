@@ -77,65 +77,114 @@ export function getProperty(el, prop) {
   }
 }
 
-/** @type {() => {startTimer: (delay: number, callback: () => void) => any, clearTimer: (timer: any) => void, clearAllTimers: () => void, pause: () => void, resume: () => void }} */
-export function basicClock() {
-  let timers = []
+/** @type { ( el: HTMLElement, callback: EventListener ) => { update: (events: string, scope: string, source: string, delay: () => number | number, enabled: boolean) => void, play: () => void, pause: () => void, remove: () => void } } */
+export function delayedEventHandler(el, callback) {
+  let _events
+  let _elements = []
+  let _delay
+  let _enabled
+  let _source
+  let _scope
+  const _timers = []
 
-  function startTimerInternal( timer, delay, callback ) {
-    timer.id = setTimeout( () => { clearTimer( timer ); callback() }, delay*1000)
+  function setupCallback(timer, callback, delay) {
     timer.startTime = Date.now()
-    timer.callback = callback
-  }
+    timer.delay = delay
+    delete timer.remainingTime
 
-  function startTimer( delay, callback ) {
-    if (delay > 0) {
-      const newTimer = {}
-      startTimerInternal( newTimer, delay, callback )
-      timers.push( newTimer )
-      return newTimer
-
-    } else {
+    timer.id = setTimeout( () => {
+      const i = _timers.indexOf(timer)
+      _timers.splice(i, 1)
       callback()
-    }
+    }, delay*1000 )
   }
 
-  function clearTimer( timer ) {
-    const index = timers.indexOf( timer )
-    if ( index >= 0 ) {
-      clearTimeout( timer.id )
-      timers.splice( index, 1 )
-    }
+  function onEvent(event) {
+    delayedCallback(event)
   }
 
-  function clearAllTimers() {
-    for ( let timer of timers ) {
-      clearTimeout( timer.id )
-    }
-    timers.length = 0
-  }
-
-  function pause() {
-    for ( let timer of timers ) {
-      timer.resumeTime = Date.now() - timer.startTime
-      clearTimeout( timer.id )
-    }
-  }
-
-  function resume() {
-    for ( let timer of timers ) {
-      if ( timer.resumeTime ) {
-        startTimerInternal( timer, timer.resumeTime, timer.callback )
-        delete timer.resumeTime
+  function addListeners() {
+    for ( let el of _elements ) {
+      for ( let type of _events ) {
+        el.addEventListener( type, onEvent )
       }
     }
   }
 
+  function removeListeners() {
+    for ( let el of _elements ) {
+      for ( let type of _events ) {
+        el.removeEventListener( type, onEvent )
+      }
+    }
+  }
+
+  function delayedCallback(event) {
+    if (_enabled) {
+      const delay = typeof _delay === "function" ? _delay() : _delay
+
+      if (delay > 0) {
+        const timer = {}
+        setupCallback(timer, callback, delay)          
+        _timers.push(timer)
+
+      } else {
+        callback(event)
+      }
+    }
+  }
+
+  function update(events, scope, source, delay, enabled) {
+    remove()
+
+    _events = events ? events.split(",") : []
+    _delay = delay
+    _enabled = enabled
+
+    if (source !== _source || scope !== _scope) {
+      _elements = getElementsInScope(el, source, scope, undefined)
+      _source = source
+      _scope = scope
+    }
+
+    if (_enabled) {
+      play()
+    }
+  }
+
+  function play() {
+    if (_enabled) {
+      for (let timer of _timers) {
+        setupCallback(timer, callback, timer.remainingTime)
+      }
+
+      addListeners()
+
+      if (_events.length === 0) {
+        delayedCallback(undefined)
+      }
+    }
+  }
+
+  function pause() {
+    for (let timer of _timers) {
+      timer.remainingTime = timer.delay - (Date.now() - timer.startTime)/1000
+      clearTimeout( timer.id )
+    }
+
+    removeListeners()
+  }
+
+  function remove() {
+    pause()
+    _timers.length = 0
+  }
+
   return {
-    startTimer,
-    clearTimer,
-    clearAllTimers,
+    update,
+    play,
     pause,
-    resume
+    remove,
   }
 }
 
@@ -151,68 +200,6 @@ export function getElementsInScope( el, selector, selectorScope, eventEl ) {
   }
 }
 
-
-/** @type { ( eventNames: string, callback: EventListener ) => any } */
-export function scopedEvents( thisEl, callback ) {
-  let eventNames, source, scope
-  let hasListeners = false
-  let elements = []
-  let eventTypes = parseEventNames( eventNames )
- 
-  function parseEventNames( eventNames ) {
-    return eventNames && typeof eventNames === "string" ? eventNames.split( "," ).map( x => x.trim() ) : []
-  }
-
-  function set( newEventNames, newSource, newScope ) {
-    const wasListening = hasListeners
-
-    if ( wasListening && ( newEventNames !== eventNames || newSource !== source || newScope !== scope ) ) {
-      remove()
-    }
-
-    source = newSource
-    scope = newScope
-
-    if ( eventNames !== newEventNames ) {
-      eventNames = newEventNames
-      eventTypes = parseEventNames( eventNames )
-    }
-
-    elements = getElementsInScope( thisEl, source, scope, undefined )
-
-    if ( wasListening ) {
-      add()
-    }
-  }
-
-  function add() {
-    if ( !hasListeners ) {
-      for ( let el of elements ) {
-        for ( let type of eventTypes ) {
-          el.addEventListener( type, callback )
-        }
-      }
-      hasListeners = true
-    }
-  }
-
-  function remove() {
-    if ( hasListeners ) {
-      for ( let el of elements ) {
-        for ( let type of eventTypes ) {
-          el.removeEventListener( type, callback )
-        }
-      }
-      hasListeners = false
-    }
-  }
-
-  return {
-    set,
-    add,
-    remove,
-  }
-}
 
 export function loadTemplate(template, testString, callback) {
   const match = template && template.match(/url\((.+)\)/)
