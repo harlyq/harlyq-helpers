@@ -137,7 +137,7 @@ export function delayedEventHandler(el, callback) {
   function update(events, scope, source, delay, enabled) {
     remove()
 
-    _events = events ? events.split(",") : []
+    _events = events ? events.split(",").map(x => x.trim()) : []
     _delay = delay
     _enabled = enabled
 
