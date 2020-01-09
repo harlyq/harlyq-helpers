@@ -132,3 +132,50 @@ test("utils.shuffle", (t) => {
   t.ok(shuffled2.some((v,i) => shuffled1[i] !== v), "consecutive shuffles are different")
   t.end()
 })
+
+test("utils.toLowerCase", (t) => {
+  t.deepEquals(utils.toLowerCase(""), "", "empty")
+  t.deepEquals(utils.toLowerCase("ABC"), "abc", "all uppercase")
+  t.deepEquals(utils.toLowerCase("AbC"), "abc", "mixedcase")
+  t.deepEquals(utils.toLowerCase("A-B-C-d-e"), "a-b-c-d-e", "kebab case")
+  t.end()
+})
+
+test("utils.toUpperCase", (t) => {
+  t.deepEquals(utils.toUpperCase(""), "", "empty")
+  t.deepEquals(utils.toUpperCase("abc"), "ABC", "all lowercase")
+  t.deepEquals(utils.toUpperCase("AbC"), "ABC", "mixedcase")
+  t.deepEquals(utils.toUpperCase("A-B-C-d-e"), "A-B-C-D-E", "kebab case")
+  t.end()
+})
+
+test("utils.filterInPlace", (t) => {
+  t.deepEquals(utils.filterInPlace([], (x => x !== 'b')), [], "empty list")
+  t.deepEquals(utils.filterInPlace(["a","b","c"], (x => x !== 'b')), ["a","c"], "a list of strings")
+  t.deepEquals(utils.filterInPlace([1,2,3,4,5,6,6,7], (x => x > 5)), [6,6,7], "a list of repeated numbers")
+  t.end()
+})
+
+test("utils.exchangeList", (t) => {
+  let actions = []  
+  t.deepEqual( utils.exchangeList([], [], () => actions.push("add"), () => actions.push("remove"), () => actions.push("keep")), [], "empty list")
+  t.deepEqual( actions, [], "emptylist => no actions")
+
+  actions.length = 0
+  t.deepEqual( utils.exchangeList(["a","b","c"], [], (x) => actions.push("add " + x), (x) => actions.push("remove " + x), (x) => actions.push("keep x")), ["a","b","c"], "adding items")
+  t.deepEqual( actions, ["add a", "add b", "add c"], "add actions")
+
+  actions.length = 0
+  t.deepEqual( utils.exchangeList([], ["a","b","c"], (x) => actions.push("add " + x), (x) => actions.push("remove " + x), (x) => actions.push("keep x")), [], "removing items")
+  t.deepEqual( actions, ["remove a", "remove b", "remove c"], "remove actions")
+
+  actions.length = 0
+  t.deepEqual( utils.exchangeList(["z","x","y"], ["x","y","z"], (x) => actions.push("add " + x), (x) => actions.push("remove " + x), (x) => actions.push("keep " + x)), ["z", "x", "y"], "keeping items, different order")
+  t.deepEqual( actions, ["keep z", "keep x", "keep y"], "keep actions")
+
+  actions.length = 0
+  t.deepEqual( utils.exchangeList(["c","b"], ["a","b"], (x) => actions.push("add " + x), (x) => actions.push("remove " + x), (x) => actions.push("keep " + x)), ["c", "b"], "remove, add, keep")
+  t.deepEqual( actions, ["remove a", "add c", "keep b"], "remove, add, keep")
+
+  t.end()
+})

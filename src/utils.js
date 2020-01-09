@@ -3,6 +3,12 @@ export function clamp(v, min, max) {
   return v < min ? min : v > max ? max : v
 }
 
+/** @type {(str: string) => string } */
+export function toLowerCase(str) { return str.toLowerCase() }
+
+/** @type {(str: string) => string } */
+export function toUpperCase(str) { return str.toUpperCase() }
+
 /** @type {(v: number, m: number) => number} */
 export function euclideanModulo(v, m) {
   return ( ( v % m ) + m ) % m  
@@ -44,6 +50,48 @@ export function count(list, fn) {
   }
   return num
 }
+
+/** @type {<T>(newList: T[], oldList: T[], addFn?: (v: T) => void, removeFn?: (v: T) => void, keepFn?: (v: T) => void) => T[] } */
+export function exchangeList(newList, oldList, addFn = undefined, removeFn = undefined, keepFn = undefined) {
+  if (typeof removeFn === "function") {
+    for (let oldItem of oldList) {
+      if (!newList.includes(oldItem)) {
+        removeFn(oldItem)
+      }
+    }
+  }
+
+  const hasAddFn = typeof addFn === "function"
+  const hasKeepFn = typeof keepFn === "function"
+
+  if (hasAddFn || hasKeepFn) {
+    for (let newItem of newList) {
+      if (!oldList.includes(newItem)) {
+        if (hasAddFn) {
+          addFn(newItem)
+        }
+      } else if (hasKeepFn) {
+        keepFn(newItem)
+      }
+    }
+  }
+
+  return newList
+}
+
+/** @type {<T>(list: T[], condition: (v: T, i: number, list: T[]) => boolean) => T[]} */
+export function filterInPlace(list, condition) {
+  let j = 0
+  for (let i = 0; i < list.length; i++) {
+    const v = list[i]
+    if ( condition(v, i, list) ) {
+      list[j++] = v
+    }
+  }
+  list.length = j
+  return list
+}
+
 
 /** @type { (maxBlocks: number) => { allocate: (requestedSize: number) => number | undefined, release: (index: number) => boolean, maxUsed: () => number } } */
 export function blocks(maxBlocks) {
