@@ -22,7 +22,7 @@ export const calcOffsetMatrix = (function() {
     calcMatrixWorld(instancedMesh, index, instancedMatrixWorld)
     outOffsetMatrix.getInverse(base3D.matrixWorld).multiply(instancedMatrixWorld)
     return outOffsetMatrix
-  }  
+  }
 })()
 
 
@@ -64,7 +64,7 @@ export function createMesh(obj3D, count) {
       attribute vec3 instancePosition;
       attribute vec4 instanceQuaternion;
       attribute vec4 instanceColor;
-      attribute float instanceScale;
+      attribute vec3 instanceScale;
   
       varying vec4 vInstanceColor;
   
@@ -149,6 +149,28 @@ export function createMesh(obj3D, count) {
 
   const instancedMesh = new THREE.Mesh(instancedGeometry, instancedMaterial)
   instancedMesh.frustumCulled = false
+
+  const raycasterMesh = new THREE.Mesh(instancedGeometry, instancedMaterial)
+  const raycasterPos = new THREE.Vector3()
+  const raycasterQuat = new THREE.Quaternion()
+  const raycasterScale = new THREE.Vector3(1,1,1)
+  const raycasterIntersections = []
+
+  instancedMesh.raycast = (raycaster, intersects) => {
+    raycasterIntersections.length = 0
+  
+    for (let i = 0; i < raycasterMesh.geometry.maxInstancedCount; i++) {
+      raycasterMesh.matrixWorld.compose( getPositionAt(instancedMesh, i, raycasterPos), getQuaternionAt(instancedMesh, i, raycasterQuat), getScaleAt(instancedMesh, i, raycasterScale) )
+      raycasterMesh.matrixWorld.premultiply(instancedMesh.matrixWorld)
+      raycasterMesh.raycast( raycaster, raycasterIntersections )
+      if (raycasterIntersections.length > 0) {
+        raycasterIntersections[0].instanceId = i
+        raycasterIntersections[0].object = instancedMesh
+        intersects.push( raycasterIntersections[0] )
+        raycasterIntersections.length = 0
+      }
+    }
+  }
 
   return instancedMesh
 }
