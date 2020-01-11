@@ -1,6 +1,7 @@
 import * as affine4 from "./affine4.js"
 import * as aframeHelper from "./aframe-helper.js"
 import * as attribute from "./attribute.js"
+import * as cardHelper from "./card-helper.js"
 import * as chessHelper from "./chess-helper.js"
 import * as closestPoint from "./closest-point.js"
 import * as domHelper from "./dom-helper.js"
@@ -28,6 +29,7 @@ import * as vertex3 from "./vertex3.js"
 export { affine4 }
 export { aframeHelper }
 export { attribute }
+export { cardHelper }
 export { chessHelper }
 export { closestPoint }
 export { domHelper }
