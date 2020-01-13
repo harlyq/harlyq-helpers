@@ -156,26 +156,58 @@ test("utils.filterInPlace", (t) => {
   t.end()
 })
 
-test("utils.exchangeList", (t) => {
+test("utils.exchangeArray", (t) => {
   let actions = []  
-  t.deepEqual( utils.exchangeList([], [], () => actions.push("add"), () => actions.push("remove"), () => actions.push("keep")), [], "empty list")
-  t.deepEqual( actions, [], "emptylist => no actions")
+  t.deepEqual( utils.exchangeArray([], [], () => actions.push("add"), () => actions.push("remove"), () => actions.push("keep")), [], "empty list")
+  t.deepEqual( actions, [], "empty list actions")
 
   actions.length = 0
-  t.deepEqual( utils.exchangeList(["a","b","c"], [], (x) => actions.push("add " + x), (x) => actions.push("remove " + x), (x) => actions.push("keep x")), ["a","b","c"], "adding items")
-  t.deepEqual( actions, ["add a", "add b", "add c"], "add actions")
+  t.deepEqual( utils.exchangeArray([], ["a","b","c"], (x) => actions.push("add " + x), (x) => actions.push("remove " + x), (x) => actions.push("keep x")), ["a","b","c"], "adding")
+  t.deepEqual( actions, ["add a", "add b", "add c"], "adding actions")
 
   actions.length = 0
-  t.deepEqual( utils.exchangeList([], ["a","b","c"], (x) => actions.push("add " + x), (x) => actions.push("remove " + x), (x) => actions.push("keep x")), [], "removing items")
-  t.deepEqual( actions, ["remove a", "remove b", "remove c"], "remove actions")
+  t.deepEqual( utils.exchangeArray(["a","b","c"], [], (x) => actions.push("add " + x), (x) => actions.push("remove " + x), (x) => actions.push("keep x")), [], "removing")
+  t.deepEqual( actions, ["remove a", "remove b", "remove c"], "removing actions")
 
   actions.length = 0
-  t.deepEqual( utils.exchangeList(["z","x","y"], ["x","y","z"], (x) => actions.push("add " + x), (x) => actions.push("remove " + x), (x) => actions.push("keep " + x)), ["z", "x", "y"], "keeping items, different order")
-  t.deepEqual( actions, ["keep z", "keep x", "keep y"], "keep actions")
+  t.deepEqual( utils.exchangeArray(["x","y","z"], ["z","x","y"], (x) => actions.push("add " + x), (x) => actions.push("remove " + x), (x) => actions.push("keep " + x)), ["z", "x", "y"], "keeping items, different order")
+  t.deepEqual( actions, ["keep z", "keep x", "keep y"], "keeping items, different order actions")
 
   actions.length = 0
-  t.deepEqual( utils.exchangeList(["c","b"], ["a","b"], (x) => actions.push("add " + x), (x) => actions.push("remove " + x), (x) => actions.push("keep " + x)), ["c", "b"], "remove, add, keep")
-  t.deepEqual( actions, ["remove a", "add c", "keep b"], "remove, add, keep")
+  t.deepEqual( utils.exchangeArray(["a","b"], ["c","b"], (x) => actions.push("add " + x), (x) => actions.push("remove " + x), (x) => actions.push("keep " + x)), ["c", "b"], "remove, add, keep")
+  t.deepEqual( actions, ["remove a", "add c", "keep b"], "remove, add, keep actions")
+
+  actions.length = 0
+  t.deepEqual( utils.exchangeArray(["c","b","b"], ["c","b","c"], (x) => actions.push("add " + x), (x) => actions.push("remove " + x), (x) => actions.push("keep " + x)), ["c","b","c"], "duplicates")
+  t.deepEqual( actions, ["keep c", "keep b", "keep c"], "duplicates actions")
+
+  t.end()
+})
+
+test("utils.exchangeObject", (t) => {
+  const addFn = (k,v) => actions.push(`add ${k},${v}`)
+  const removeFn = (k,v) => actions.push(`remove ${k},${v}`)
+  const keepFn = (k,v,old) => actions.push(`keep ${k},${v}`)
+
+  let actions = []
+  t.deepEqual( utils.exchangeObject({}, {}, addFn, removeFn, keepFn), {}, "empty object" )
+  t.deepEqual( actions, [], "empty object actions")
+
+  actions.length = 0
+  t.deepEqual( utils.exchangeObject({}, {a:1, b:2, c:3}, addFn, removeFn, keepFn), {a: 1, b:2, c:3}, "adding" )
+  t.deepEqual( actions, ["add a,1", "add b,2", "add c,3"], "adding actions")
+
+  actions.length = 0
+  t.deepEqual( utils.exchangeObject({a:1, b:2, c:3}, {}, addFn, removeFn, keepFn), {}, "removing" )
+  t.deepEqual( actions, ["remove a,1", "remove b,2", "remove c,3"], "removing actions")
+
+  actions.length = 0
+  t.deepEqual( utils.exchangeObject({x:1, y:2, z:3}, {z:1, x:2, y:3}, addFn, removeFn, keepFn), {z:1, x:2, y:3}, "changing" )
+  t.deepEqual( actions, ["remove x,1", "remove y,2", "remove z,3", "add z,1", "add x,2", "add y,3"], "changing actions")
+
+  actions.length = 0
+  t.deepEqual( utils.exchangeObject({x:1, y:2}, {z:3, y:2}, addFn, removeFn, keepFn), {z:3, y:2}, "remove, add, keep" )
+  t.deepEqual( actions, ["remove x,1", "add z,3", "keep y,2"], "remove, add, keep actions")
 
   t.end()
 })

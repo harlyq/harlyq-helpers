@@ -51,8 +51,8 @@ export function count(list, fn) {
   return num
 }
 
-/** @type {<T>(newList: T[], oldList: T[], addFn?: (v: T) => void, removeFn?: (v: T) => void, keepFn?: (v: T) => void) => T[] } */
-export function exchangeList(newList, oldList, addFn = undefined, removeFn = undefined, keepFn = undefined) {
+/** @type {<T>(oldList: T[], newList: T[], addFn?: (v: T) => void, removeFn?: (v: T) => void, keepFn?: (v: T) => void) => T[] } */
+export function exchangeArray(oldList, newList, addFn = undefined, removeFn = undefined, keepFn = undefined) {
   if (typeof removeFn === "function") {
     for (let oldItem of oldList) {
       if (!newList.includes(oldItem)) {
@@ -77,6 +77,34 @@ export function exchangeList(newList, oldList, addFn = undefined, removeFn = und
   }
 
   return newList
+}
+
+/** @type {(oldList: Object, newList: Object, addFn?: (k: string, v: any) => void, removeFn?: (k: string, v: any) => void, keepFn?: (k: string, vNew: any) => void) => Object } */
+export function exchangeObject(oldObj, newObj, addFn = undefined, removeFn = undefined, keepFn = undefined) {
+  if (typeof removeFn === "function") {
+    for (let oldKey in oldObj) {
+      if (!(oldKey in newObj) || oldObj[oldKey] !== newObj[oldKey]) {
+        removeFn(oldKey, oldObj[oldKey])
+      }
+    }
+  }
+
+  const hasAddFn = typeof addFn === "function"
+  const hasKeepFn = typeof keepFn === "function"
+
+  if (hasAddFn || hasKeepFn) {
+    for (let newKey in newObj) {
+      if (!(newKey in oldObj) || newObj[newKey] !== oldObj[newKey]) {
+        if (hasAddFn) {
+          addFn(newKey, newObj[newKey])
+        }
+      } else if (hasKeepFn) {
+        keepFn(newKey, newObj[newKey])
+      }
+    }
+  }
+
+  return newObj
 }
 
 /** @type {<T>(list: T[], condition: (v: T, i: number, list: T[]) => boolean) => T[]} */
