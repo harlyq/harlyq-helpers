@@ -1,6 +1,6 @@
 {
   "name": "harlyq-helpers",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "helpful functions",
   "files": [
     "src"
@@ -16,7 +16,7 @@
   "author": "harlyq",
   "license": "MIT",
   "devDependencies": {
-    "tape": "^4.11.0"
+    "tape": "^4.13.2"
   },
   "peerDependencies": {
     "three": "^0.101.0",
