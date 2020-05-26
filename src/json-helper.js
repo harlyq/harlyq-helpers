@@ -1,13 +1,11 @@
-const IDENTITY_FN = x => x
-
 /** @type {(json: any, queryFn: (json: any) => boolean, dataFn: (json: any, path: string[]) => any ) => any } */
-export function query(json, queryFn, dataFn = IDENTITY_FN) {
+export function query(json, queryFn, dataFn = undefined) {
   return queryInternal(json, queryFn, dataFn, true, [])
 }
 
 // depth first traversal
 /** @type {(json: any, queryFn: (json: any) => boolean, dataFn: (json: any, path: string[]) => any ) => any } */
-export function queryAll(json, queryFn, dataFn = IDENTITY_FN) {
+export function queryAll(json, queryFn, dataFn = undefined) {
   const result = queryInternal(json, queryFn, dataFn, false, [])
   return result ? result : []
 }
@@ -20,7 +18,7 @@ function queryInternal(json, queryFn, dataFn, onlyFirst, path) {
     const use = queryFn( json )
 
     if ( use ) {    
-      const answer = dataFn( json, path )
+      const answer = typeof dataFn === 'function' ? dataFn( json, path ) : json
       if ( onlyFirst ) {
         return answer
       } else {
@@ -69,6 +67,23 @@ export function countAll(json, queryFn) {
   return count
 }
 
+/** @type {(json: any, mapFn: (x: any) => any) => any} */
+export function map(json, mapFn) {
+  if (Array.isArray(json)) {
+    return json.map( v => typeof v === "object" ? map(v, mapFn) : mapFn(v) )
+
+  } else if (typeof json === "object") {
+    let result = {}
+    for (let k in json) {
+      const v = json[k]
+      result[k] = typeof v === "object" ? map(v, mapFn) : mapFn(v)
+    }
+    return result
+  }
+
+  return mapFn(json)
+}
+
 /** @type {(a: any, b: any) => boolean} */
 export function deepEquals(a, b) {
   if (typeof a === "object" && typeof b === "object") {
@@ -80,7 +95,7 @@ export function deepEquals(a, b) {
         const aValue = a[i]
         const bValue = b[i]
         if (typeof aValue === "object" && typeof bValue === "object") {
-          if (!deepEquals(aValue, bValue)) {
+          if ( !deepEquals(aValue, bValue) ) {
             return false
           }
         } else if (aValue !== bValue) {
@@ -91,7 +106,7 @@ export function deepEquals(a, b) {
     } else {
       const aKeys = Object.keys(a)
       const bKeys = Object.keys(b)
-      if (aKeys.length !== bKeys.length && aKeys.every(x => bKeys.includes(x))) {
+      if ( aKeys.length !== bKeys.length && aKeys.every( x => bKeys.includes(x) ) ) {
         return false
       }
 
@@ -99,7 +114,7 @@ export function deepEquals(a, b) {
         const aValue = a[key]
         const bValue = b[key]
         if (typeof aValue === "object" && typeof bValue === "object") {
-          if (!deepEquals(aValue, bValue)) {
+          if ( !deepEquals(aValue, bValue) ) {
             return false
           }
         } else if (aValue !== bValue) {
@@ -114,6 +129,8 @@ export function deepEquals(a, b) {
   return a === b
 }
 
+export const deepEqual = deepEquals
+
 /** @type {(a: any) => any} */
 export function deepCopy(a) {
   if (Array.isArray(a)) {
@@ -122,27 +139,85 @@ export function deepCopy(a) {
       arrayCopy[i] = deepCopy(a[i])
     }
     return arrayCopy
+
   } else if (typeof a === "object") {
     let objectCopy = {}
     for (let k in a) {
       objectCopy[k] = deepCopy(a[k])
     }
     return objectCopy
+
   } else {
     return a
   }
 }
 
-// returns a value from a 'root' and an array of 'properties', each property is considered the child of the previous property
-/** @type {(root: {[key: string]: any}, properties: string[]) => any} */
-export function getWithPath(root, properties) {
-  let path = root
-  let parts = properties && Array.isArray(properties) ? properties.slice().reverse() : []
-  while (path && parts.length > 0) {
-    path = path[parts.pop()]
+// returns a value from a 'root' and an array of 'paths', each property is considered the child of the previous property
+/** @type {(root: any, paths: string[]) => any} */
+export function getWithPath(root, paths) {
+  let value = root
+
+  for (let i = 0; typeof value !== "undefined" && i < paths.length; i++) {
+    value = value[ paths[i] ]
   }
 
-  return path
+  return value
 }
 
+function setByPath(result, value, base, paths) {
+  let object = typeof result === "object" ? result[base] : {[base]: undefined}
+  const n = paths.length
 
+  for (let i = 0; i < n - 1; i++) {
+    const path = paths[i]
+    if ( !(path in object) ) {
+      object[path] = typeof path === "number" ? [] : {}
+    }
+    object = object[path]
+  }
+
+  object[ n > 0 ? paths[n-1] : base ] = value
+  return object
+}
+
+/** @type {(oldObject: any, newObject: any, callbackFn?: (oldObject: any, newObject: any, paths: (string|number)[], oldRoot: any, newRoot: any) => boolean, paths?: (string|number)[], oldRoot?: any, newRoot?: any, result?: any) => {added?:any, deleted?:any, updated?:any} } */
+export function diff(oldObject, newObject, callbackFn = undefined, paths = [], oldRoot = undefined, newRoot = undefined, result = undefined) {
+  const typeofOldObject = typeof oldObject
+  const typeofNewObject = typeof newObject
+
+  if (typeofOldObject === "object" || typeofNewObject === "object") {
+    const isArray = Array.isArray(oldObject)
+    for (let k in oldObject) {
+      result = diff(oldObject[k], newObject[k], callbackFn, paths.concat( isArray ? Number(k) : k ), oldObject, newObject, result)
+    }
+
+    for (let k in newObject) {
+      if (!(k in oldObject)) {
+        result = diff(undefined, newObject[k], callbackFn, paths.concat( isArray ? Number(k) : k ), oldObject, newObject, result)
+      }
+    }
+
+  } else if (typeofOldObject !== "undefined" || typeofNewObject !== "undefined") {
+    const isIncluded = typeof callbackFn === "function" ? callbackFn(oldObject, newObject, paths, oldRoot, newRoot) : oldObject !== newObject
+
+    if (isIncluded) {
+      result = result || {}
+
+      // no need to copy paths
+      if (typeofOldObject === "undefined") {
+        if (!("added" in result)) result["added"] = []
+        result.added.push(paths)
+
+      } else if (typeofNewObject === "undefined") {
+        if (!("deleted" in result)) result["deleted"] = []
+        result.deleted.push(paths)
+
+      } else {
+        if (!("updated" in result)) result["updated"] = []
+        result.updated.push(paths)
+      }
+    }
+  }
+
+  return result
+}
